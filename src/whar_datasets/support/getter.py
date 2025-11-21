@@ -12,6 +12,7 @@ from whar_datasets.support.configs.cfg_uci_har import cfg_uci_har
 from whar_datasets.support.configs.cfg_motion_sense import cfg_motion_sense
 from whar_datasets.support.configs.cfg_daphnet import cfg_daphnet
 from whar_datasets.support.configs.cfg_har_sense import cfg_har_sense
+from whar_datasets.support.configs.cfg_whar import cfg_whar
 
 
 class WHARDatasetID(Enum):
@@ -25,6 +26,7 @@ class WHARDatasetID(Enum):
     KU_HAR = "ku_har"
     DAPHNET = "daphnet"
     HAR_SENSE = "har_sense"
+    WHAR = "whar"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -38,6 +40,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.KU_HAR: (cfg_ku_har),
     WHARDatasetID.DAPHNET: (cfg_daphnet),
     WHARDatasetID.HAR_SENSE: (cfg_har_sense),
+    WHARDatasetID.WHAR: (cfg_whar)
 }
 
 

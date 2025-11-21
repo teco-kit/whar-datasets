@@ -41,19 +41,22 @@ class DownloadingStep(ProcessingStep):
         return True
 
     def compute_results(self, base: base_type) -> result_type:
-        # Use filename to define file path
-        filename = self.cfg.download_url.split("/")[-1]
+        clean_url = self.cfg.download_url.split("?")[0] 
+        filename = clean_url.split("/")[-1]
         file_path = self.download_dir / filename
 
-        # download file from url
-        logger.info(f"Downloading {self.cfg.dataset_id}")
+        logger.info(f"Downloading {self.cfg.dataset_id} to {file_path}")
         response = requests.get(self.cfg.download_url)
+        
         with open(file_path, "wb") as f:
             f.write(response.content)
 
-        # extract file
-        logger.info(f"Extracting {self.cfg.dataset_id}")
-        extract(file_path, self.download_dir)
+        if filename.endswith(".zip") or filename.endswith(".tar") or filename.endswith(".gz"):
+            logger.info(f"Extracting {self.cfg.dataset_id}")
+            extract(file_path, self.download_dir)
+        else:
+            logger.info(f"Skipping extraction for {filename} (not an archive)")
+
 
     def save_results(self, results: result_type) -> None:
         return None

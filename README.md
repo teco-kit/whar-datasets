@@ -66,7 +66,7 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ⬜        | [WISDM-19](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset)       | 2019 | WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset |
 | ✅        | [MotionSense](https://github.com/mmalekzadeh/motion-sense)    | 2019 | *Mobile Sensor Data Anonymization*                                                         |
 | ⬜        | [RealLifeHAR](https://lbd.udc.es/research/real-life-HAR-dataset/)    | 2020 | *A Public Domain Dataset for Real-Life Human Activity Recognition Using Smartphone Sensors* |
-| ⬜        | [w-HAR](https://github.com/gmbhat/human-activity-recognition)          | 2020 | *w-HAR: An Activity Recognition Dataset and Framework Using Low-Power Wearable Devices*    |
+| ✅        | [w-HAR](https://github.com/gmbhat/human-activity-recognition)          | 2020 | *w-HAR: An Activity Recognition Dataset and Framework Using Low-Power Wearable Devices*    |
 | ✅        | [KU-HAR](https://data.mendeley.com/datasets/45f952y38r/5)         | 2021 | *KU-HAR: An open dataset for heterogeneous human activity recognition*                     |
 | ✅        | [HARSense](https://ieee-dataport.org/open-access/harsense-statistical-human-activity-recognition-dataset)       | 2021 | *HARSense: Statistical Human Activity Recognition Dataset*                                 |
 | ⬜        | [iSPL](https://github.com/thunguyenth/HAR_IMU_Stretch) | 2022 | *An Investigation on Deep Learning-Based Activity Recognition Using IMUs and Stretch Sensors* |
