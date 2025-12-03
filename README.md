@@ -44,7 +44,7 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ✅        | [WISDM](https://www.cis.fordham.edu/wisdm/dataset.php)       | 2010 | *Activity Recognition using Cell Phone Accelerometers*                                      |
 | ✅        | [OPPORTUNITY](https://archive.ics.uci.edu/dataset/226/opportunity+activity+recognition)    | 2010 | *Collecting complex activity datasets in highly rich networked sensor environments*        |
 | ✅        | [DSADS](https://archive.ics.uci.edu/dataset/256/daily+and+sports+activities)          | 2010 | *Comparative study on classifying human activities with miniature inertial and magnetic sensors* |
-| ⬜        | [USC-HAD](https://sipi.usc.edu/had/)        | 2012 | *USC-HAD: A Daily Activity Dataset for Ubiquitous Activity Recognition Using Wearable Sensors* |
+| ✅        | [USC-HAD](https://sipi.usc.edu/had/)        | 2012 | *USC-HAD: A Daily Activity Dataset for Ubiquitous Activity Recognition Using Wearable Sensors* |
 | ✅        | [PAMAP2](https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring)         | 2012 | *Introducing a New Benchmarked Dataset for Activity Monitoring*                            |
 | ⬜        | DA | 2012 | *Recognizing Human Activities User-independently on Smartphones Based on Accelerometer Data* |
 | ✅        | [UCI-HAR](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones)        | 2013 | *A Public Domain Dataset for Human Activity Recognition using Smartphones*                  |
@@ -57,13 +57,15 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ⬜        | [UTD-MHAD](https://personal.utdallas.edu/~kehtar/UTD-MHAD.html)       | 2015 | *UTD-MHAD: A Multimodal Dataset for Human Action Recognition Utilizing a Depth Camera and a Wearable Inertial Sensor* |
 | ⬜        | [MobiAct](https://bmi.hmu.gr/the-mobifall-and-mobiact-datasets-2/#) | 2016 | *The MobiAct dataset: recognition of activities of daily living using smartphones*         |
 | ⬜        | [ExtraSensory](http://extrasensory.ucsd.edu/)   | 2016 | *Recognizing Detailed Human Context In-the-Wild from Smartphones and Smartwatches*         |
-| ⬜        | [HAPT](https://archive.ics.uci.edu/dataset/341/smartphone+based+recognition+of+human+activities+and+postural+transitions)           | 2016 | *Transition-aware human activity recognition using smartphones.*                           |
+<!--> Another version of the UCI-HAR Dataset --> 
+<!-- | ⬜        | [HAPT](https://archive.ics.uci.edu/dataset/341/smartphone+based+recognition+of+human+activities+and+postural+transitions)           | 2016 | *Transition-aware human activity recognition using smartphones.*                           | -->
 | ⬜        | [RealWorld](https://www.uni-mannheim.de/dws/research/projects/activity-recognition/dataset/dataset-realworld/)      | 2016 | *On-body Localization of Wearable Devices: An Investigation of Position-Aware Activity Recognition*    |
 | ⬜        | [UniMiB-SHAR](http://www.sal.disco.unimib.it/technologies/unimib-shar/) | 2017 | *Unimib shar: a dataset for human activity recognition using acceleration data from smartphones* |
 | ⬜        | [UMAFall](https://figshare.com/articles/dataset/UMA_ADL_FALL_Dataset_zip/4214283) | 2017 | *UMAFall: Fall Detection Dataset*                                                          |
 | ⬜        | [SHL](http://www.shl-dataset.org/dataset/)            | 2018 | *The University of Sussex-Huawei Locomotion and Transportation Dataset for Multimodal Analytics with Mobile Devices* |
 | ⬜        | [HuGaDB](https://github.com/romanchereshnev/HuGaDB)         | 2018 | *HuGaDB: Human Gait Database for Activity Recognition from Wearable Inertial Sensor Networks* |
-| ⬜        | [WISDM-19](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset)       | 2019 | WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset |
+| ✅        | [WISDM-19 (watch data)](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset)       | 2019 | WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset |
+| ✅        | [WISDM-19 (phone data)](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset)       | 2019 | WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset |
 | ✅        | [MotionSense](https://github.com/mmalekzadeh/motion-sense)    | 2019 | *Mobile Sensor Data Anonymization*                                                         |
 | ⬜        | [RealLifeHAR](https://lbd.udc.es/research/real-life-HAR-dataset/)    | 2020 | *A Public Domain Dataset for Real-Life Human Activity Recognition Using Smartphone Sensors* |
 | ✅        | [w-HAR](https://github.com/gmbhat/human-activity-recognition)          | 2020 | *w-HAR: An Activity Recognition Dataset and Framework Using Low-Power Wearable Devices*    |
