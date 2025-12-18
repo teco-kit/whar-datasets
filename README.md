@@ -55,6 +55,7 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ✅        | [MHEALTH](https://archive.ics.uci.edu/dataset/319/mhealth+dataset)        | 2014 | *mHealthDroid: A Novel Framework for Agile Development of Mobile Health Applications*      |
 | ⬜        | [SWELL-KW](https://www.kaggle.com/datasets/qiriro/swell-heart-rate-variability-hrv)          | 2014 | *The SWELL Knowledge Work Dataset for Stress and User Modeling Research*                   |
 | ⬜        | [SAD](https://www.utwente.nl/en/eemcs/ps/research/dataset/) | 2014 | *Fusion of Smartphone Motion Sensors for Physical Activity Recognition*                    |
+| ⬜        | [HHAR](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition) | 2015 | *Smart Devices are Different: Assessing and MitigatingMobile Sensing Heterogeneities for Activity Recognition*                    |
 | ⬜        | [UTD-MHAD](https://personal.utdallas.edu/~kehtar/UTD-MHAD.html)       | 2015 | *UTD-MHAD: A Multimodal Dataset for Human Action Recognition Utilizing a Depth Camera and a Wearable Inertial Sensor* |
 | ⬜        | [MobiAct](https://bmi.hmu.gr/the-mobifall-and-mobiact-datasets-2/#) | 2016 | *The MobiAct dataset: recognition of activities of daily living using smartphones*         |
 | ⬜        | [ExtraSensory](http://extrasensory.ucsd.edu/)   | 2016 | *Recognizing Detailed Human Context In-the-Wild from Smartphones and Smartwatches*         |
