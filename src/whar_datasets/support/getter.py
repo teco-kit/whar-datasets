@@ -16,6 +16,8 @@ from whar_datasets.support.configs.cfg_whar import cfg_whar
 from whar_datasets.support.configs.cfg_wisdm_19_phone import cfg_wisdm_19_phone
 from whar_datasets.support.configs.cfg_wisdm_19_watch import cfg_wisdm_19_watch
 from whar_datasets.support.configs.cfg_usc_had import cfg_usc_had
+from whar_datasets.support.configs.cfg_hhar import cfg_hhar
+
 
 class WHARDatasetID(Enum):
     UCI_HAR = "uci_har"
@@ -32,6 +34,8 @@ class WHARDatasetID(Enum):
     WISM_19_PHONE = "wism_19_phone"
     WISM_19_WATCH = "wism_19_watch"
     USC_HAD = "usc_had"
+    HHAR = "hhar"
+
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.UCI_HAR: (cfg_uci_har),
@@ -45,9 +49,10 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.DAPHNET: (cfg_daphnet),
     WHARDatasetID.HAR_SENSE: (cfg_har_sense),
     WHARDatasetID.WHAR: (cfg_whar),
-    WHARDatasetID.WISM_19_PHONE : (cfg_wisdm_19_phone),
-    WHARDatasetID.WISM_19_WATCH : (cfg_wisdm_19_watch),
-    WHARDatasetID.USC_HAD : (cfg_usc_had)
+    WHARDatasetID.WISM_19_PHONE: (cfg_wisdm_19_phone),
+    WHARDatasetID.WISM_19_WATCH: (cfg_wisdm_19_watch),
+    WHARDatasetID.USC_HAD: (cfg_usc_had),
+    WHARDatasetID.HHAR: (cfg_hhar),
 }
 
 

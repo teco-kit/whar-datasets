@@ -17,6 +17,11 @@ def process_sessions_seq(
     cfg: WHARConfig, sessions_dir: Path, session_metadata: pd.DataFrame
 ) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
     # loop over sessions
+
+    session_metadata = pd.read_parquet(
+        r"C:\Users\hohma\Teco\whar-datasets\notebooks\datasets\hhar\metadata\session_metadata.parquet"
+    )
+
     loop = tqdm([int(x) for x in session_metadata["session_id"].unique()])
     loop.set_description("Processing sessions")
 
