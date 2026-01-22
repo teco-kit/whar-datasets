@@ -29,20 +29,7 @@ def validate_common_format(
     if not pd.api.types.is_integer_dtype(session_df["subject_id"]):
         logger.error("'subject_id' column is not integer type.")
         return False
-
-    # checks, if we have int-lists
-    erste_liste = session_df["activity_id"].iloc[0]
-    erstes_element = erste_liste[0]
-
-    print(f"Inhalt: {erstes_element}")
-    print(f"Typ: {type(erstes_element)}")
-
-    # Teste direkt
-    import numpy as np
-
-    ist_int = isinstance(erstes_element, (int, np.integer))
-    print(f"Ist es ein Int? {ist_int}")
-    print(session_df.head())
+    
     is_list_of_ints = (
         session_df["activity_id"]
         .apply(

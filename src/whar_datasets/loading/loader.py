@@ -45,8 +45,7 @@ class Loader:
         inds = np.random.choice(inds, size=batch_size, replace=True).tolist()
 
         items = [self.get_item(idx) for idx in inds]
-
-        # TODO: zip angucken
+        
         activity_labels, subject_labels, samples = zip(*items)
 
         return list(activity_labels), list(subject_labels), list(samples)
