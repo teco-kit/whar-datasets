@@ -1,20 +1,23 @@
-from whar_datasets.core.config import WHARConfig
-import os
 from typing import Dict, Tuple, List
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from scipy.interpolate import CubicSpline
+from whar_datasets.core.config import WHARConfig
+import os
 
-
-KEEP_DEVICES: List[str] = [
-    # "samsungold_2",
-    # "samsungold_1",
+KEEP_DEVICES = [
     "s3_2",
     "nexus4_1",
     "nexus4_2",
     "s3mini_1",
     "s3_1",
+    "lgwatch_1",
+    # ,'gear_1', 'gear_2', 'lgwatch_2',
+    # Anzahl der Vorkommen
+    # "s3_2", "s3_1", "s3mini_1", "nexus4_2", "nexus4_1"
+    # 1557683,1402066,1539476,3149186, 3091797
+    # gear_1: 381357,gear2: 67720, lg1: 2576814,lg2: 515071
 ]
 
 
@@ -66,7 +69,6 @@ def session_to_wide(
     wide["subject_raw"] = seg["subject_raw"].iloc[0]
     wide["activity_name"] = seg["activity_name"].iloc[0]
 
-    # pro Device spline
     for dev in devices:
         g = seg[seg["device"] == dev].sort_values("timestamp")
         if g.empty:
@@ -76,7 +78,6 @@ def session_to_wide(
                 wide[f"{dev}_{col}"] = np.nan
             continue
 
-        # Duplikate bei timestamp: mitteln
         g = g.groupby("timestamp", as_index=False).agg(
             {
                 "acc_x": "mean",
@@ -87,6 +88,9 @@ def session_to_wide(
                 "gyro_z": "mean",
             }
         )
+
+        sensor_cols = ["acc_x", "acc_y", "acc_z", "gyro_x", "gyro_y", "gyro_z"]
+        g = g.dropna(subset=sensor_cols)
 
         if len(g) < min_points:
             if require_all_devices:
@@ -116,50 +120,53 @@ def parse_hhar(
     dir: str,
     activity_id_col: str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
-    df_acc_path = os.path.join(
-        dir,
-        "Activity recognition exp",
-        "Activity recognition exp",
-        "Phones_accelerometer.csv",
-    )
-    df_gyro_path = df_acc_path = os.path.join(
-        dir,
-        "Activity recognition exp",
-        "Activity recognition exp",
-        "Phones_gyroscope.csv",
+    import os
+
+    base_path = os.path.join(
+        dir, "Activity recognition exp", "Activity recognition exp"
     )
 
-    df_acc = pd.read_csv(df_acc_path)
-    df_gyro = pd.read_csv(df_gyro_path)
+    df_phone_acc_path = os.path.join(base_path, "Phones_accelerometer.csv")
+    df_phone_gyro_path = os.path.join(base_path, "Phones_gyroscope.csv")
+    df_watch_gyro_path = os.path.join(base_path, "Watch_gyroscope.csv")
+    df_watch_acc_path = os.path.join(base_path, "Watch_accelerometer.csv")
 
-    df_acc = df_acc.sort_values("Arrival_Time")
-    df_gyro = df_gyro.sort_values("Arrival_Time")
+    watch_acc = pd.read_csv(df_watch_acc_path)
+    watch_gyro = pd.read_csv(df_watch_gyro_path)
+    phone_acc = pd.read_csv(df_phone_gyro_path)
+    phone_gyro = pd.read_csv(df_phone_acc_path)
 
-    df_acc_renamed = df_acc.rename(columns={"x": "acc_x", "y": "acc_y", "z": "acc_z"})
-    df_gyro_renamed = df_gyro.rename(
+    df_acc_all = pd.concat([phone_acc, watch_acc], ignore_index=True)
+    df_gyro_all = pd.concat([phone_gyro, watch_gyro], ignore_index=True)
+    # df_acc_all = phone_acc
+    # df_gyro_all = phone_gyro
+
+    df_acc_all = df_acc_all[df_acc_all["Device"].isin(KEEP_DEVICES)].copy()
+    df_gyro_all = df_gyro_all[df_gyro_all["Device"].isin(KEEP_DEVICES)].copy()
+
+    df_acc_all = df_acc_all.rename(columns={"x": "acc_x", "y": "acc_y", "z": "acc_z"})
+    df_gyro_all = df_gyro_all.rename(
         columns={"x": "gyro_x", "y": "gyro_y", "z": "gyro_z"}
     )
 
-    # 2. Mergen
+    df_acc_all["Arrival_Time"] = pd.to_datetime(df_acc_all["Arrival_Time"], unit="ms")
+    df_gyro_all["Arrival_Time"] = pd.to_datetime(df_gyro_all["Arrival_Time"], unit="ms")
+
+    df_acc_all = df_acc_all.sort_values("Arrival_Time")
+    df_gyro_all = df_gyro_all.sort_values("Arrival_Time")
+
     merged_df = pd.merge_asof(
-        df_acc_renamed,
-        df_gyro_renamed,
+        df_acc_all,
+        df_gyro_all,
         on="Arrival_Time",
-        by=[
-            "Model",
-            "User",
-            "Device",
-            "gt",
-        ], 
+        by=["Model", "User", "Device", "gt"],
         direction="nearest",
-        tolerance=5,
+        tolerance=pd.Timedelta("10ms"),
+        suffixes=("", "_drop"),
     )
 
-    merged_df = merged_df.dropna(subset=["gyro_x"])
-    merged_df = merged_df.rename(columns={"Index_x": "Index"})
-    merged_df = merged_df.drop(
-        columns={"Index_y", "Creation_Time_x", "Creation_Time_y"}
-    )
+    drop_cols = [c for c in merged_df.columns if "_drop" in c]
+    merged_df = merged_df.drop(columns=drop_cols)
 
     df = merged_df
 
@@ -195,7 +202,6 @@ def parse_hhar(
 
     df = df.sort_values(["device", "timestamp"]).reset_index(drop=True)
 
-    df = df.sort_values("timestamp").reset_index(drop=True)
     df = add_session_id(df, gap="3s")
 
     grouped = df.groupby("session_id_raw", group_keys=False)
@@ -247,7 +253,7 @@ def parse_hhar(
         "session_id",
     ]
     for sid in loop:
-
+        # hat noch timestamp, die x,y,z der devices
         sdf = wide_df[wide_df["session_id"] == sid].copy()
 
         sdf = sdf.drop(columns=[c for c in drop_cols if c in sdf.columns]).reset_index(
@@ -271,7 +277,7 @@ cfg_hhar = WHARConfig(
     dataset_id="hhar",
     download_url="https://archive.ics.uci.edu/static/public/344/heterogeneity+activity+recognition.zip",
     sampling_freq=50,
-    num_of_subjects=8,
+    num_of_subjects=,
     num_of_activities=6,
     num_of_channels=len(KEEP_DEVICES) * 6,
     datasets_dir="./datasets",
