@@ -12,15 +12,13 @@ def select_activities(
 ) -> pd.DataFrame:
     logger.info("Selecting activities")
 
-    # get activity ids corresponding to activity names
-    activity_ids = activity_df[activity_df["activity_name"].isin(activity_names)][
-        "activity_id"
-    ]
+    target_ids = activity_df[activity_df["activity_name"].isin(activity_names)]["activity_id"].tolist()
 
-    # get session ids corresponding to activiy ids
-    session_ids = session_df[session_df["activity_id"].isin(activity_ids)]
+    mask = session_df["activity_id"].explode().isin(target_ids).groupby(level=0).any()
 
-    return session_ids
+    sessions_containing_ids = session_df[mask]
+
+    return sessions_containing_ids
 
 
 def select_channels(session_df: pd.DataFrame, channels: List[str]) -> pd.DataFrame:

@@ -5,13 +5,15 @@ import pandas as pd
 
 def compute_class_weights(session_df: pd.DataFrame, window_df: pd.DataFrame) -> dict:
     # Get all possible labels
-    possible_labels = [int(label) for label in session_df["activity_id"].unique()]
+    possible_labels = [
+        int(label) for label in session_df["activity_id"].explode().unique()
+    ]
 
     # Merge to assign activity_id to each window
     merged = window_df.merge(session_df, on="session_id", how="left")
 
     # Count activity_id occurrences over windows
-    label_counts = merged["activity_id"].value_counts()
+    label_counts = merged["activity_id"].explode().value_counts()
 
     # Compute inverse frequency
     total = label_counts.sum()

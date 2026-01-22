@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 
 from whar_datasets.loading.weighting import compute_class_weights
 from whar_datasets.utils.loading import load_sample
+import ast
 
 
 class Loader:
@@ -32,7 +33,7 @@ class Loader:
         activity_id: int | None = None,
         subject_id: int | None = None,
         seed: int | None = None,
-    ) -> Tuple[List[int], List[int], List[List[np.ndarray]]]:
+    ) -> Tuple[List[List[int]], List[int], List[List[np.ndarray]]]:
         inds = indices or list(range(len(self)))
 
         inds = self.filter_indices(inds, subject_id, activity_id)
@@ -45,6 +46,7 @@ class Loader:
 
         items = [self.get_item(idx) for idx in inds]
 
+        # TODO: zip angucken
         activity_labels, subject_labels, samples = zip(*items)
 
         return list(activity_labels), list(subject_labels), list(samples)
@@ -63,7 +65,7 @@ class Loader:
         activity_label = self.session_df.loc[
             self.session_df["session_id"] == session_id, "activity_id"
         ].item()
-        assert isinstance(activity_label, int)
+        assert isinstance(activity_label, list)
 
         return activity_label
 
@@ -124,9 +126,10 @@ class Loader:
                 how="left",
             )
 
-            # Filter by activity_id
-            filtered = merged[merged["activity_id"] == activity_id]
-            indices = filtered["orig_index"].to_list()
+            # filter by activity_list containing activity_id
+            exploded = merged.explode("activity_id")
+            filtered = exploded[exploded["activity_id"] == activity_id]
+            indices = filtered["orig_index"].unique().tolist()
 
         return indices
 
@@ -139,8 +142,10 @@ class Loader:
             on="session_id",
             how="left",
         )
+
         counts = (
-            merged.groupby(["subject_id", "activity_id"])
+            merged.explode("activity_id")
+            .groupby(["subject_id", "activity_id"])
             .size()
             .reset_index(name="num_samples")
         )

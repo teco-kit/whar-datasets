@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import List
 
+import numpy as np
 import dask.dataframe as dd
 import pandas as pd
 from dask.base import compute
@@ -28,26 +29,53 @@ def validate_common_format(
     if not pd.api.types.is_integer_dtype(session_df["subject_id"]):
         logger.error("'subject_id' column is not integer type.")
         return False
-    if not pd.api.types.is_integer_dtype(session_df["activity_id"]):
-        logger.error("'activity_id' column is not integer type.")
+
+    # checks, if we have int-lists
+    erste_liste = session_df["activity_id"].iloc[0]
+    erstes_element = erste_liste[0]
+
+    print(f"Inhalt: {erstes_element}")
+    print(f"Typ: {type(erstes_element)}")
+
+    # Teste direkt
+    import numpy as np
+
+    ist_int = isinstance(erstes_element, (int, np.integer))
+    print(f"Ist es ein Int? {ist_int}")
+    print(session_df.head())
+    is_list_of_ints = (
+        session_df["activity_id"]
+        .apply(
+            lambda x: isinstance(x, list)
+            and all(isinstance(i, (int, np.integer)) for i in x)
+        )
+        .all()
+    )
+    if not is_list_of_ints:
+        logger.error("'activity_id' column is not a list of integers.")
         return False
+
     if session_df["session_id"].min() != 0:
         logger.error("Minimum session_id is not 0.")
         return False
     if session_df["subject_id"].min() != 0:
         logger.error("Minimum subject_id is not 0.")
         return False
-    if session_df["activity_id"].min() != 0:
-        logger.error("Minimum activity_id is not 0.")
+
+    # checks, if min. one session contrains activity 0
+    if session_df["activity_id"].explode().min() != 0:
+        logger.error("Minimum activity_id is not 0 (or 0 is missing).")
         return False
+
     if session_df["subject_id"].nunique() != cfg.num_of_subjects:
         logger.error(
             f"In session_df, num of subject_ids {session_df['subject_id'].nunique()} does not match num of subjects {cfg.num_of_subjects}."
         )
         return False
-    if session_df["activity_id"].nunique() != cfg.num_of_activities:
+
+    if session_df["activity_id"].explode().nunique() != cfg.num_of_activities:
         logger.error(
-            f"In session_df, number of activity_ids {session_df['activity_id'].nunique()} does not match number of activities {cfg.num_of_activities} ."
+            f"In session_df, number of activity_ids {session_df['activity_id'].explode().nunique()} does not match number of activities {cfg.num_of_activities} ."
         )
         return False
 

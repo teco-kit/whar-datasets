@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Dict, List
-
+import ast
 import numpy as np
 import pandas as pd
 
@@ -12,7 +12,19 @@ def load_window_df(cache_dir: Path) -> pd.DataFrame:
 
 def load_session_df(cache_dir: Path) -> pd.DataFrame:
     session_df_path = cache_dir / "session_df.csv"
-    return pd.read_csv(session_df_path)
+    session_df = pd.read_csv(session_df_path)
+    if not session_df.empty:
+        first_entry = session_df["activity_id"].iloc[0]
+
+        if isinstance(first_entry, str):
+            try:
+                session_df["activity_id"] = session_df["activity_id"].apply(
+                    ast.literal_eval
+                )
+            except (ValueError, SyntaxError) as e:
+                print(f"Warning: couldn't parse activity_id: {e}")
+
+    return session_df
 
 
 def load_activity_df(cache_dir: Path) -> pd.DataFrame:

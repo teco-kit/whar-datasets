@@ -94,10 +94,6 @@ def parse_daphnet(
         .reset_index(drop=True)
     )
 
-    session_metadata["activity_id"] = session_metadata["activity_id"].apply(
-        lambda x: [int(x)]
-    )
-
     # create sessions
     sessions: Dict[int, pd.DataFrame] = {}
 
@@ -136,9 +132,8 @@ def parse_daphnet(
     activity_metadata = activity_metadata.astype(
         {"activity_id": "int32", "activity_name": "string"}
     )
-
     session_metadata = session_metadata.astype(
-        {"session_id": "int32", "subject_id": "int32"}
+        {"session_id": "int32", "subject_id": "int32", "activity_id": "int32"}
     )
 
     return activity_metadata, session_metadata, sessions
