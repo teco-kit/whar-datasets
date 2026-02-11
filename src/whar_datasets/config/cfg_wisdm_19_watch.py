@@ -212,7 +212,6 @@ cfg_wisdm_19_watch = WHARConfig(
     num_of_subjects=51,
     num_of_activities=18,
     num_of_channels=6,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_wisdm_19_watch,
     # Preprocessing (selections + sliding window)

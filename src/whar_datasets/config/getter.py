@@ -35,6 +35,7 @@ class WHARDatasetID(Enum):
     HUGADB = "hugadb"
     WISDM_19_PHONE = "wisdm_19_phone"
     WISDM_19_WATCH = "wisdm_19_watch"
+    HHAR = "hhar"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {

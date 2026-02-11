@@ -149,7 +149,6 @@ cfg_usc_had = WHARConfig(
     num_of_subjects=14,
     num_of_activities=12,
     num_of_channels=6,
-    datasets_dir="./datasets/",
     # Parsing
     parse=parse_usc_had,
     # Preprocessing (selections + sliding window)

@@ -214,7 +214,6 @@ cfg_wisdm_19_phone = WHARConfig(
     num_of_subjects=51,
     num_of_activities=18,
     num_of_channels=6,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_wisdm_19_phone,
     # Preprocessing (selections + sliding window)
