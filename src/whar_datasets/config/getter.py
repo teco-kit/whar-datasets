@@ -4,6 +4,7 @@ from typing import Dict
 from whar_datasets.config.cfg_daphnet import cfg_daphnet
 from whar_datasets.config.cfg_dsads import cfg_dsads
 from whar_datasets.config.cfg_har_sense import cfg_har_sense
+from whar_datasets.config.cfg_hugadb import cfg_hugadb
 from whar_datasets.config.cfg_ku_har import cfg_ku_har
 from whar_datasets.config.cfg_mhealth import cfg_mhealth
 from whar_datasets.config.cfg_motion_sense import cfg_motion_sense
@@ -29,6 +30,7 @@ class WHARDatasetID(Enum):
     HAR_SENSE = "har_sense"
     W_HAR = "w_har"
     USC_HAD = "usc_had"
+    HUGADB = "hugadb"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -44,6 +46,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.HAR_SENSE: (cfg_har_sense),
     WHARDatasetID.W_HAR: (cfg_w_har),
     WHARDatasetID.USC_HAD: (cfg_usc_had),
+    WHARDatasetID.HUGADB: (cfg_hugadb),
 }
 
 
