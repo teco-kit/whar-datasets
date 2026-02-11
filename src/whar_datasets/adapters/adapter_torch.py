@@ -40,8 +40,8 @@ class TorchAdapter(Dataset):
 
     def get_dataloaders(self, batch_size: int) -> Dict[str, DataLoader]:
         train_set = Subset(self, self.split.train_indices)
-        test_set = Subset(self, self.split.val_indices)
-        val_set = Subset(self, self.split.test_indices)
+        test_set = Subset(self, self.split.test_indices)
+        val_set = Subset(self, self.split.val_indices)
 
         train_loader = DataLoader(train_set, batch_size, True, generator=self.generator)
         val_loader = DataLoader(val_set, len(val_set), False, generator=self.generator)
