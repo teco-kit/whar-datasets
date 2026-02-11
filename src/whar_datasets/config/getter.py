@@ -10,6 +10,7 @@ from whar_datasets.config.cfg_motion_sense import cfg_motion_sense
 from whar_datasets.config.cfg_opportunity import cfg_opportunity
 from whar_datasets.config.cfg_pamap2 import cfg_pamap2
 from whar_datasets.config.cfg_uci_har import cfg_uci_har
+from whar_datasets.config.cfg_usc_had import cfg_usc_had
 from whar_datasets.config.cfg_w_har import cfg_w_har
 from whar_datasets.config.cfg_wisdm import cfg_wisdm
 from whar_datasets.config.config import WHARConfig
@@ -27,6 +28,7 @@ class WHARDatasetID(Enum):
     DAPHNET = "daphnet"
     HAR_SENSE = "har_sense"
     W_HAR = "w_har"
+    USC_HAD = "usc_had"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -41,6 +43,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.DAPHNET: (cfg_daphnet),
     WHARDatasetID.HAR_SENSE: (cfg_har_sense),
     WHARDatasetID.W_HAR: (cfg_w_har),
+    WHARDatasetID.USC_HAD: (cfg_usc_had),
 }
 
 
