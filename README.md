@@ -81,7 +81,7 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ⬜ | [UMAFall](https://figshare.com/articles/dataset/UMA_ADL_FALL_Dataset_zip/4214283) | 2017 | *Umafall: A multisensor dataset for the research on automatic fall detection* | 243 |
 | ⬜ | [REALDISP](https://archive.ics.uci.edu/dataset/305/realdisp+activity+recognition+dataset) | 2014 | *Dealing with the Effects of Sensor Displacement in Wearable Activity Recognition* | 216 |
 | ⬜ | [RealLifeHAR](https://lbd.udc.es/research/real-life-HAR-dataset/) | 2020 | *A Public Domain Dataset for Real-Life Human Activity Recognition Using Smartphone Sensors* | 208 |
-| ⬜ | [WISDM-19](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset) | 2019 | *WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset* | 198 |
+| ✅ | [WISDM-19](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset) | 2019 | *WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset* | 198 |
 | ✅ | [KU-HAR](https://data.mendeley.com/datasets/45f952y38r/5) | 2021 | *KU-HAR: An open dataset for heterogeneous human activity recognition* | 187 |
 | ⬜ | [HASC-Challenge](http://hasc.jp/) | 2011 | *Hasc challenge: gathering large scale human activity corpus for the real-world activity understandings* | 157 |
 | ✅ | [HuGaDB](https://github.com/romanchereshnev/HuGaDB) | 2018 | *HuGaDB: Human Gait Database for Activity Recognition from Wearable Inertial Sensor Networks* | 154 |

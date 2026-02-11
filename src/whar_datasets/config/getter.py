@@ -14,6 +14,7 @@ from whar_datasets.config.cfg_uci_har import cfg_uci_har
 from whar_datasets.config.cfg_usc_had import cfg_usc_had
 from whar_datasets.config.cfg_w_har import cfg_w_har
 from whar_datasets.config.cfg_wisdm import cfg_wisdm
+from whar_datasets.config.cfg_wisdm_19_phone import cfg_wisdm_19_phone
 from whar_datasets.config.config import WHARConfig
 
 
@@ -31,6 +32,7 @@ class WHARDatasetID(Enum):
     W_HAR = "w_har"
     USC_HAD = "usc_had"
     HUGADB = "hugadb"
+    WISDM_19_PHONE = "wisdm_19_phone"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -47,6 +49,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.W_HAR: (cfg_w_har),
     WHARDatasetID.USC_HAD: (cfg_usc_had),
     WHARDatasetID.HUGADB: (cfg_hugadb),
+    WHARDatasetID.WISDM_19_PHONE: (cfg_wisdm_19_phone),
 }
 
 
