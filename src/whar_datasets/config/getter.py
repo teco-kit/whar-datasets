@@ -11,6 +11,7 @@ from whar_datasets.config.cfg_opportunity import cfg_opportunity
 from whar_datasets.config.cfg_pamap2 import cfg_pamap2
 from whar_datasets.config.cfg_uci_har import cfg_uci_har
 from whar_datasets.config.cfg_wisdm import cfg_wisdm
+from whar_datasets.config.cfg_extrasensory import cfg_extrasensory
 from whar_datasets.config.config import WHARConfig
 
 
@@ -25,6 +26,7 @@ class WHARDatasetID(Enum):
     KU_HAR = "ku_har"
     DAPHNET = "daphnet"
     HAR_SENSE = "har_sense"
+    EXTRASENSORY = "extrasensory"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -38,6 +40,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.KU_HAR: (cfg_ku_har),
     WHARDatasetID.DAPHNET: (cfg_daphnet),
     WHARDatasetID.HAR_SENSE: (cfg_har_sense),
+    WHARDatasetID.EXTRASENSORY: (cfg_extrasensory),
 }
 
 

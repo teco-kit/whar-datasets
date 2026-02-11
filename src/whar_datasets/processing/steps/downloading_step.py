@@ -40,19 +40,24 @@ class DownloadingStep(ProcessingStep):
         return True
 
     def compute_results(self, base: base_type) -> result_type:
-        # Use filename to define file path
-        filename = self.cfg.download_url.split("/")[-1]
-        file_path = self.download_dir / filename
+        raw_urls = self.cfg.download_url
 
-        # download file from url
-        logger.info(f"Downloading {self.cfg.dataset_id}")
-        response = requests.get(self.cfg.download_url)
-        with open(file_path, "wb") as f:
-            f.write(response.content)
+        urls = [raw_urls] if isinstance(raw_urls, str) else raw_urls
 
-        # extract file
-        logger.info(f"Extracting {self.cfg.dataset_id}")
-        extract(file_path, self.download_dir)
+        for url in urls:
+            filename = url.split("/")[-1]
+            file_path = self.download_dir / filename
+
+            logger.info(f"Downloading {filename} (Dataset: {self.cfg.dataset_id})")
+
+            response = requests.get(url)
+            response.raise_for_status()
+
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+
+            logger.info(f"Extracting {filename}")
+            extract(file_path, self.download_dir)
 
     def save_results(self, results: result_type) -> None:
         return None

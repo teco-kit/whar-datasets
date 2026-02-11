@@ -8,7 +8,7 @@ from whar_datasets.utils.types import NormType, Parse, TransformType
 class WHARConfig(BaseModel):
     # metadata fields
     dataset_id: str
-    download_url: str
+    download_url: str | List[str]
     sampling_freq: int
     num_of_subjects: int
     num_of_activities: int
