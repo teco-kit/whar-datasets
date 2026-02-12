@@ -69,7 +69,8 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ⬜ | [SAD](https://www.utwente.nl/en/eemcs/ps/research/dataset/) | 2014 | *Fusion of Smartphone Motion Sensors for Physical Activity Recognition* | 752 |
 | ⬜ | [UniMiB-SHAR](http://www.sal.disco.unimib.it/technologies/unimib-shar/) | 2017 | *Unimib shar: a dataset for human activity recognition using acceleration data from smartphones* | 712 |
 | ✅ | [Daphnet](https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait) | 2009 | *Ambulatory monitoring of freezing of gait in Parkinson’s disease* | 652 |
-| ⬜ | [CHAD](https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait) | 2009 | *Complex human activity recognition using smartphone and wrist-worn motion sensors* | 554 |
+| ⬜ | [CHAD](https://www.utwente.nl/en/eemcs/ps/research/dataset/) | 2016 | *Complex human activity recognition using smartphone and wrist-worn motion sensors* | 554 |
+| ⬜ | [DIP](https://dip.is.tuebingen.mpg.de/) | 2018 | *Deep inertial poser: Learning to reconstruct human pose from sparse inertial measurements in real time* | 495 |
 | ⬜ | [RealWorld](https://www.uni-mannheim.de/dws/research/projects/activity-recognition/dataset/dataset-realworld/) | 2016 | *On-body Localization of Wearable Devices: An Investigation of Position-Aware Activity Recognition* | 482 |
 | ⬜ | [TotalCapture](https://cvssp.org/data/totalcapture/) | 2017 | *Total capture: 3d human pose estimation fusing video and inertial sensors* | 437 |
 | ⬜ | [ExtraSensory](http://extrasensory.ucsd.edu/) | 2016 | *Recognizing Detailed Human Context In-the-Wild from Smartphones and Smartwatches* | 402 |
