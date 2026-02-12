@@ -99,9 +99,9 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ⬜ | [GOTOV](https://data.4tu.nl/articles/dataset/GOTOV_Human_Physical_Activity_and_Energy_Expenditure_Dataset_on_Older_Individuals/12716081) | 2022 | *A recurrent neural network architecture to model physical activity energy expenditure in older people* | 33 |
 | ⬜ | PAR | 2021 | *Context-aware support for cardiac health monitoring using federated machine learning* | 12 |
 | ⬜ | [iSPL](https://github.com/thunguyenth/HAR_IMU_Stretch) | 2022 | *An Investigation on Deep Learning-Based Activity Recognition Using IMUs and Stretch Sensors* | 11 |
+| ✅ | [HARSense](https://ieee-dataport.org/open-access/harsense-statistical-human-activity-recognition-dataset) | 2021 | Harsense: statistical human activity recognition dataset | 5 |
 | ⬜ | CHARM | 2021 | *A recommendation specific human activity recognition dataset with mobile device's sensor data* | 5 |
 | ⬜ | [HIP](https://github.com/ManuelPalermo/HumanInertialPose) | 2022 | *Complete Inertial Pose Dataset: from raw measurements to pose with low-cost and high-end MARG sensors* | 3 |
-| ✅ | [HARSense](https://ieee-dataport.org/open-access/harsense-statistical-human-activity-recognition-dataset) | 2021 | - | - |
 | ⬜ | [AReM](https://archive.ics.uci.edu/dataset/366/activity+recognition+system+based+on+multisensor+data+fusion+arem) | 2016 | - | - |
 
 # Citation
