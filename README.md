@@ -91,7 +91,7 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ✅ | [w-HAR](https://github.com/gmbhat/human-activity-recognition) | 2020 | *w-HAR: An Activity Recognition Dataset and Framework Using Low-Power Wearable Devices* | 98 |
 | ⬜ | [HAR70+](https://archive.ics.uci.edu/dataset/780/har70) | 2021 | *A machine learning classifier for detection of physical activity types and postures during free-living* | 55 |
 | ⬜ | [TNDA-HAR](https://ieee-dataport.org/open-access/tnda-har-0) | 2022 | *Deep transfer learning with graph neural network for sensor-based human activity recognition* | 48 |
-| ⬜ | CAPTURE-24 | 2024 | *CAPTURE-24: A large dataset of wrist-worn activity tracker data collected in the wild for human activity recognition* | 45 |
+| ⬜ | [CAPTURE-24](https://ora.ox.ac.uk/objects/uuid:99d7c092-d865-4a19-b096-cc16440cd001) | 2024 | *CAPTURE-24: A large dataset of wrist-worn activity tracker data collected in the wild for human activity recognition* | 45 |
 | ⬜ | PAR | 2021 | *Context-aware support for cardiac health monitoring using federated machine learning* | 12 |
 | ⬜ | [iSPL](https://github.com/thunguyenth/HAR_IMU_Stretch) | 2022 | *An Investigation on Deep Learning-Based Activity Recognition Using IMUs and Stretch Sensors* | 11 |
 | ⬜ | CHARM | 2021 | *A recommendation specific human activity recognition dataset with mobile device's sensor data* | 5 |
