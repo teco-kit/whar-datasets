@@ -85,6 +85,7 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ✅ | [KU-HAR](https://data.mendeley.com/datasets/45f952y38r/5) | 2021 | *KU-HAR: An open dataset for heterogeneous human activity recognition* | 187 |
 | ⬜ | [HASC-Challenge](http://hasc.jp/) | 2011 | *Hasc challenge: gathering large scale human activity corpus for the real-world activity understandings* | 157 |
 | ✅ | [HuGaDB](https://github.com/romanchereshnev/HuGaDB) | 2018 | *HuGaDB: Human Gait Database for Activity Recognition from Wearable Inertial Sensor Networks* | 154 |
+| ⬜ | [Mmact](https://mmact19.github.io/2019/) | 2019 | *Mmact: A large-scale dataset for cross modal human action understanding* | 145 |
 | ⬜ | [HARTH](https://archive.ics.uci.edu/dataset/779/harth) | 2021 | *HARTH: A Human Activity Recognition Dataset for Machine Learning* | 132 |
 | ⬜ | [MobiFall](https://bmi.hmu.gr/the-mobifall-and-mobiact-datasets-2/#) | 2014 | *The MobiFall Dataset: Fall Detection and Classification with a Smartphone* | 128 |
 | ⬜ | [FallAllD](https://www.kaggle.com/datasets/harnoor343/fall-detection-accelerometer-data) | 2020 | *FallAllD: An Open Dataset of Human Falls and Activities of Daily Living for Classical and Deep Learning Applications* | 115 |
