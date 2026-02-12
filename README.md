@@ -71,6 +71,7 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ✅ | [Daphnet](https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait) | 2009 | *Ambulatory monitoring of freezing of gait in Parkinson’s disease* | 652 |
 | ⬜ | [CHAD](https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait) | 2009 | *Complex human activity recognition using smartphone and wrist-worn motion sensors* | 554 |
 | ⬜ | [RealWorld](https://www.uni-mannheim.de/dws/research/projects/activity-recognition/dataset/dataset-realworld/) | 2016 | *On-body Localization of Wearable Devices: An Investigation of Position-Aware Activity Recognition* | 482 |
+| ⬜ | [TotalCapture](https://cvssp.org/data/totalcapture/) | 2017 | *Total capture: 3d human pose estimation fusing video and inertial sensors* | 437 |
 | ⬜ | [ExtraSensory](http://extrasensory.ucsd.edu/) | 2016 | *Recognizing Detailed Human Context In-the-Wild from Smartphones and Smartwatches* | 402 |
 | ⬜ | [MobiAct](https://bmi.hmu.gr/the-mobifall-and-mobiact-datasets-2/#) | 2016 | *The MobiAct dataset: recognition of activities of daily living using smartphones* | 364 |
 | ✅ | [MotionSense](https://github.com/mmalekzadeh/motion-sense) | 2019 | *Mobile Sensor Data Anonymization* | 345 |
