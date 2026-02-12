@@ -90,6 +90,7 @@ Not yet natively supported WHAR datasets can be integrated via a custom configur
 | ⬜ | [Mmact](https://mmact19.github.io/2019/) | 2019 | *Mmact: A large-scale dataset for cross modal human action understanding* | 145 |
 | ⬜ | [HARTH](https://archive.ics.uci.edu/dataset/779/harth) | 2021 | *HARTH: A Human Activity Recognition Dataset for Machine Learning* | 132 |
 | ⬜ | [MobiFall](https://bmi.hmu.gr/the-mobifall-and-mobiact-datasets-2/#) | 2014 | *The MobiFall Dataset: Fall Detection and Classification with a Smartphone* | 128 |
+| ⬜ | [LARa](https://zenodo.org/records/8189341) | 2020 | *Lara: Creating a dataset for human activity recognition in logistics using semantic attributes* | 119 |
 | ⬜ | [FallAllD](https://www.kaggle.com/datasets/harnoor343/fall-detection-accelerometer-data) | 2020 | *FallAllD: An Open Dataset of Human Falls and Activities of Daily Living for Classical and Deep Learning Applications* | 115 |
 | ✅ | [w-HAR](https://github.com/gmbhat/human-activity-recognition) | 2020 | *w-HAR: An Activity Recognition Dataset and Framework Using Low-Power Wearable Devices* | 98 |
 | ⬜ | [HAR70+](https://archive.ics.uci.edu/dataset/780/har70) | 2021 | *A machine learning classifier for detection of physical activity types and postures during free-living* | 55 |
