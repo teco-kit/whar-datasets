@@ -1,6 +1,6 @@
 # WHAR Datasets
 
-This library provides data handling support for popular WHAR (Wearable Human Activity Recognition) datasets including
+This library provides support for popular WHAR (Wearable Human Activity Recognition) datasets including
 
 <!-- - metadata descriptions in [DCAT-AP](https://www.dcat-ap.de/) and [Croissant](https://github.com/mlcommons/croissant) -->
 - downloading from original source
