@@ -1,4 +1,5 @@
 import hashlib
+import json
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, Set, TypeAlias
@@ -23,7 +24,8 @@ class ProcessingStep(ABC):
 
     def compute_hash(self) -> str:
         # hash based on relevant part of own config
-        sub_cfg_json = self.cfg.model_dump_json(include=self.relevant_cfg_keys)
+        sub_cfg_dict = self.cfg.model_dump(include=self.relevant_cfg_keys)
+        sub_cfg_json = json.dumps(sub_cfg_dict, sort_keys=True, separators=(",", ":"))
         base_hash = hashlib.sha256(sub_cfg_json.encode("utf-8")).hexdigest()
 
         # collect dependency hashes
