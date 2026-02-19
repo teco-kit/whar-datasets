@@ -10,6 +10,7 @@ from whar_datasets.config.cfg_mhealth import cfg_mhealth
 from whar_datasets.config.cfg_motion_sense import cfg_motion_sense
 from whar_datasets.config.cfg_opportunity import cfg_opportunity
 from whar_datasets.config.cfg_pamap2 import cfg_pamap2
+from whar_datasets.config.cfg_real_world import cfg_real_world
 from whar_datasets.config.cfg_uci_har import cfg_uci_har
 from whar_datasets.config.cfg_usc_had import cfg_usc_had
 from whar_datasets.config.cfg_w_har import cfg_w_har
@@ -36,6 +37,7 @@ class WHARDatasetID(Enum):
     WISDM_19_PHONE = "wisdm_19_phone"
     WISDM_19_WATCH = "wisdm_19_watch"
     HHAR = "hhar"
+    REAL_WORLD = "real_world"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -54,6 +56,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.HUGADB: (cfg_hugadb),
     WHARDatasetID.WISDM_19_PHONE: (cfg_wisdm_19_phone),
     WHARDatasetID.WISDM_19_WATCH: (cfg_wisdm_19_watch),
+    WHARDatasetID.REAL_WORLD: (cfg_real_world),
 }
 
 
