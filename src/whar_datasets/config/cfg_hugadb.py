@@ -5,6 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
+from whar_datasets.config.timestamps import to_datetime64_ms
 
 ID_TO_ACTIVITY = {
     0: "walking",  # ID 0 (Original 1)
@@ -53,7 +54,7 @@ def parse_hugadb(
 
             time_sec = samples_since_change * (1.0 / sampling_rate)  # type: ignore
 
-            df["timestamp"] = pd.to_datetime(time_sec, unit="s")
+            df["timestamp"] = to_datetime64_ms(pd.Series(time_sec), default_unit="s")
             df["subject_id"] = pr_id
 
             df["subject_id"] = pd.to_numeric(df["subject_id"], errors="coerce")
@@ -104,7 +105,9 @@ def parse_hugadb(
         ).reset_index(drop=True)
 
         # set types
-        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="s")
+        session_df["timestamp"] = to_datetime64_ms(
+            session_df["timestamp"], default_unit="s"
+        )
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
         float_cols = [col for col in session_df.columns if col != "timestamp"]

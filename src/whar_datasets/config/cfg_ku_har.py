@@ -7,6 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from whar_datasets.config.config import NormType, WHARConfig
+from whar_datasets.config.timestamps import to_datetime64_ms
 
 ACTIVITY_MAP = {
     0: "Stand",
@@ -90,8 +91,8 @@ def parse_ku_har(
                 )
 
             # Optionally convert timestamps to datetime after interpolation
-            session_df["timestamp"] = pd.to_datetime(
-                session_df["timestamp_acc"], unit="s"
+            session_df["timestamp"] = to_datetime64_ms(
+                session_df["timestamp_acc"], default_unit="s"
             )
             session_df = session_df.drop(columns=["timestamp_acc", "timestamp_gyro"])
 
@@ -133,7 +134,7 @@ def parse_ku_har(
         session_df.reset_index(drop=True, inplace=True)
 
         # set types
-        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"])
+        session_df["timestamp"] = to_datetime64_ms(session_df["timestamp"])
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
         float_cols = [col for col in session_df.columns if col != "timestamp"]

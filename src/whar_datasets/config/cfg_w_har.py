@@ -5,6 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
+from whar_datasets.config.timestamps import to_datetime64_ms
 
 
 def parse_w_har(
@@ -65,7 +66,9 @@ def parse_w_har(
         ).reset_index(drop=True)
 
         # set types
-        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="s")
+        session_df["timestamp"] = to_datetime64_ms(
+            session_df["timestamp"], default_unit="s"
+        )
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
         float_cols = [col for col in session_df.columns if col != "timestamp"]

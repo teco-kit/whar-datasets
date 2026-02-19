@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
+from whar_datasets.config.timestamps import to_datetime64_ms
 
 REAL_LIFE_HAR_ACTIVITY_NAMES = [
     "Inactive",
@@ -168,8 +169,8 @@ def _load_sensor_data_by_session(
                         session_activity_names[sid] = str(activity_values.iloc[0])
 
                 values = session_chunk.drop(columns=["activity"]).copy()
-                values["timestamp"] = pd.to_datetime(
-                    values["timestamp"], unit="s", errors="coerce"
+                values["timestamp"] = to_datetime64_ms(
+                    values["timestamp"], default_unit="s"
                 )
                 values = values.dropna(subset=["timestamp"])
                 if values.empty:
@@ -188,8 +189,12 @@ def _merge_session_modalities(
     sampling_freq: int,
 ) -> pd.DataFrame:
     session_id = int(session_info["session_id"])
-    start_dt = pd.to_datetime(float(session_info["init_timestamp"]), unit="s")
-    end_dt = pd.to_datetime(float(session_info["end_timestamp"]), unit="s")
+    start_dt = to_datetime64_ms(
+        pd.Series([float(session_info["init_timestamp"])]), default_unit="s"
+    ).iloc[0]
+    end_dt = to_datetime64_ms(
+        pd.Series([float(session_info["end_timestamp"])]), default_unit="s"
+    ).iloc[0]
 
     if end_dt < start_dt:
         raise ValueError(f"Invalid session bounds for session_id={session_id}.")

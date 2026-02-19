@@ -6,6 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
+from whar_datasets.config.timestamps import to_datetime64_ms
 
 NAMES = [
     "timestamp",
@@ -111,7 +112,7 @@ def parse_pamap2(
         sub_df["heart_rate"] = sub_df["heart_rate"].bfill()
 
         # change timestamp to datetime in ns
-        sub_df["timestamp"] = pd.to_datetime(sub_df["timestamp"], unit="s")
+        sub_df["timestamp"] = to_datetime64_ms(sub_df["timestamp"], default_unit="s")
 
         # map to types
         types_map = defaultdict(lambda: "float32")
@@ -184,7 +185,7 @@ def parse_pamap2(
         ).reset_index(drop=True)
 
         # set types
-        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="ms")
+        session_df["timestamp"] = to_datetime64_ms(session_df["timestamp"])
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
         float_cols = [col for col in session_df.columns if col != "timestamp"]
