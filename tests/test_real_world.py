@@ -239,6 +239,27 @@ def test_parse_real_world_output_is_semantically_compatible_with_common_format_v
     assert len(sessions) == cfg_real_world.num_of_subjects * cfg_real_world.num_of_activities
 
 
+def test_real_world_session_timestamps_are_continuous_at_sampling_rate(
+    tmp_path: Path,
+) -> None:
+    raw_root = tmp_path / "realworld2016_dataset"
+    _build_minimal_real_world_subject(raw_root, subject_num=6)
+
+    _, session_df, sessions = parse_real_world(str(tmp_path), "activity_id")
+
+    assert len(session_df) == 1
+    session_id = int(session_df.at[0, "session_id"])
+    session = sessions[session_id]
+
+    assert session["timestamp"].is_monotonic_increasing
+    diffs = session["timestamp"].diff().dropna().dt.total_seconds() * 1000
+
+    # RealWorld cfg uses 50Hz => 20ms cadence.
+    expected_step_ms = int(1e3 / cfg_real_world.sampling_freq)
+    assert len(diffs) > 0
+    assert set(diffs.astype(int).tolist()) == {expected_step_ms}
+
+
 def test_real_world_is_glued_into_dataset_getter() -> None:
     assert WHARDatasetID.REAL_WORLD in har_dataset_dict
 
