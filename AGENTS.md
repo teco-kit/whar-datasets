@@ -46,3 +46,5 @@ A new session must be created when:
 ## Other Details
 
 - you can set cfg.parallelize to true for faster preprocessing
+- dataset caches are located in notebooks/datasets, so you dont need to redownload existing ones
+- make sure you know what data belongs to which activty or which person, often info is in some sort of readme file or also in the filnames themselves of a raw datase, if not contained as columns in data itself
