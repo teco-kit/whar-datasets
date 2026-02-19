@@ -1,4 +1,5 @@
 from pathlib import Path
+import pickle
 from typing import Dict, List
 
 import numpy as np
@@ -23,11 +24,23 @@ def load_activity_df(cache_dir: Path) -> pd.DataFrame:
 def load_samples(
     window_df: pd.DataFrame, samples_dir: Path
 ) -> Dict[str, List[np.ndarray]]:
-    samples_path = samples_dir / "samples.npy"
-    if not samples_path.exists():
-        raise FileNotFoundError(f"No samples found at {samples_path}")
+    pickle_path = samples_dir / "samples.pkl"
+    if pickle_path.exists():
+        with pickle_path.open("rb") as f:
+            loaded = pickle.load(f)
+        if not isinstance(loaded, dict):
+            raise TypeError(f"Expected dict in {pickle_path}, got {type(loaded)}")
+        return loaded
 
-    return np.load(samples_path, allow_pickle=True).item()
+    # Backward compatibility for older caches.
+    legacy_path = samples_dir / "samples.npy"
+    if legacy_path.exists():
+        loaded = np.load(legacy_path, allow_pickle=True).item()
+        if not isinstance(loaded, dict):
+            raise TypeError(f"Expected dict in {legacy_path}, got {type(loaded)}")
+        return loaded
+
+    raise FileNotFoundError(f"No samples found at {pickle_path} or {legacy_path}")
 
 
 def load_windows(window_df: pd.DataFrame, windows_dir: Path) -> Dict[str, pd.DataFrame]:
@@ -65,11 +78,19 @@ def load_sessions(
 
 def load_sample(samples_dir: Path, window_id: str) -> List[np.ndarray]:
     # Try loading from single file first
-    samples_path = samples_dir / "samples.npy"
-    if samples_path.exists():
+    pickle_path = samples_dir / "samples.pkl"
+    if pickle_path.exists():
         # Warning: This loads the entire dataset to get one sample.
         # Use in_memory=True for better performance.
-        all_samples = np.load(samples_path, allow_pickle=True).item()
+        with pickle_path.open("rb") as f:
+            all_samples = pickle.load(f)
+        return all_samples[window_id]
+
+    legacy_path = samples_dir / "samples.npy"
+    if legacy_path.exists():
+        # Warning: This loads the entire dataset to get one sample.
+        # Use in_memory=True for better performance.
+        all_samples = np.load(legacy_path, allow_pickle=True).item()
         return all_samples[window_id]
 
     # Fallback to individual file

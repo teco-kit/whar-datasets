@@ -1,4 +1,5 @@
 import shutil
+import pickle
 from pathlib import Path
 from typing import Dict, List
 
@@ -18,9 +19,10 @@ def cache_samples(
     # create samples directory if it does not exist
     samples_dir.mkdir(parents=True, exist_ok=True)
 
-    # save samples as a single file
-    samples_path = samples_dir / "samples.npy"
-    np.save(samples_path, samples)  # type: ignore
+    # Save dict-like samples in a format that natively preserves Python mappings.
+    samples_path = samples_dir / "samples.pkl"
+    with samples_path.open("wb") as f:
+        pickle.dump(samples, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def cache_windows(
