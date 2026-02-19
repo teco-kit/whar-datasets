@@ -259,8 +259,7 @@ def merge_real_world_session(
         .fillna(0.0)
     )
 
-    session_df[REAL_WORLD_SENSOR_CHANNELS] = values_df.astype("float32")
-    session_df = session_df.round(6)
+    session_df[REAL_WORLD_SENSOR_CHANNELS] = values_df.astype("float32").round(6)
     session_df = session_df.astype(
         {
             **{channel: "float32" for channel in REAL_WORLD_SENSOR_CHANNELS},
