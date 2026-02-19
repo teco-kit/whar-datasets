@@ -15,6 +15,7 @@ dependencies = [
     "pandas>=2.2.3",
     "pandas-stubs>=2.2.3.250527",
     "pyarrow>=20.0.0",
+    "pytest>=9.0.2",
     "pywavelets>=1.8.0",
     "rich>=14.0.0",
     "scikit-learn>=1.6.1",

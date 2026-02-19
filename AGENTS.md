@@ -37,6 +37,12 @@ A new session must be created when:
   - Images
   - Video
 
+- if different sensor modalities where not recorded simultaneously, than the effectively constitute several different datasets, tell me about this
+
 ## Implementation Details
 
 - All implementations must use Python type hints.
+
+## Other Details
+
+- you can set cfg.parallelize to true for faster preprocessing

@@ -52,92 +52,92 @@ ID_TO_ACTIVITY = {
 def parse_wisdm_19_watch(
     dir: str, activity_id_col: str
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
-    all_subjects_list = []
+    del activity_id_col
 
+    all_subjects_list: list[pd.DataFrame] = []
     base_path = os.path.join(dir, "wisdm-dataset/wisdm-dataset/raw/watch")
-    measures = ["accel_watch", "gyro_watch"]
-    leit_measure = "accel_watch"
 
-    for i in range(1600, 1651):
-        dfs = {}
-        current_subject_failed = False
-
-        for measure in measures:
-            parts = measure.split("_")
-            sensor = parts[0]
-            filename = f"data_{i}_{measure}.txt"
-            full_path = os.path.join(base_path, sensor, filename)
-
-            header = [
-                "subject_id",
-                "activity_id",
-                "timestamp",
-                f"{measure}_x",
-                f"{measure}_y",
-                f"{measure}_z",
-            ]
-
-            try:
-                df = pd.read_csv(full_path, header=None, names=header)
-
-                if df[f"{measure}_z"].dtype == object:
-                    df[f"{measure}_z"] = (
-                        df[f"{measure}_z"]
-                        .astype(str)
-                        .str.replace(";", "", regex=False)
-                        .astype(float)
-                    )
-
-                df = df.sort_values("timestamp")
-                dfs[measure] = df
-
-            except FileNotFoundError:
-                print(f"File not found: {full_path} - Skipping Subject {i}")
-                current_subject_failed = True
-                break
-
-        if current_subject_failed or leit_measure not in dfs:
+    for subject in range(1600, 1651):
+        accel_path = os.path.join(base_path, "accel", f"data_{subject}_accel_watch.txt")
+        gyro_path = os.path.join(base_path, "gyro", f"data_{subject}_gyro_watch.txt")
+        if not os.path.exists(accel_path) or not os.path.exists(gyro_path):
             continue
 
-        df_final_subj = dfs[leit_measure].copy()
+        accel_cols = [
+            "subject_id",
+            "activity_id",
+            "timestamp",
+            "accel_watch_x",
+            "accel_watch_y",
+            "accel_watch_z",
+        ]
+        gyro_cols = [
+            "subject_id",
+            "activity_id",
+            "timestamp",
+            "gyro_watch_x",
+            "gyro_watch_y",
+            "gyro_watch_z",
+        ]
 
-        for measure in measures:
-            if measure == leit_measure:
-                continue
+        accel_df = pd.read_csv(accel_path, header=None, names=accel_cols)
+        gyro_df = pd.read_csv(gyro_path, header=None, names=gyro_cols)
 
-            cols_to_use = ["timestamp", f"{measure}_x", f"{measure}_y", f"{measure}_z"]
+        accel_df["accel_watch_z"] = (
+            accel_df["accel_watch_z"].astype(str).str.replace(";", "", regex=False)
+        )
+        gyro_df["gyro_watch_z"] = (
+            gyro_df["gyro_watch_z"].astype(str).str.replace(";", "", regex=False)
+        )
 
-            df_final_subj = pd.merge(
-                df_final_subj, dfs[measure][cols_to_use], on="timestamp", how="inner"
-            )
+        for col in ["timestamp", "accel_watch_x", "accel_watch_y", "accel_watch_z"]:
+            accel_df[col] = pd.to_numeric(accel_df[col], errors="coerce")
+        for col in ["timestamp", "gyro_watch_x", "gyro_watch_y", "gyro_watch_z"]:
+            gyro_df[col] = pd.to_numeric(gyro_df[col], errors="coerce")
 
-        # df_final_subj.dropna(inplace=True)
+        accel_df = accel_df.dropna().sort_values("timestamp")
+        gyro_df = gyro_df.dropna().sort_values("timestamp")
 
-        all_subjects_list.append(df_final_subj)
+        accel_df = accel_df.groupby(
+            ["subject_id", "activity_id", "timestamp"], as_index=False
+        ).mean()
+        gyro_df = gyro_df.groupby(
+            ["subject_id", "activity_id", "timestamp"], as_index=False
+        ).mean()
 
-    complete_df = pd.DataFrame(
-        columns=["subject_id", "activity_id", "timestamp", "..."]
+        merged = accel_df.merge(
+            gyro_df[["timestamp", "gyro_watch_x", "gyro_watch_y", "gyro_watch_z"]],
+            on="timestamp",
+            how="inner",
+        )
+        if not merged.empty:
+            all_subjects_list.append(merged)
+
+    if not all_subjects_list:
+        raise ValueError("No WISDM 2019 watch data found for parsing.")
+
+    complete_df = pd.concat(all_subjects_list, ignore_index=True)
+    complete_df["subject_id"] = complete_df["subject_id"] - 1600
+    complete_df["activity_id"] = (
+        complete_df["activity_id"].astype(str).str.strip().map(LETTER_TO_INT)
     )
 
-    if all_subjects_list:
-        complete_df = pd.concat(all_subjects_list, ignore_index=True)
-
-        complete_df["subject_id"] = complete_df["subject_id"] - 1600
-
-        complete_df["activity_id"] = (
-            complete_df["activity_id"].astype(str).str.strip().map(LETTER_TO_INT)
-        )
-    else:
-        print("Keine Daten gefunden.")
-
+    complete_df = complete_df.dropna(subset=["subject_id", "activity_id", "timestamp"]).copy()
+    complete_df["timestamp"] = pd.to_numeric(complete_df["timestamp"], errors="coerce")
+    complete_df = complete_df.dropna(subset=["timestamp"])
+    complete_df["subject_id"] = complete_df["subject_id"].astype("int32")
+    complete_df["activity_id"] = complete_df["activity_id"].astype("int32")
+    complete_df = complete_df.sort_values(by=["subject_id", "activity_id", "timestamp"]).reset_index(drop=True)
+    step_ms = int(1e3 / 20)
+    complete_df["timestamp"] = (
+        complete_df.groupby(["subject_id", "activity_id"]).cumcount().astype("int64")
+        * step_ms
+    )
+    complete_df["timestamp"] = pd.to_datetime(complete_df["timestamp"], unit="ms")
     changes = (complete_df["activity_id"] != complete_df["activity_id"].shift(1)) | (
         complete_df["subject_id"] != complete_df["subject_id"].shift(1)
     )
-
     complete_df["session_id"] = changes.cumsum() - 1
-
-    complete_df = complete_df.sort_values(by=["session_id", "timestamp"])
-    complete_df.head()
 
     metadata_cols = ["session_id", "subject_id", "activity_id"]
 
@@ -162,30 +162,14 @@ def parse_wisdm_19_watch(
             columns=["session_id", "subject_id", "activity_id"]
         ).reset_index(drop=True)
 
-        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="ns")
+        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"])
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
-        session_df = session_df.round(6)
+        float_cols = [col for col in session_df.columns if col != "timestamp"]
+        session_df[float_cols] = session_df[float_cols].round(6)
         session_df = session_df.astype(dtypes)
 
         sessions[session_id] = session_df
-
-    complete_df["timestamp"] = pd.to_datetime(complete_df["timestamp"], unit="ns")
-    dtypes = {}
-    for col in complete_df.columns:
-        if col == "timestamp":
-            dtypes[col] = "datetime64[ms]"  # Hier wird von ns auf ms gekürzt
-        elif col in ["subject_id", "activity_id"]:
-            dtypes[col] = "int32"
-        else:
-            dtypes[col] = "float32"
-
-    # 3. Floats runden (Nur die Sensordaten)
-    float_cols = [c for c, t in dtypes.items() if t == "float32"]
-    complete_df[float_cols] = complete_df[float_cols].round(6)
-
-    # 4. Finales Casting der Typen
-    complete_df = complete_df.astype(dtypes)
 
     activity_metadata = pd.DataFrame(
         list(ID_TO_ACTIVITY.items()), columns=["activity_id", "activity_name"]

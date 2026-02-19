@@ -23,8 +23,7 @@ def _make_activity_names(cfg) -> List[str]:
 
     if len(names) < cfg.num_of_activities:
         names.extend(
-            f"activity_{idx}"
-            for idx in range(len(names), cfg.num_of_activities)
+            f"activity_{idx}" for idx in range(len(names), cfg.num_of_activities)
         )
 
     return names[: cfg.num_of_activities]
@@ -80,7 +79,9 @@ def _make_common_format_payload(
         )
         data = {"timestamp": ts}
         for col_idx, col_name in enumerate(channels):
-            data[col_name] = [float(col_idx + row_idx) for row_idx in range(session_length)]
+            data[col_name] = [
+                float(col_idx + row_idx) for row_idx in range(session_length)
+            ]
 
         sessions[session_id] = pd.DataFrame(data).astype(
             {
@@ -132,12 +133,18 @@ def test_dataset_cfg_parse_function_contract(dataset_id: WHARDatasetID, cfg) -> 
 
 
 def test_whar_dataset_enum_and_registry_are_in_sync() -> None:
-    implemented_ids = {enum_member for enum_member in WHARDatasetID if enum_member != WHARDatasetID.HHAR}
+    implemented_ids = {
+        enum_member
+        for enum_member in WHARDatasetID
+        if enum_member != WHARDatasetID.HHAR
+    }
     assert set(har_dataset_dict.keys()) == implemented_ids
 
 
 @pytest.mark.parametrize(("dataset_id", "cfg"), CFG_ITEMS)
-def test_get_dataset_cfg_returns_expected_config_object(dataset_id: WHARDatasetID, cfg) -> None:
+def test_get_dataset_cfg_returns_expected_config_object(
+    dataset_id: WHARDatasetID, cfg
+) -> None:
     custom_dir = f"/tmp/{dataset_id.value}_dataset_cache"
     resolved_cfg = get_dataset_cfg(dataset_id, datasets_dir=custom_dir)
 
@@ -152,7 +159,9 @@ def test_common_format_validation_contract_can_be_satisfied_for_all_datasets(
     cfg,
     tmp_path: Path,
 ) -> None:
-    activity_df, session_df, sessions = _make_common_format_payload(cfg, session_length=8)
+    activity_df, session_df, sessions = _make_common_format_payload(
+        cfg, session_length=8
+    )
 
     metadata_dir = tmp_path / dataset_id.value / "metadata"
     sessions_dir = tmp_path / dataset_id.value / "sessions"
@@ -182,7 +191,9 @@ def test_process_session_windowing_semantics_hold_for_all_datasets(
     ts = pd.date_range("2020-01-01", periods=session_length, freq=f"{base_freq_ms}ms")
     session_data = {"timestamp": ts}
     for col_idx, col_name in enumerate(channels):
-        session_data[col_name] = [float(col_idx + row_idx) for row_idx in range(session_length)]
+        session_data[col_name] = [
+            float(col_idx + row_idx) for row_idx in range(session_length)
+        ]
     sessions = {
         0: pd.DataFrame(session_data).astype(
             {
@@ -208,6 +219,7 @@ def test_process_session_windowing_semantics_hold_for_all_datasets(
 
     assert list(first_window.columns) == cfg.sensor_channels
     assert not first_window.isna().any().any()
-    assert all(pd.api.types.is_float_dtype(first_window[col]) for col in first_window.columns)
+    assert all(
+        pd.api.types.is_float_dtype(first_window[col]) for col in first_window.columns
+    )
     assert len(first_window) <= window_size
-

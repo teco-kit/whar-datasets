@@ -160,6 +160,8 @@ LABEL_COLS = [
     "ML_Both_Arms",
 ]
 
+MAX_SESSION_GAP_MS = 100.0
+
 # Locomotion
 LOCOMOTION_MAP = {0: "Unknown", 1: "Stand", 2: "Walk", 4: "Sit", 5: "Lie"}
 
@@ -293,7 +295,7 @@ def parse_opportunity(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
     dir = os.path.join(dir, "OpportunityUCIDataset/dataset/")
 
-    files = [file for file in os.listdir(dir) if file.endswith(".dat")]
+    files = sorted(file for file in os.listdir(dir) if file.endswith(".dat"))
 
     sub_dfs = []
 
@@ -321,30 +323,36 @@ def parse_opportunity(
         # # fills nans in label cols with backward fill
         sub_df.loc[:, LABEL_COLS] = sub_df[LABEL_COLS].bfill()
 
-        # add subject id
-        sub_df.loc[:, "subject_id"] = subject_id
+        # add subject/file provenance before concatenation
+        sub_df = sub_df.copy()
+        sub_df["subject_id"] = subject_id
+        sub_df["source_file"] = file
 
         # append to list
         sub_dfs.append(sub_df)
 
     # concat all sub_dfs
-    df = pd.concat(sub_dfs)
+    df = pd.concat(sub_dfs, ignore_index=True).copy()
 
     # specify one label column as activity_id column
     df = df.rename(columns={activity_id_col: "activity_id"})
     df = df.drop(columns=[col for col in LABEL_COLS if col != activity_id_col])
 
-    # identify where activity or subject changes
-    changes = (df["activity_id"] != df["activity_id"].shift(1)) | (
-        df["subject_id"] != df["subject_id"].shift(1)
-    )
-
-    # assign a unique session to each continuous segment
-    df["session_id"] = changes.cumsum()
-
     # change ms timestamp from ms to ns
-    df["timestamp"] = df["timestamp"] * 1e6
-    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ns")
+    df["timestamp"] = pd.to_datetime(df["timestamp"] * 1e6, unit="ns")
+
+    # split sessions on subject/activity change, file boundary, timestamp resets,
+    # and unusually large time gaps to avoid interpolation artifacts.
+    diff_ms = df["timestamp"].diff().dt.total_seconds().mul(1e3)
+    changes = (
+        df["activity_id"].ne(df["activity_id"].shift(1))
+        | df["subject_id"].ne(df["subject_id"].shift(1))
+        | df["source_file"].ne(df["source_file"].shift(1))
+        | diff_ms.isna()
+        | diff_ms.le(0.0)
+        | diff_ms.gt(MAX_SESSION_GAP_MS)
+    )
+    df["session_id"] = changes.cumsum().sub(1).astype("int64")
 
     # map activity_id to activity_name
     match activity_id_col:
@@ -405,18 +413,36 @@ def parse_opportunity(
                 "subject_id",
                 "activity_id",
                 "activity_name",
+                "source_file",
             ]
         ).reset_index(drop=True)
 
         # set types
-        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="ms")
+        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"])
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
-        session_df = session_df.round(6)
+        float_cols = [col for col in session_df.columns if col != "timestamp"]
+        session_df[float_cols] = session_df[float_cols].round(6)
         session_df = session_df.astype(dtypes)
+
+        if session_df.empty:
+            continue
 
         # add to sessions
         sessions[session_id] = session_df
+
+    # Keep metadata aligned with retained sessions and compact ids.
+    valid_session_ids = sorted(int(sid) for sid in sessions.keys())
+    session_metadata = session_metadata[
+        session_metadata["session_id"].isin(valid_session_ids)
+    ].copy()
+
+    remap = {old_sid: new_sid for new_sid, old_sid in enumerate(valid_session_ids)}
+    session_metadata["session_id"] = session_metadata["session_id"].map(remap)
+    session_metadata = session_metadata.sort_values("session_id").reset_index(
+        drop=True
+    )
+    sessions = {remap[int(old_sid)]: df for old_sid, df in sessions.items()}
 
     # set metadata types
     activity_metadata = activity_metadata.astype(
@@ -438,6 +464,7 @@ cfg_opportunity = WHARConfig(
     num_of_activities=18,
     num_of_channels=133,
     datasets_dir="./datasets",
+    parallelize=True,
     # Parsing
     parse=parse_opportunity,
     activity_id_col="ML_Both_Arms",

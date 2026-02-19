@@ -51,7 +51,7 @@ def parse_hugadb(
             activity_groups = (df["activity_id"] != df["activity_id"].shift()).cumsum()
             samples_since_change = df.groupby(activity_groups).cumcount()
 
-            time_sec = samples_since_change * (1.0 / sampling_rate)
+            time_sec = samples_since_change * (1.0 / sampling_rate)  # type: ignore
 
             df["timestamp"] = pd.to_datetime(time_sec, unit="s")
             df["subject_id"] = pr_id
@@ -107,7 +107,8 @@ def parse_hugadb(
         session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="s")
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
-        session_df = session_df.round(6)
+        float_cols = [col for col in session_df.columns if col != "timestamp"]
+        session_df[float_cols] = session_df[float_cols].round(6)
         session_df = session_df.astype(dtypes)
 
         # add to sessions
