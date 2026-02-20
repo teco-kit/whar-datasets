@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import Dict
 
+from whar_datasets.config.cfg_capture24 import cfg_capture_24
 from whar_datasets.config.cfg_daphnet import cfg_daphnet
 from whar_datasets.config.cfg_dsads import cfg_dsads
-from whar_datasets.config.cfg_capture24 import cfg_capture_24
 from whar_datasets.config.cfg_hang_time import cfg_hang_time
 from whar_datasets.config.cfg_hapt import cfg_hapt
 from whar_datasets.config.cfg_har_sense import cfg_har_sense
@@ -15,6 +15,7 @@ from whar_datasets.config.cfg_opportunity import cfg_opportunity
 from whar_datasets.config.cfg_pamap2 import cfg_pamap2
 from whar_datasets.config.cfg_real_life_har import cfg_real_life_har
 from whar_datasets.config.cfg_real_world import cfg_real_world
+from whar_datasets.config.cfg_sad import cfg_sad
 from whar_datasets.config.cfg_uci_har import cfg_uci_har
 from whar_datasets.config.cfg_usc_had import cfg_usc_had
 from whar_datasets.config.cfg_w_har import cfg_w_har
@@ -46,6 +47,7 @@ class WHARDatasetID(Enum):
     CAPTURE_24 = "capture_24"
     REAL_WORLD = "real_world"
     REAL_LIFE_HAR = "real_life_har"
+    SAD = "sad"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -69,6 +71,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.CAPTURE_24: (cfg_capture_24),
     WHARDatasetID.REAL_WORLD: (cfg_real_world),
     WHARDatasetID.REAL_LIFE_HAR: (cfg_real_life_har),
+    WHARDatasetID.SAD: (cfg_sad),
 }
 
 
