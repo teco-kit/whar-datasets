@@ -12,6 +12,7 @@ from whar_datasets.config.cfg_pamap2 import cfg_pamap2
 from whar_datasets.config.cfg_uci_har import cfg_uci_har
 from whar_datasets.config.cfg_wisdm import cfg_wisdm
 from whar_datasets.config.cfg_extrasensory import cfg_extrasensory
+from whar_datasets.config.cfg_unimib import cfg_unimib
 from whar_datasets.config.config import WHARConfig
 
 
@@ -27,6 +28,7 @@ class WHARDatasetID(Enum):
     DAPHNET = "daphnet"
     HAR_SENSE = "har_sense"
     EXTRASENSORY = "extrasensory"
+    UNIMIB = "unimib"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -41,6 +43,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.DAPHNET: (cfg_daphnet),
     WHARDatasetID.HAR_SENSE: (cfg_har_sense),
     WHARDatasetID.EXTRASENSORY: (cfg_extrasensory),
+    WHARDatasetID.UNIMIB: (cfg_unimib),
 }
 
 
