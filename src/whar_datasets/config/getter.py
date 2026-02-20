@@ -17,6 +17,7 @@ from whar_datasets.config.cfg_real_life_har import cfg_real_life_har
 from whar_datasets.config.cfg_real_world import cfg_real_world
 from whar_datasets.config.cfg_sad import cfg_sad
 from whar_datasets.config.cfg_uci_har import cfg_uci_har
+from whar_datasets.config.cfg_unimib_shar import cfg_unimib
 from whar_datasets.config.cfg_usc_had import cfg_usc_had
 from whar_datasets.config.cfg_w_har import cfg_w_har
 from whar_datasets.config.cfg_wisdm import cfg_wisdm
@@ -48,6 +49,7 @@ class WHARDatasetID(Enum):
     REAL_WORLD = "real_world"
     REAL_LIFE_HAR = "real_life_har"
     SAD = "sad"
+    UNIMIB_SHAR = "unimib_shar"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -72,6 +74,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.REAL_WORLD: (cfg_real_world),
     WHARDatasetID.REAL_LIFE_HAR: (cfg_real_life_har),
     WHARDatasetID.SAD: (cfg_sad),
+    WHARDatasetID.UNIMIB_SHAR: (cfg_unimib),
 }
 
 
