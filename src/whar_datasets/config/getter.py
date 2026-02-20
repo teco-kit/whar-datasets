@@ -3,6 +3,7 @@ from typing import Dict
 
 from whar_datasets.config.cfg_daphnet import cfg_daphnet
 from whar_datasets.config.cfg_dsads import cfg_dsads
+from whar_datasets.config.cfg_capture24 import cfg_capture_24
 from whar_datasets.config.cfg_hang_time import cfg_hang_time
 from whar_datasets.config.cfg_hapt import cfg_hapt
 from whar_datasets.config.cfg_har_sense import cfg_har_sense
@@ -42,6 +43,7 @@ class WHARDatasetID(Enum):
     WISDM_19_WATCH = "wisdm_19_watch"
     HANG_TIME = "hang_time"
     HHAR = "hhar"
+    CAPTURE_24 = "capture_24"
     REAL_WORLD = "real_world"
     REAL_LIFE_HAR = "real_life_har"
 
@@ -64,6 +66,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.WISDM_19_PHONE: (cfg_wisdm_19_phone),
     WHARDatasetID.WISDM_19_WATCH: (cfg_wisdm_19_watch),
     WHARDatasetID.HANG_TIME: (cfg_hang_time),
+    WHARDatasetID.CAPTURE_24: (cfg_capture_24),
     WHARDatasetID.REAL_WORLD: (cfg_real_world),
     WHARDatasetID.REAL_LIFE_HAR: (cfg_real_life_har),
 }

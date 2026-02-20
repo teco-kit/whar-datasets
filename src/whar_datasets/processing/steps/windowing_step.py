@@ -4,7 +4,7 @@ from typing import Dict, List, Set, Tuple, TypeAlias
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
-from whar_datasets.processing.pipeline import ProcessingStep
+from whar_datasets.processing.pipeline import AbstractStep
 from whar_datasets.processing.utils.caching import cache_window_df, cache_windows
 from whar_datasets.processing.utils.selecting import select_activities
 from whar_datasets.processing.utils.sessions import (
@@ -28,14 +28,14 @@ result_type: TypeAlias = Tuple[
 ]
 
 
-class WindowingStep(ProcessingStep):
+class WindowingStep(AbstractStep):
     def __init__(
         self,
         cfg: WHARConfig,
         metadata_dir: Path,
         sessions_dir: Path,
         windows_dir: Path,
-        dependent_on: List[ProcessingStep],
+        dependent_on: List[AbstractStep],
     ):
         super().__init__(cfg, windows_dir, dependent_on)
 

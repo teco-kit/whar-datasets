@@ -1,50 +1,27 @@
-# Standardized Dataset Format
-
-## Requirements
-
-- Every dataset must contain:
-  - Activity labels
-  - Subject identifiers  
-
-  This is necessary to enable Leave-One-Subject-Out Cross-Validation (LOSOCV).  
-  If either activity labels or subject identifiers are missing, tell me.
+## Dataset Requirements
+- Each dataset must include activity labels and subject identifiers
+- These are required for Leave-One-Subject-Out Cross-Validation (LOSOCV)
+- Inform me if activity labels or subject identifiers are missing
+- Make sure activity and subject information is correctly assigned (e.g. subject01_walking.csv indicates subject and activity)
 
 ## Session Definition
-
-A session is defined as: A continuous recording of a single subject performing a single activity
-
-A new session must be created when:
-
-- The subject changes, or
-- The activity changes, or
-- There is an unusually large timestamp gap in the recording (indicating discontinuity)
+- A session is one continuous recording of one subject performing one activity
+- Create a new session if the subject changes
+- Create a new session if the activity changes
+- Create a new session if there is a large timestamp gap in the recording (e.g. recording stops and resumes after several minutes)
 
 ## Activity Labels
-
-- If a dataset provides multiple possible activity label schemes (e.g., coarse vs. fine-grained labels), then tell me.
+- Inform me if multiple activity label schemes are available (e.g. coarse: walking, running / fine-grained: walking upstairs, walking downstairs)
 
 ## Sensor Modalities
+- Include only time-series sensor data (e.g. IMU, Accelerometer, Gyroscope, Magnetometer, Physiological signals)
+- Exclude non-time-series data (e.g. Audio, Images, Video)
+- Inform me if different sensor modalities were not recorded at the same time (e.g. IMU recorded separately from physiological signals)
+- Treat non-simultaneously recorded modalities as separate datasets
 
-- Include only time-series sensor data, such as:
-  - IMU
-  - Accelerometer
-  - Gyroscope
-  - Magnetometer
-  - Physiological signals
-
-- Exclude all non-time-series modalities, including:
-  - Audio
-  - Images
-  - Video
-
-- if different sensor modalities where not recorded simultaneously, than the effectively constitute several different datasets, tell me about this
-
-## Implementation Details
-
-- All implementations must use Python type hints.
-
-## Other Details
-
-- you can set cfg.parallelize to true for faster preprocessing
-- dataset caches are located in notebooks/datasets, so you dont need to redownload existing ones
-- make sure you know what data belongs to which activty or which person, often info is in some sort of readme file or also in the filnames themselves of a raw datase, if not contained as columns in data itself
+## Implementation & Data Handling
+- Use Python type hints in all implementations
+- You can set cfg.parallelize to true for faster preprocessing
+- Dataset caches are stored in notebooks/datasets, do not redownload existing datasets
+- Check readme files or metadata if needed (e.g. activity labels stored in metadata file)
+- Use filenames if needed when information is not available as data columns (e.g. subject01_walking.csv)

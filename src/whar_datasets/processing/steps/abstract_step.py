@@ -11,9 +11,9 @@ base_type: TypeAlias = Any
 result_type: TypeAlias = Any
 
 
-class ProcessingStep(ABC):
+class AbstractStep(ABC):
     def __init__(
-        self, cfg: WHARConfig, hash_dir: Path, dependent_on: List["ProcessingStep"] = []
+        self, cfg: WHARConfig, hash_dir: Path, dependent_on: List["AbstractStep"] = []
     ):
         self.cfg = cfg
         self.hash_dir = hash_dir
