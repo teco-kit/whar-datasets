@@ -367,6 +367,7 @@ def parse_real_world(
 cfg_real_world = WHARConfig(
     # Info + common
     dataset_id="real_world",
+    dataset_url="https://www.uni-mannheim.de/dws/research/projects/activity-recognition/dataset/dataset-realworld/",
     download_url="http://wifo5-14.informatik.uni-mannheim.de/sensor/dataset/realworld2016/realworld2016_dataset.zip",
     sampling_freq=50,
     num_of_subjects=15,

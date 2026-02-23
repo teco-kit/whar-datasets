@@ -155,6 +155,7 @@ def parse_harth(
 
 cfg_harth = WHARConfig(
     dataset_id="harth",
+    dataset_url="https://archive.ics.uci.edu/dataset/779/harth",
     download_url="https://archive.ics.uci.edu/static/public/779/harth.zip",
     sampling_freq=50,
     num_of_subjects=22,

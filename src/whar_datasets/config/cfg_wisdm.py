@@ -171,6 +171,7 @@ def parse_wisdm_12(
 cfg_wisdm = WHARConfig(
     # Info + common
     dataset_id="wisdm",
+    dataset_url="https://www.cis.fordham.edu/wisdm/dataset.php",
     download_url="https://www.cis.fordham.edu/wisdm/includes/datasets/latest/WISDM_ar_latest.tar.gz",
     sampling_freq=20,
     num_of_subjects=36,

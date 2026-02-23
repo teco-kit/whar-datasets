@@ -458,6 +458,7 @@ def parse_opportunity(
 cfg_opportunity = WHARConfig(
     # Info + common
     dataset_id="opportunity",
+    dataset_url="https://archive.ics.uci.edu/dataset/226/opportunity+activity+recognition",
     download_url="https://archive.ics.uci.edu/static/public/226/opportunity+activity+recognition.zip",
     sampling_freq=30,
     num_of_subjects=4,

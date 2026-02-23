@@ -213,6 +213,7 @@ def parse_dsads(
 cfg_dsads = WHARConfig(
     # Info fields + common
     dataset_id="dsads",
+    dataset_url="https://archive.ics.uci.edu/dataset/256/daily+and+sports+activities",
     download_url="https://archive.ics.uci.edu/static/public/256/daily+and+sports+activities.zip",
     sampling_freq=25,
     num_of_subjects=8,

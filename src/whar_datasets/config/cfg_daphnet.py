@@ -143,6 +143,7 @@ def parse_daphnet(
 cfg_daphnet = WHARConfig(
     # Info fields + common
     dataset_id="daphnet",
+    dataset_url="https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait",
     download_url="https://archive.ics.uci.edu/static/public/245/daphnet+freezing+of+gait.zip",
     sampling_freq=64,
     num_of_subjects=10,

@@ -166,6 +166,7 @@ def parse_hapt(
 cfg_hapt = WHARConfig(
     # Info + common
     dataset_id="hapt",
+    dataset_url="https://archive.ics.uci.edu/dataset/341/smartphone+based+recognition+of+human+activities+and+postural+transitions",
     download_url="https://archive.ics.uci.edu/static/public/341/smartphone+based+recognition+of+human+activities+and+postural+transitions.zip",
     sampling_freq=50,
     num_of_subjects=30,

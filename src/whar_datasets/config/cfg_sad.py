@@ -184,6 +184,7 @@ def parse_sad(
 cfg_sad = WHARConfig(
     # Info + common
     dataset_id="sad",
+    dataset_url="https://www.utwente.nl/en/eemcs/ps/research/dataset/",
     download_url="https://www.utwente.nl/en/eemcs/ps/dataset-folder/sensors-activity-recognition-dataset-shoaib.rar",
     sampling_freq=50,
     num_of_subjects=10,

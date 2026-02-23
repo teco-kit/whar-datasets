@@ -343,6 +343,7 @@ def parse_real_life_har(
 cfg_real_life_har = WHARConfig(
     # Info + common
     dataset_id="real_life_har",
+    dataset_url="https://lbd.udc.es/research/real-life-HAR-dataset/",
     download_url="https://lbd.udc.es/research/real-life-HAR-dataset/data_cleaned_adapted_full.zip",
     sampling_freq=20,
     num_of_subjects=17,

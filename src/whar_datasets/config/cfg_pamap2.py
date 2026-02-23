@@ -209,6 +209,7 @@ def parse_pamap2(
 cfg_pamap2 = WHARConfig(
     # Info + common
     dataset_id="pamap2",
+    dataset_url="https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring",
     download_url="https://archive.ics.uci.edu/static/public/231/pamap2+physical+activity+monitoring.zip",
     sampling_freq=100,
     num_of_subjects=9,

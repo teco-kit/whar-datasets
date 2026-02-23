@@ -206,6 +206,7 @@ def parse_falldet(
 
 cfg_falldet = WHARConfig(
     dataset_id="falldet",
+    dataset_url="https://www.kaggle.com/datasets/harnoor343/fall-detection-accelerometer-data",
     download_url="https://www.kaggle.com/api/v1/datasets/download/harnoor343/fall-detection-accelerometer-data?datasetVersionNumber=1",
     sampling_freq=50,
     num_of_subjects=48,

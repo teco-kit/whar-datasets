@@ -168,6 +168,7 @@ def parse_motion_sense(
 cfg_motion_sense = WHARConfig(
     # Info + common
     dataset_id="motion_sense",
+    dataset_url="https://github.com/mmalekzadeh/motion-sense",
     download_url="https://github.com/mmalekzadeh/motion-sense/archive/refs/heads/master.zip",
     sampling_freq=50,
     num_of_subjects=24,

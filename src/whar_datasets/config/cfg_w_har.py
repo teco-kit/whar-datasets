@@ -94,6 +94,7 @@ def parse_w_har(
 # config Zeugs
 cfg_w_har = WHARConfig(
     dataset_id="w_har",
+    dataset_url="https://github.com/gmbhat/human-activity-recognition",
     download_url="https://github.com/gmbhat/human-activity-recognition/raw/refs/heads/master/datasets/raw_data/motion_data_22_users.csv",
     sampling_freq=250,  # ist das pro Sekunde? dann ist 250 richtig
     num_of_subjects=22,

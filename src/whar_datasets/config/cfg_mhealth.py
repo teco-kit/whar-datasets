@@ -178,6 +178,7 @@ def parse_mhealth(
 cfg_mhealth = WHARConfig(
     # Info fields + common
     dataset_id="mhealth",
+    dataset_url="https://archive.ics.uci.edu/dataset/319/mhealth+dataset",
     download_url="https://archive.ics.uci.edu/static/public/319/mhealth+dataset.zip",
     sampling_freq=50,
     num_of_subjects=10,

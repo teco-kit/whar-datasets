@@ -80,6 +80,12 @@ Here are the newly adjusted tables. Group 1 and Group 4 remain exactly as they w
 | ⬜ | [CIP2](https://github.com/ManuelPalermo/HumanInertialPose) | 2022 | *Complete Inertial Pose Dataset: from raw measurements to pose with low-cost and high-end MARG sensors* | 3 | 10 participants (6 males, 4 females) with an average age of 24.2 years | 6 types of movement sequences designed to capture a wide range of human dynamics | 17 Xsens MTw Awinda sensors secured with straps, sampling at 60 Hz. Sensors were placed full-body on the head, chest, waist, and all main segments of the arms and legs, Xsens Awinda Motion Capture system using the MVN BIOMECH biomechanical model |
 
 
+
+### Group 4: Other Modality
+
+| Supported | Name | Year | Paper | Citations | Subjects | Activities | Sensors |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+
 ---
 
 ### Group 4: Unclear or not Publicy Available
@@ -92,7 +98,7 @@ Here are the newly adjusted tables. Group 1 and Group 4 remain exactly as they w
 
 ---
 
-### Group 4: No Subject Info -> No Loso possible
+### Group 5: No Subject Info -> No Loso possible
 
 | Supported | Name | Year | Paper | Citations | Subjects | Activities | Sensors |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -102,7 +108,7 @@ Here are the newly adjusted tables. Group 1 and Group 4 remain exactly as they w
 
 
 
-### Need to Register
+### Group6: Need to Register
 | ⬜ | [DIP](https://dip.is.tuebingen.mpg.de/) | 2018 | *Deep inertial poser: Learning to reconstruct human pose from sparse inertial measurements in real time* | 495 | 10 | - | 17 IMUs worn on the body; data includes orientation and motion information |
 | ⬜ | [HASC2010](http://hasc.jp/) | 2011 | *Hasc challenge: gathering large scale human activity corpus for the real-world activity understandings* | 157 | 540 subjects total, 96 with full datase | 7 main activities — stay, walk, jog, skip, stair up (stUp), stair down (stDown), sequence | iPhone, iPod Touch, WAA-series (ATR), accelerometer (X, Y, Z axes), 10–100 Hz |
 | ⬜ | [MobiAct](https://bmi.hmu.gr/the-mobifall-and-mobiact-datasets-2/#) | 2016 | *The MobiAct dataset: recognition of activities of daily living using smartphones* | 364 | 66 | 12 ADLs and 4 types of falls, plus a scenario of daily living; ADLs include fall-like activities (sitting, stepping in/out of a car), sudden/rapid movements (jumping, jogging), and common everyday movements (walking, standing, stairs up/down). | Smartphone (Samsung Galaxy S3) with 3-axis accelerometer, 3-axis gyroscope, and software-based orientation |
@@ -111,6 +117,8 @@ Here are the newly adjusted tables. Group 1 and Group 4 remain exactly as they w
 
 
 ---
+
+## group 7: unsortewd yeet
 
 
 | ⬜ | [UESTC-MMEA-CL](https://github.com/Xu-Linfeng/UESTC_MMEA_CL_main) | 2023 | *Towards Continual Egocentric Activity Recognition: A Multi-Modal Egocentric Activity Dataset for Continual Learning* | 57 | 10 | 32 daily activities, including basic movements, indoor behaviors, cleaning labor, and recreational activities | Self-developed smart glasses with an egocentric camera (640×480 at 25 FPS) and IMU (accelerometer and gyroscope) sampled at 25 Hz |

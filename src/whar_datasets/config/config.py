@@ -8,6 +8,7 @@ from whar_datasets.utils.types import NormType, Parse, TransformType
 class WHARConfig(BaseModel):
     # metadata fields
     dataset_id: str
+    dataset_url: str
     download_url: str
     sampling_freq: int
     num_of_subjects: int

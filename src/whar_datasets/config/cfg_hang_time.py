@@ -373,6 +373,7 @@ def parse_hang_time(
 
 cfg_hang_time = WHARConfig(
     dataset_id="hang_time",
+    dataset_url="https://ahoelzemann.github.io/hangtime_har/",
     download_url="https://zenodo.org/records/7920485/files/hangtime_har.zip?download=1",
     sampling_freq=HANG_TIME_SAMPLING_FREQ,
     num_of_subjects=24,

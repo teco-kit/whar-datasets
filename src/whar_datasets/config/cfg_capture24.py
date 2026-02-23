@@ -394,6 +394,7 @@ def parse_capture24(
 
 cfg_capture_24 = WHARConfig(
     dataset_id="capture_24",
+    dataset_url="https://ora.ox.ac.uk/objects/uuid:99d7c092-d865-4a19-b096-cc16440cd001",
     download_url="https://ora.ox.ac.uk/objects/uuid:99d7c092-d865-4a19-b096-cc16440cd001/files/rpr76f381b",
     sampling_freq=CAPTURE24_SAMPLING_FREQ,
     num_of_subjects=151,

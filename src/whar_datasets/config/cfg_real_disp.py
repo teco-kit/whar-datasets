@@ -259,6 +259,7 @@ def parse_real_disp(
 cfg_real_disp = WHARConfig(
     # Info + common
     dataset_id="real_disp",
+    dataset_url="https://archive.ics.uci.edu/dataset/305/realdisp+activity+recognition+dataset",
     download_url="https://archive.ics.uci.edu/static/public/305/realdisp+activity+recognition+dataset.zip",
     sampling_freq=50,
     num_of_subjects=17,

@@ -137,6 +137,7 @@ def parse_hugadb(
 cfg_hugadb = WHARConfig(
     # Info + common
     dataset_id="hugadb",
+    dataset_url="https://github.com/romanchereshnev/HuGaDB",
     download_url="https://github.com/romanchereshnev/HuGaDB/raw/refs/heads/master/HumanGaitDataBase.zip?download=",
     sampling_freq=60,
     num_of_subjects=18,

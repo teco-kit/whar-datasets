@@ -145,6 +145,7 @@ def parse_usc_had(
 # config Zeugs
 cfg_usc_had = WHARConfig(
     dataset_id="usc_had",
+    dataset_url="https://sipi.usc.edu/had/",
     download_url="https://sipi.usc.edu/had/USC-HAD.zip",
     sampling_freq=100,
     num_of_subjects=14,

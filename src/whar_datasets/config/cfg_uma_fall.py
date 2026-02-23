@@ -267,6 +267,7 @@ def parse_uma_fall(
 cfg_uma_fall = WHARConfig(
     # Info + common
     dataset_id="uma_fall",
+    dataset_url="https://figshare.com/articles/dataset/UMA_ADL_FALL_Dataset_zip/4214283",
     download_url="https://figshare.com/ndownloader/files/43076140",
     sampling_freq=200,
     num_of_subjects=19,

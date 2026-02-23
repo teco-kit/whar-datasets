@@ -174,6 +174,7 @@ def parse_ku_har(
 cfg_ku_har = WHARConfig(
     # Info fields + common
     dataset_id="ku_har",
+    dataset_url="https://data.mendeley.com/datasets/45f952y38r/5",
     download_url="https://data.mendeley.com/public-files/datasets/45f952y38r/files/49c6120b-59fd-466c-97da-35d53a4be595/file_downloaded",
     sampling_freq=100,
     num_of_subjects=89,

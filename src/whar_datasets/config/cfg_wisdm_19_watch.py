@@ -191,6 +191,7 @@ def parse_wisdm_19_watch(
 cfg_wisdm_19_watch = WHARConfig(
     # Info + common
     dataset_id="wisdm_19_watch",
+    dataset_url="https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset",
     download_url="https://archive.ics.uci.edu/static/public/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset.zip",
     sampling_freq=20,
     num_of_subjects=51,

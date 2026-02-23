@@ -125,6 +125,7 @@ def parse_har_sense(
 cfg_har_sense = WHARConfig(
     # Info fields + common
     dataset_id="har_sense",
+    dataset_url="https://ieee-dataport.org/open-access/harsense-statistical-human-activity-recognition-dataset",
     download_url="https://www.kaggle.com/api/v1/datasets/download/nurulaminchoudhury/harsense-datatset",
     sampling_freq=50,
     num_of_subjects=12,
