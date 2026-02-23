@@ -1,8 +1,9 @@
 ## Dataset Requirements
-- Each dataset must include activity labels and subject identifiers
+- Each dataset must include activity labels and subject identifiers, stop if one of these does not exist
 - These are required for Leave-One-Subject-Out Cross-Validation (LOSOCV)
 - Inform me if activity labels or subject identifiers are missing
 - Make sure activity and subject information is correctly assigned (e.g. subject01_walking.csv indicates subject and activity)
+- if multiple sensor record at the same time (e.g. multiple imus), then stack them them to a multichannel dataset
 
 ## Session Definition
 - A session is one continuous recording of one subject performing one activity

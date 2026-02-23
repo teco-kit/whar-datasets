@@ -4,19 +4,23 @@ from typing import Dict
 from whar_datasets.config.cfg_capture24 import cfg_capture_24
 from whar_datasets.config.cfg_daphnet import cfg_daphnet
 from whar_datasets.config.cfg_dsads import cfg_dsads
+from whar_datasets.config.cfg_falldet import cfg_falldet
 from whar_datasets.config.cfg_hang_time import cfg_hang_time
 from whar_datasets.config.cfg_hapt import cfg_hapt
 from whar_datasets.config.cfg_har_sense import cfg_har_sense
+from whar_datasets.config.cfg_harth import cfg_harth
 from whar_datasets.config.cfg_hugadb import cfg_hugadb
 from whar_datasets.config.cfg_ku_har import cfg_ku_har
 from whar_datasets.config.cfg_mhealth import cfg_mhealth
 from whar_datasets.config.cfg_motion_sense import cfg_motion_sense
 from whar_datasets.config.cfg_opportunity import cfg_opportunity
 from whar_datasets.config.cfg_pamap2 import cfg_pamap2
+from whar_datasets.config.cfg_real_disp import cfg_real_disp
 from whar_datasets.config.cfg_real_life_har import cfg_real_life_har
 from whar_datasets.config.cfg_real_world import cfg_real_world
 from whar_datasets.config.cfg_sad import cfg_sad
 from whar_datasets.config.cfg_uci_har import cfg_uci_har
+from whar_datasets.config.cfg_uma_fall import cfg_uma_fall
 from whar_datasets.config.cfg_unimib_shar import cfg_unimib
 from whar_datasets.config.cfg_usc_had import cfg_usc_had
 from whar_datasets.config.cfg_w_har import cfg_w_har
@@ -50,6 +54,10 @@ class WHARDatasetID(Enum):
     REAL_LIFE_HAR = "real_life_har"
     SAD = "sad"
     UNIMIB_SHAR = "unimib_shar"
+    UMA_FALL = "uma_fall"
+    REAL_DISP = "real_disp"
+    HARTH = "harth"
+    FALLDET = "falldet"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -75,6 +83,10 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.REAL_LIFE_HAR: (cfg_real_life_har),
     WHARDatasetID.SAD: (cfg_sad),
     WHARDatasetID.UNIMIB_SHAR: (cfg_unimib),
+    WHARDatasetID.UMA_FALL: (cfg_uma_fall),
+    WHARDatasetID.REAL_DISP: (cfg_real_disp),
+    WHARDatasetID.HARTH: (cfg_harth),
+    WHARDatasetID.FALLDET: (cfg_falldet),
 }
 
 
