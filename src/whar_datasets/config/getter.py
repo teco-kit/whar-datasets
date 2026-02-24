@@ -5,8 +5,10 @@ from whar_datasets.config.cfg_capture24 import cfg_capture_24
 from whar_datasets.config.cfg_daphnet import cfg_daphnet
 from whar_datasets.config.cfg_dsads import cfg_dsads
 from whar_datasets.config.cfg_falldet import cfg_falldet
+from whar_datasets.config.cfg_gotov import cfg_gotov
 from whar_datasets.config.cfg_hang_time import cfg_hang_time
 from whar_datasets.config.cfg_hapt import cfg_hapt
+from whar_datasets.config.cfg_har70 import cfg_har70
 from whar_datasets.config.cfg_har_sense import cfg_har_sense
 from whar_datasets.config.cfg_harth import cfg_harth
 from whar_datasets.config.cfg_hugadb import cfg_hugadb
@@ -58,6 +60,8 @@ class WHARDatasetID(Enum):
     REAL_DISP = "real_disp"
     HARTH = "harth"
     FALLDET = "falldet"
+    HAR70 = "har70"
+    GOTOV = "gotov"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -87,6 +91,8 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.REAL_DISP: (cfg_real_disp),
     WHARDatasetID.HARTH: (cfg_harth),
     WHARDatasetID.FALLDET: (cfg_falldet),
+    WHARDatasetID.HAR70: (cfg_har70),
+    WHARDatasetID.GOTOV: (cfg_gotov),
 }
 
 
