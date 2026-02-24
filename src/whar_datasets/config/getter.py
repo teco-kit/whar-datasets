@@ -11,6 +11,7 @@ from whar_datasets.config.cfg_hapt import cfg_hapt
 from whar_datasets.config.cfg_har70 import cfg_har70
 from whar_datasets.config.cfg_har_sense import cfg_har_sense
 from whar_datasets.config.cfg_harth import cfg_harth
+from whar_datasets.config.cfg_hhar import cfg_hhar
 from whar_datasets.config.cfg_hugadb import cfg_hugadb
 from whar_datasets.config.cfg_ku_har import cfg_ku_har
 from whar_datasets.config.cfg_mhealth import cfg_mhealth
@@ -93,6 +94,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.FALLDET: (cfg_falldet),
     WHARDatasetID.HAR70: (cfg_har70),
     WHARDatasetID.GOTOV: (cfg_gotov),
+    WHARDatasetID.HHAR: (cfg_hhar),
 }
 
 
