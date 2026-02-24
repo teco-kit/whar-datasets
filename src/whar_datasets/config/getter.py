@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Dict
 
+from whar_datasets.config.cfg_bmhad import cfg_bmhad
 from whar_datasets.config.cfg_capture24 import cfg_capture_24
 from whar_datasets.config.cfg_daphnet import cfg_daphnet
 from whar_datasets.config.cfg_dsads import cfg_dsads
@@ -22,10 +23,13 @@ from whar_datasets.config.cfg_real_disp import cfg_real_disp
 from whar_datasets.config.cfg_real_life_har import cfg_real_life_har
 from whar_datasets.config.cfg_real_world import cfg_real_world
 from whar_datasets.config.cfg_sad import cfg_sad
+from whar_datasets.config.cfg_uca_ehar import cfg_uca_ehar
 from whar_datasets.config.cfg_uci_har import cfg_uci_har
 from whar_datasets.config.cfg_uma_fall import cfg_uma_fall
 from whar_datasets.config.cfg_unimib_shar import cfg_unimib
+from whar_datasets.config.cfg_up_fall import cfg_up_fall
 from whar_datasets.config.cfg_usc_had import cfg_usc_had
+from whar_datasets.config.cfg_utd_mhad import cfg_utd_mhad
 from whar_datasets.config.cfg_w_har import cfg_w_har
 from whar_datasets.config.cfg_wisdm import cfg_wisdm
 from whar_datasets.config.cfg_wisdm_19_phone import cfg_wisdm_19_phone
@@ -63,6 +67,10 @@ class WHARDatasetID(Enum):
     FALLDET = "falldet"
     HAR70 = "har70"
     GOTOV = "gotov"
+    UTD_MHAD = "utd_mhad"
+    UP_FALL = "up_fall"
+    BMHAD = "bmhad"
+    UCA_EHAR = "uca_ehar"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -95,6 +103,10 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.HAR70: (cfg_har70),
     WHARDatasetID.GOTOV: (cfg_gotov),
     WHARDatasetID.HHAR: (cfg_hhar),
+    WHARDatasetID.UTD_MHAD: (cfg_utd_mhad),
+    WHARDatasetID.UP_FALL: (cfg_up_fall),
+    WHARDatasetID.BMHAD: (cfg_bmhad),
+    WHARDatasetID.UCA_EHAR: (cfg_uca_ehar),
 }
 
 

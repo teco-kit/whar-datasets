@@ -14,3 +14,4 @@ wheels/
 .DS_Store
 
 notes
+.env
