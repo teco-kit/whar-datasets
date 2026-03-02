@@ -4,7 +4,7 @@ This library offers comprehensive support for widely used WHAR (Wearable Human A
 
 - automated downloading from original sources and data extraction
 - parsing into a unified, standardized data format
-- configurable pre-processing (e.g., resampling, windowing) and post-processing (e.g., normalization, transformations)
+- configurable pre-processing (e.g., resampling, windowing) and post-processing (e.g., normalization)
 - dataset splitting for common evaluation protocols such as LOSO and K-Fold cross-validation
 - built-in caching and multi-processing for improved performance
 - seamless integration with PyTorch and TensorFlow
