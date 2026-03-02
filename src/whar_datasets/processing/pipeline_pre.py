@@ -6,6 +6,7 @@ import pandas as pd
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.pipeline import ProcessingPipeline
 from whar_datasets.processing.steps.downloading_step import DownloadingStep
+from whar_datasets.processing.steps.extracting_step import ExtractingStep
 from whar_datasets.processing.steps.parsing_step import ParsingStep
 from whar_datasets.processing.steps.windowing_step import WindowingStep
 
@@ -15,14 +16,14 @@ class PreProcessingPipeline(ProcessingPipeline):
         # define directories
         self.datasets_dir = Path(cfg.datasets_dir)
         self.dataset_dir = self.datasets_dir / cfg.dataset_id
-        self.raw_dir = self.dataset_dir / "data"
+        self.data_dir = self.dataset_dir / "data"
         self.metadata_dir = self.dataset_dir / "metadata"
         self.sessions_dir = self.dataset_dir / "sessions"
         self.windows_dir = self.dataset_dir / "windows"
 
         # create directories
         self.dataset_dir.mkdir(parents=True, exist_ok=True)
-        self.raw_dir.mkdir(parents=True, exist_ok=True)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         self.metadata_dir.mkdir(parents=True, exist_ok=True)
         self.sessions_dir.mkdir(parents=True, exist_ok=True)
         self.windows_dir.mkdir(parents=True, exist_ok=True)
@@ -38,15 +39,21 @@ class PreProcessingPipeline(ProcessingPipeline):
             cfg=cfg,
             datasets_dir=self.datasets_dir,
             dataset_dir=self.dataset_dir,
-            raw_dir=self.raw_dir,
+            data_dir=self.data_dir,
+        )
+
+        self.extracting_step = ExtractingStep(
+            cfg=cfg,
+            data_dir=self.data_dir,
+            dependent_on=[self.downloading_step],
         )
 
         self.parsing_step = ParsingStep(
             cfg=cfg,
-            raw_dir=self.raw_dir,
+            data_dir=self.data_dir,
             metadata_dir=self.metadata_dir,
             sessions_dir=self.sessions_dir,
-            dependent_on=[self.downloading_step],
+            dependent_on=[self.extracting_step],
         )
 
         self.windowing_step = WindowingStep(
@@ -58,7 +65,12 @@ class PreProcessingPipeline(ProcessingPipeline):
         )
 
         super().__init__(
-            steps=[self.downloading_step, self.parsing_step, self.windowing_step]
+            steps=[
+                self.downloading_step,
+                self.extracting_step,
+                self.parsing_step,
+                self.windowing_step,
+            ]
         )
 
     def run(

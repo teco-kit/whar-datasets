@@ -1,10 +1,10 @@
 from typing import Any, List
 
-from whar_datasets.processing.steps.processing_step import ProcessingStep
+from whar_datasets.processing.steps.abstract_step import AbstractStep
 
 
 class ProcessingPipeline:
-    def __init__(self, steps: List[ProcessingStep]):
+    def __init__(self, steps: List[AbstractStep]):
         self.steps = steps
 
     def run(self, force_recompute: bool | List[bool] | None = None) -> Any:

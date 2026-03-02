@@ -182,7 +182,8 @@ def parse_uci_har(
         session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="ms")
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
-        session_df = session_df.round(6)
+        float_cols = [col for col in session_df.columns if col != "timestamp"]
+        session_df[float_cols] = session_df[float_cols].round(6)
         session_df = session_df.astype(dtypes)
 
         # add to sessions
@@ -202,6 +203,7 @@ def parse_uci_har(
 cfg_uci_har = WHARConfig(
     # Info + common
     dataset_id="uci_har",
+    dataset_url="https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones",
     download_url="https://archive.ics.uci.edu/static/public/240/human+activity+recognition+using+smartphones.zip",
     sampling_freq=50,
     num_of_subjects=30,

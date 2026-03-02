@@ -6,6 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
+from whar_datasets.config.timestamps import to_datetime64_ms
 
 NAMES = [
     "timestamp",
@@ -111,7 +112,7 @@ def parse_pamap2(
         sub_df["heart_rate"] = sub_df["heart_rate"].bfill()
 
         # change timestamp to datetime in ns
-        sub_df["timestamp"] = pd.to_datetime(sub_df["timestamp"], unit="s")
+        sub_df["timestamp"] = to_datetime64_ms(sub_df["timestamp"], default_unit="s")
 
         # map to types
         types_map = defaultdict(lambda: "float32")
@@ -184,10 +185,11 @@ def parse_pamap2(
         ).reset_index(drop=True)
 
         # set types
-        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="ms")
+        session_df["timestamp"] = to_datetime64_ms(session_df["timestamp"])
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
-        session_df = session_df.round(6)
+        float_cols = [col for col in session_df.columns if col != "timestamp"]
+        session_df[float_cols] = session_df[float_cols].round(6)
         session_df = session_df.astype(dtypes)
 
         # add to sessions
@@ -207,6 +209,7 @@ def parse_pamap2(
 cfg_pamap2 = WHARConfig(
     # Info + common
     dataset_id="pamap2",
+    dataset_url="https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring",
     download_url="https://archive.ics.uci.edu/static/public/231/pamap2+physical+activity+monitoring.zip",
     sampling_freq=100,
     num_of_subjects=9,
@@ -232,6 +235,8 @@ cfg_pamap2 = WHARConfig(
         "rope jumping",
     ],
     sensor_channels=[
+        "heart_rate",
+        "hand_temp",
         "hand_acc_x",
         "hand_acc_y",
         "hand_acc_z",
@@ -244,6 +249,11 @@ cfg_pamap2 = WHARConfig(
         "hand_mag_x",
         "hand_mag_y",
         "hand_mag_z",
+        "hand_orient_x",
+        "hand_orient_y",
+        "hand_orient_z",
+        "hand_orient_w",
+        "chest_temp",
         "chest_acc_x",
         "chest_acc_y",
         "chest_acc_z",
@@ -256,6 +266,11 @@ cfg_pamap2 = WHARConfig(
         "chest_mag_x",
         "chest_mag_y",
         "chest_mag_z",
+        "chest_orient_x",
+        "chest_orient_y",
+        "chest_orient_z",
+        "chest_orient_w",
+        "ankle_temp",
         "ankle_acc_x",
         "ankle_acc_y",
         "ankle_acc_z",
@@ -268,6 +283,10 @@ cfg_pamap2 = WHARConfig(
         "ankle_mag_x",
         "ankle_mag_y",
         "ankle_mag_z",
+        "ankle_orient_x",
+        "ankle_orient_y",
+        "ankle_orient_z",
+        "ankle_orient_w",
     ],
     window_time=1.28,
     window_overlap=0.5,

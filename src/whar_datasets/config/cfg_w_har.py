@@ -5,6 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
+from whar_datasets.config.timestamps import to_datetime64_ms
 
 
 def parse_w_har(
@@ -65,10 +66,13 @@ def parse_w_har(
         ).reset_index(drop=True)
 
         # set types
-        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="s")
+        session_df["timestamp"] = to_datetime64_ms(
+            session_df["timestamp"], default_unit="s"
+        )
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
-        session_df = session_df.round(6)
+        float_cols = [col for col in session_df.columns if col != "timestamp"]
+        session_df[float_cols] = session_df[float_cols].round(6)
         session_df = session_df.astype(dtypes)
 
         # add to sessions
@@ -90,6 +94,7 @@ def parse_w_har(
 # config Zeugs
 cfg_w_har = WHARConfig(
     dataset_id="w_har",
+    dataset_url="https://github.com/gmbhat/human-activity-recognition",
     download_url="https://github.com/gmbhat/human-activity-recognition/raw/refs/heads/master/datasets/raw_data/motion_data_22_users.csv",
     sampling_freq=250,  # ist das pro Sekunde? dann ist 250 richtig
     num_of_subjects=22,

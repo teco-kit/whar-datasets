@@ -107,7 +107,8 @@ def parse_usc_had(
         session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="ns")
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
-        session_df = session_df.round(6)
+        float_cols = [col for col in session_df.columns if col != "timestamp"]
+        session_df[float_cols] = session_df[float_cols].round(6)
         session_df = session_df.astype(dtypes)
 
         sessions[session_id] = session_df
@@ -144,6 +145,7 @@ def parse_usc_had(
 # config Zeugs
 cfg_usc_had = WHARConfig(
     dataset_id="usc_had",
+    dataset_url="https://sipi.usc.edu/had/",
     download_url="https://sipi.usc.edu/had/USC-HAD.zip",
     sampling_freq=100,
     num_of_subjects=14,

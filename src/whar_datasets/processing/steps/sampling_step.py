@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
-from whar_datasets.processing.steps.processing_step import ProcessingStep
+from whar_datasets.processing.steps.abstract_step import AbstractStep
 from whar_datasets.processing.utils.caching import cache_samples
 from whar_datasets.processing.utils.normalization import get_norm_params
 from whar_datasets.processing.utils.preparation import (
@@ -19,7 +19,7 @@ base_type: TypeAlias = Dict[str, pd.DataFrame]
 result_type: TypeAlias = Dict[str, List[np.ndarray]]
 
 
-class SamplingStep(ProcessingStep):
+class SamplingStep(AbstractStep):
     def __init__(
         self,
         cfg: WHARConfig,
@@ -28,7 +28,7 @@ class SamplingStep(ProcessingStep):
         windows_dir: Path,
         window_df: pd.DataFrame,
         indices: List[int],
-        dependent_on: List[ProcessingStep],
+        dependent_on: List[AbstractStep],
     ):
         super().__init__(cfg, samples_dir, dependent_on)
 

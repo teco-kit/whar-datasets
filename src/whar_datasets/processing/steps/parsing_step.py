@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Set, Tuple, TypeAlias
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
-from whar_datasets.processing.steps.processing_step import ProcessingStep
+from whar_datasets.processing.steps.abstract_step import AbstractStep
 from whar_datasets.processing.utils.caching import cache_common_format
 from whar_datasets.utils.loading import load_activity_df, load_session_df, load_sessions
 from whar_datasets.utils.logging import logger
@@ -17,18 +17,18 @@ result_type: TypeAlias = Tuple[
 ]
 
 
-class ParsingStep(ProcessingStep):
+class ParsingStep(AbstractStep):
     def __init__(
         self,
         cfg: WHARConfig,
-        raw_dir: Path,
+        data_dir: Path,
         metadata_dir: Path,
         sessions_dir: Path,
-        dependent_on: List[ProcessingStep],
+        dependent_on: List[AbstractStep],
     ):
         super().__init__(cfg, sessions_dir, dependent_on)
 
-        self.download_dir = raw_dir
+        self.data_dir = data_dir
         self.metadata_dir = metadata_dir
         self.sessions_dir = sessions_dir
 
@@ -39,20 +39,20 @@ class ParsingStep(ProcessingStep):
         return None
 
     def check_initial_format(self, base: base_type) -> bool:
-        logger.info("Checking download")
+        logger.info("Checking extracted data")
 
-        if not self.download_dir.exists():
-            logger.warning(f"Download directory not found at '{self.download_dir}'.")
+        if not self.data_dir.exists():
+            logger.warning(f"Data directory not found at '{self.data_dir}'.")
             return False
 
-        logger.info("Download exists")
+        logger.info("Data directory exists")
         return True
 
     def compute_results(self, base: base_type) -> result_type:
         logger.info("Parsing to common format")
 
         activity_df, session_df, sessions = self.cfg.parse(
-            str(self.download_dir), self.cfg.activity_id_col
+            str(self.data_dir), self.cfg.activity_id_col
         )
 
         return activity_df, session_df, sessions

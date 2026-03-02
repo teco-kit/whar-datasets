@@ -7,6 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from whar_datasets.config.config import NormType, WHARConfig
+from whar_datasets.config.timestamps import to_datetime64_ms
 
 ACTIVITY_MAP = {
     0: "Stand",
@@ -33,6 +34,8 @@ ACTIVITY_MAP = {
 def parse_ku_har(
     dir: str, activity_id_col: str
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+    del activity_id_col
+
     session_metadata_dict = defaultdict(list)
     session_dfs = []
 
@@ -88,8 +91,8 @@ def parse_ku_har(
                 )
 
             # Optionally convert timestamps to datetime after interpolation
-            session_df["timestamp"] = pd.to_datetime(
-                session_df["timestamp_acc"], unit="s"
+            session_df["timestamp"] = to_datetime64_ms(
+                session_df["timestamp_acc"], default_unit="s"
             )
             session_df = session_df.drop(columns=["timestamp_acc", "timestamp_gyro"])
 
@@ -124,19 +127,38 @@ def parse_ku_har(
 
         # drop nan rows
         session_df = session_df.dropna()
+        if session_df.empty:
+            continue
 
         # drop index
         session_df.reset_index(drop=True, inplace=True)
 
         # set types
-        session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="ms")
+        session_df["timestamp"] = to_datetime64_ms(session_df["timestamp"])
         dtypes = {col: "float32" for col in session_df.columns if col != "timestamp"}
         dtypes["timestamp"] = "datetime64[ms]"
-        session_df = session_df.round(6)
+        float_cols = [col for col in session_df.columns if col != "timestamp"]
+        session_df[float_cols] = session_df[float_cols].round(6)
         session_df = session_df.astype(dtypes)
 
         # add to sessions
         sessions[session_id] = session_df
+
+    # Keep metadata in sync with non-empty sessions and ensure dense session ids.
+    session_metadata = session_metadata[
+        session_metadata["session_id"].isin(sessions.keys())
+    ].copy()
+    session_metadata = session_metadata.reset_index(drop=True)
+    id_map = {
+        int(old_sid): int(new_sid)
+        for new_sid, old_sid in enumerate(session_metadata["session_id"].tolist())
+    }
+    session_metadata["session_id"] = session_metadata["session_id"].map(id_map)
+    sessions = {
+        id_map[int(old_sid)]: session
+        for old_sid, session in sessions.items()
+        if int(old_sid) in id_map
+    }
 
     # set metadata types
     activity_metadata = activity_metadata.astype(
@@ -152,6 +174,7 @@ def parse_ku_har(
 cfg_ku_har = WHARConfig(
     # Info fields + common
     dataset_id="ku_har",
+    dataset_url="https://data.mendeley.com/datasets/45f952y38r/5",
     download_url="https://data.mendeley.com/public-files/datasets/45f952y38r/files/49c6120b-59fd-466c-97da-35d53a4be595/file_downloaded",
     sampling_freq=100,
     num_of_subjects=89,
