@@ -11,14 +11,19 @@ This library offers comprehensive support for widely used WHAR (Wearable Human A
 
 The library currently includes out-of-the-box support for 33 datasets (listed below). Additional WHAR datasets can be easily integrated by defining a custom configuration with an associated parser and registering it with the framework.
 
+# Notice 
 
-# How to Install
+This library does not host any datasets. To use a dataset, please visit its original website and make sure you understand and agree to the dataset’s terms and conditions.
+
+# How to Use 
+
+### Installation
 
 ```
 pip install "git+https://github.com/teco-kit/whar-datasets.git"
 ```
 
-# How To Use With PyTorch
+### Example with PyTorch
 
 ```python
 from whar_datasets import (
@@ -53,8 +58,9 @@ adapter = TorchAdapter(cfg, loader, split)
 dataloaders = adapter.get_dataloaders(batch_size=64)
 ```
 
+# Supported Datasets
 
-# Single-Sensor Datasets
+### Single-Sensor Datasets
 
 | Supported | Name | Year | Paper | Citations |
 | --- | --- | --- | --- | --- |
@@ -73,7 +79,7 @@ dataloaders = adapter.get_dataloaders(batch_size=64)
 | ✅ | [CAPTURE-24](https://ora.ox.ac.uk/objects/uuid:99d7c092-d865-4a19-b096-cc16440cd001) | 2024 | *CAPTURE-24: A large dataset of wrist-worn activity tracker data collected in the wild for human activity recognition* | 45 |
 
 
-# Multi-Sensor Datasets
+### Multi-Sensor Datasets
 
 | Supported | Name | Year | Paper | Citations |
 | --- | --- | --- | --- | --- |
