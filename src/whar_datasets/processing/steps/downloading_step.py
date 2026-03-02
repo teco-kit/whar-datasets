@@ -3,7 +3,7 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Any, Set, TypeAlias
+from typing import Any, List, Set, TypeAlias
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -115,12 +115,59 @@ class DownloadingStep(AbstractStep):
 
         return None
 
-    def _download_kaggle_dataset(self, request_auth: tuple[str, str]) -> None:
+    def _normalize_download_urls(self) -> List[str]:
+        if isinstance(self.cfg.download_url, str):
+            urls = [self.cfg.download_url]
+        else:
+            urls = list(self.cfg.download_url)
+
+        normalized_urls = [
+            url.strip() for url in urls if isinstance(url, str) and url.strip()
+        ]
+        if not normalized_urls:
+            raise RuntimeError(
+                f"Config '{self.cfg.dataset_id}' must define at least one non-empty download URL."
+            )
+
+        return normalized_urls
+
+    @staticmethod
+    def _filename_from_url(url: str) -> str:
+        path_name = Path(urlparse(url).path).name
+        return path_name if path_name else "download.bin"
+
+    def _build_download_path(
+        self,
+        url: str,
+        index: int,
+        used_filenames: Set[str],
+    ) -> Path:
+        base_name = self._filename_from_url(url)
+        candidate = base_name
+
+        if candidate in used_filenames:
+            stem = Path(base_name).stem
+            suffix = Path(base_name).suffix
+            candidate = f"{stem}_{index + 1}{suffix}"
+
+        dedupe_idx = 2
+        while candidate in used_filenames:
+            stem = Path(base_name).stem
+            suffix = Path(base_name).suffix
+            candidate = f"{stem}_{index + 1}_{dedupe_idx}{suffix}"
+            dedupe_idx += 1
+
+        used_filenames.add(candidate)
+        return self.data_dir / candidate
+
+    def _download_kaggle_dataset(
+        self,
+        url: str,
+        request_auth: tuple[str, str],
+    ) -> None:
         from kaggle.api.kaggle_api_extended import KaggleApi
 
-        owner_slug, dataset_slug, version = self._parse_kaggle_dataset_url(
-            self.cfg.download_url
-        )
+        owner_slug, dataset_slug, version = self._parse_kaggle_dataset_url(url)
         kaggle_username, kaggle_key = request_auth
 
         # Kaggle client reads credentials from env during authenticate().
@@ -153,20 +200,14 @@ class DownloadingStep(AbstractStep):
             else:
                 os.environ["KAGGLE_KEY"] = prev_key
 
-    def compute_results(self, base: base_type) -> result_type:
-        # Use filename to define file path
-        filename = self.cfg.download_url.split("/")[-1]
-        file_path = self.data_dir / filename
-
-        # download file from url
-        logger.info(f"Downloading {self.cfg.dataset_id}")
+    def _download_single_url(self, url: str, file_path: Path) -> None:
         request_headers = {
             "User-Agent": (
                 "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                 "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
             ),
         }
-        is_kaggle_api_download = self._is_kaggle_api_download(self.cfg.download_url)
+        is_kaggle_api_download = self._is_kaggle_api_download(url)
         request_auth: tuple[str, str] | None = None
 
         if is_kaggle_api_download:
@@ -180,7 +221,7 @@ class DownloadingStep(AbstractStep):
                     "or a discoverable .env file."
                 )
             request_auth = kaggle_creds
-            self._download_kaggle_dataset(request_auth)
+            self._download_kaggle_dataset(url, request_auth)
             return
 
         should_fallback_to_playwright = False
@@ -188,7 +229,7 @@ class DownloadingStep(AbstractStep):
         try:
             # First-pass plain HTTP download for direct file URLs.
             with requests.get(
-                self.cfg.download_url,
+                url,
                 headers=request_headers,
                 auth=request_auth,
                 timeout=120,
@@ -243,9 +284,7 @@ class DownloadingStep(AbstractStep):
                 page = await context.new_page()
                 try:
                     # Fast path: works for direct file URLs and avoids waiting on page load events.
-                    response = await context.request.get(
-                        self.cfg.download_url, timeout=120000
-                    )
+                    response = await context.request.get(url, timeout=120000)
                     content_type = (response.headers.get("content-type") or "").lower()
                     if response.ok and "text/html" not in content_type:
                         body = await response.body()
@@ -263,7 +302,7 @@ class DownloadingStep(AbstractStep):
                     )
                     async with page.expect_download(timeout=120000) as download_info:
                         await page.goto(
-                            self.cfg.download_url,
+                            url,
                             wait_until="domcontentloaded",
                             timeout=120000,
                         )
@@ -301,6 +340,19 @@ class DownloadingStep(AbstractStep):
         except Exception as e:
             logger.error(f"Async download failed: {e}")
             raise
+
+    def compute_results(self, base: base_type) -> result_type:
+        download_urls = self._normalize_download_urls()
+        used_filenames: Set[str] = set()
+
+        logger.info(f"Downloading {self.cfg.dataset_id} from {len(download_urls)} URL(s)")
+
+        for index, url in enumerate(download_urls):
+            file_path = self._build_download_path(url, index, used_filenames)
+            logger.info(
+                f"Downloading [{index + 1}/{len(download_urls)}]: {url} -> {file_path.name}"
+            )
+            self._download_single_url(url, file_path)
 
     def save_results(self, results: result_type) -> None:
         return None

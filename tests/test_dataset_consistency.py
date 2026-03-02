@@ -100,7 +100,12 @@ def _make_common_format_payload(
 @pytest.mark.parametrize(("dataset_id", "cfg"), CFG_ITEMS)
 def test_dataset_cfg_basic_semantics(dataset_id: WHARDatasetID, cfg) -> None:
     assert cfg.dataset_id == dataset_id.value
-    assert cfg.download_url.startswith(("http://", "https://"))
+    if isinstance(cfg.download_url, str):
+        download_urls = [cfg.download_url]
+    else:
+        download_urls = list(cfg.download_url)
+    assert len(download_urls) > 0
+    assert all(url.startswith(("http://", "https://")) for url in download_urls)
     assert cfg.sampling_freq > 0
     assert cfg.num_of_subjects > 0
     assert cfg.num_of_activities > 0

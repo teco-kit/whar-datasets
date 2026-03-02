@@ -1,3 +1,24 @@
+# Features TODO
+
+- multiple activtiry labels (hierarchies)
+- multiple downloads
+- unit tests
+- really all are multichannel?
+- unstetigkeiten?
+
+
+- how to handle licenses?
+    - add info to readme
+    - add runtime prompt
+        - includ doc_url in dataset cfg
+        - add hash to know if already accepted
+
+
+- too large to test
+    - capture24
+    - realdisp
+
+
 Got it. That's a very practical distinction. Physiological signals (like ECG, EMG, heart rate) and environmental time-series data (like stretch sensors or audio/MFCC) are fundamentally still 1D time-series data streams, much like IMU data. Reserving Group 3 strictly for non-time-series, high-dimensional modalities (like RGB video, depth cameras, or optical motion capture) makes the boundary much clearer for a machine learning benchmark.
 
 Here are the newly adjusted tables. Group 1 and Group 4 remain exactly as they were before, while Group 2 has been expanded to include all the time-series physiological/ambient datasets. All tables are sorted by citations in descending order, and no cell contents have been changed.
@@ -53,6 +74,7 @@ Here are the newly adjusted tables. Group 1 and Group 4 remain exactly as they w
 | ✅ | [HuGaDB](https://github.com/romanchereshnev/HuGaDB) | 2018 | *HuGaDB: Human Gait Database for Activity Recognition from Wearable Inertial Sensor Networks* | 154 | 18 participants (14 male, 4 female, average age 23.67 y) | 12 activities – Walking, Running, Going up stairs, Going down stairs, Sitting, Sitting down, Standing up, Standing, Bicycling, Elevator up, Elevator down, Sitting in car | 6 wearable inertial sensors (accelerometer + gyroscope) on right/left thighs, shins, feet, 2 EMG sensors on quadriceps |
 | ✅ | [HARTH](https://archive.ics.uci.edu/dataset/779/harth) | 2021 | *HARTH: A Human Activity Recognition Dataset for Machine Learning* | 132 | 22 | 12 (walking, running, shuffling, stairs up, stairs down, standing, sitting, lying, cycling (sit), cycling (stand), cycling (sit, inactive), cycling (stand, inactive)) | 2 × 3-axis accelerometers (attached to right thigh and lower back), sampling rate 50 Hz |
 | ✅ | [w-HAR](https://github.com/gmbhat/human-activity-recognition) | 2020 | *w-HAR: An Activity Recognition Dataset and Framework Using Low-Power Wearable Devices* | 100 | 22 | 7  | inertial and wearable stretch sensors, thus providing two modalities of activity information |
+| ✅  | [WEAR](https://mariusbock.github.io/wear/) | 2024 | *Wear: An outdoor sports dataset for wearable and egocentric activity recognition* | 66 | 22 | 8 different workout activities | synchronized inertial (acceleration) and camera (egocentric video) data |
 | ✅ | [HAR70+](https://archive.ics.uci.edu/dataset/780/har70) | 2021 | *A machine learning classifier for detection of physical activity types and postures during free-living* | 55 | 18 older adults (age 70–95 years) | 7 (walking, shuffling, stairs (ascending), stairs (descending), standing, sitting, lying) | 2 × 3-axial accelerometers (Axivity AX3) — one on the right thigh, one on the lower back, sampling at 50 Hz |
 | ✅ | [UCA-EHAR](https://zenodo.org/records/5659336) | 2022 | *UCA-EHAR: A Dataset for Human Activity Recognition with Embedded AI on Smart Glasses* | 35 | 20 adult subjects (8 women and 12 men) | 8 different activities: STANDING, SITTING, WALKING, LYING, WALKING_DOWNSTAIRS, WALKING_UPSTAIRS, RUNNING, and DRINKING | An accelerometer, a gyroscope, and a barometer embedded onto Ellcie Healthy smart glasses. The accelerometer and gyroscope are sampled at 26 Hz, while the barometer is sampled at 6.66 Hz |
 | ✅ | [GOTOV](https://data.4tu.nl/articles/dataset/GOTOV_Human_Physical_Activity_and_Energy_Expenditure_Dataset_on_Older_Individuals/12716081) | 2022 | *A recurrent neural network architecture to model physical activity energy expenditure in older people* | 33 | 35 healthy older adults (14 female, 21 male, all over 60 years old) | 16 activities of daily living including low intensity (lying down, sitting), mid intensity (standing, household activities), high intensity (walking, cycling), both indoor and outdoor; some activities recorded at multiple granularities | 3× GeneActiv accelerometers (ankle, wrist, chest), 1× Equivital (chest), COSMED (mask and belt on chest) |
@@ -63,7 +85,6 @@ Here are the newly adjusted tables. Group 1 and Group 4 remain exactly as they w
 | Supported | Name | Year | Paper | Citations | Subjects | Activities | Sensors |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | ⬜ | [SHL](http://www.shl-dataset.org/) | 2018 | *The University of Sussex-Huawei Locomotion and Transportation Dataset for Multimodal Analytics with Mobile Devices* | 317 | 3 | 8 locomotion/transportation modes — Car, Bus, Train, Subway, Walk, Run, Bike, Still | Multi-modal sensors from 4 smartphones (torso, backpack, hand, pocket), (accelerometer, gyroscope, likely magnetometer, GPS) and a body-worn camera |
-| ⬜ | [WEAR](https://mariusbock.github.io/wear/) | 2024 | *Wear: An outdoor sports dataset for wearable and egocentric activity recognition* | 66 | 22 | 8 different workout activities | synchronized inertial (acceleration) and camera (egocentric video) data |
 | ⬜ | [ExtraSensory](http://extrasensory.ucsd.edu/) | 2016 | *Recognizing Detailed Human Context In-the-Wild from Smartphones and Smartwatches* | 402 | 60 users (34 female, 26 male, mostly students and research assistants, age 18–42, various ethnicities, handedness, and body stats). | Multi-label behavioral context recognition, including 7 main activities (lying down, sitting, standing in place, standing and moving, walking, running, bicycling) and 109 secondary activities (e.g., sports, transportation, basic needs, company, location), with an average of ~3.8 labels per example; total of 103 cleaned labels applied. | Smartphone and smartwatch sensors, including accelerometer, gyroscope, magnetometer, watch accelerometer, watch compass, audio (MFCC), location, phone state, gravity, and additional sensors (light, air pressure, humidity, temperature), sampled at various frequencies (25–40 Hz for motion sensors, 22 kHz audio, once-per-minute for low-frequency sensors). |
 | ⬜ | [Ego4D]() | 2022 | *Ego4D: Around the World in 3,000 Hours of Egocentric Video* | 1763 | 931 participants | Unscripted daily life activities spanning hundreds of scenarios (household, outdoor, workplace, leisure, etc.) captured in 74 worldwide locations | 7 different head-mounted cameras (e.g., GoPro, Vuzix Blade) capturing RGB video; subsets include audio, 3D scans (Matterport3D), gaze, stereo, and IMU data |
 | ⬜ | [CMU-MMAC](https://kitchen.cs.cmu.edu/) | 2009 | *Temporal Segmentation and Activity Classification from First-person Sensing* | 358 | 43 | Cooking and food preparation activities (5 recipes: brownies, pizza, sandwich, salad, scrambled eggs) | Wearable camera, microphones, and 5 wearable 3-axis IMUs (accelerometer, gyroscope, magnetometer) placed on the torso, arms, and legs |

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, field_serializer
 
@@ -9,7 +9,7 @@ class WHARConfig(BaseModel):
     # metadata fields
     dataset_id: str
     dataset_url: str
-    download_url: str
+    download_url: Union[str, List[str]]
     sampling_freq: int
     num_of_subjects: int
     num_of_activities: int

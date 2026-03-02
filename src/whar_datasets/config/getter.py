@@ -31,6 +31,7 @@ from whar_datasets.config.cfg_up_fall import cfg_up_fall
 from whar_datasets.config.cfg_usc_had import cfg_usc_had
 from whar_datasets.config.cfg_utd_mhad import cfg_utd_mhad
 from whar_datasets.config.cfg_w_har import cfg_w_har
+from whar_datasets.config.cfg_wear import cfg_wear
 from whar_datasets.config.cfg_wisdm import cfg_wisdm
 from whar_datasets.config.cfg_wisdm_19_phone import cfg_wisdm_19_phone
 from whar_datasets.config.cfg_wisdm_19_watch import cfg_wisdm_19_watch
@@ -71,6 +72,7 @@ class WHARDatasetID(Enum):
     UP_FALL = "up_fall"
     BMHAD = "bmhad"
     UCA_EHAR = "uca_ehar"
+    WEAR = "wear"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -107,6 +109,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.UP_FALL: (cfg_up_fall),
     WHARDatasetID.BMHAD: (cfg_bmhad),
     WHARDatasetID.UCA_EHAR: (cfg_uca_ehar),
+    WHARDatasetID.WEAR: (cfg_wear),
 }
 
 
