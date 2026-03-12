@@ -1,3 +1,5 @@
+import hashlib
+import json
 from pathlib import Path
 from typing import Dict, List, Set, TypeAlias
 
@@ -30,13 +32,19 @@ class SamplingStep(AbstractStep):
         indices: List[int],
         dependent_on: List[AbstractStep],
     ):
-        super().__init__(cfg, samples_dir, dependent_on)
-
+        self.samples_root_dir = samples_dir
         self.metadata_dir = metadata_dir
-        self.samples_dir = samples_dir
+        self.split_hash = self._compute_split_hash(indices)
+        self.samples_dir = (
+            self.samples_root_dir / self.split_hash
+            if cfg.cache_each_split
+            else self.samples_root_dir
+        )
         self.windows_dir = windows_dir
         self.window_df = window_df
         self.indices = indices
+
+        super().__init__(cfg, self.samples_dir, dependent_on)
 
         self.hash_name: str = "sampling_hash"
         self.relevant_cfg_keys: Set[str] = {
@@ -45,8 +53,15 @@ class SamplingStep(AbstractStep):
             "val_percentage",
             "normalization",
             "transform",
+            "cache_each_split",
         }
         self.relevant_values = [str(i) for i in self.indices]
+
+    @staticmethod
+    def _compute_split_hash(indices: List[int]) -> str:
+        # Hash normalized train indices so identical splits map to one cache directory.
+        payload = json.dumps(sorted(indices), separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     def get_base(self) -> base_type:
         windows = load_windows(self.window_df, self.windows_dir)

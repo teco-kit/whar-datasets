@@ -19,6 +19,7 @@ class WHARConfig(BaseModel):
     datasets_dir: str = "./datasets/"  # directory to cache datasets
     in_memory: bool = True  # whether to load the dataset fully into memory
     parallelize: bool = False  # whether to parallelize preprocessing
+    cache_each_split: bool = True  # cache samples per split hash
 
     # parsing fields
     parse: Parse  # function to parse raw data files to common format

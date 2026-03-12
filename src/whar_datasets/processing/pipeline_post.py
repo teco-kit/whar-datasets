@@ -18,19 +18,20 @@ class PostProcessingPipeline(ProcessingPipeline):
         indices: List[int],
     ):
         self.cfg = cfg
-        self.samples_dir = pre_processing_pipeline.dataset_dir / "samples"
+        self.samples_root_dir = pre_processing_pipeline.dataset_dir / "samples"
         self.metadata_dir = pre_processing_pipeline.metadata_dir
         self.windows_dir = pre_processing_pipeline.windows_dir
 
         self.sampling_step = SamplingStep(
             cfg=cfg,
             metadata_dir=self.metadata_dir,
-            samples_dir=self.samples_dir,
+            samples_dir=self.samples_root_dir,
             windows_dir=self.windows_dir,
             window_df=window_df,
             indices=indices,
             dependent_on=[pre_processing_pipeline.windowing_step],
         )
+        self.samples_dir = self.sampling_step.samples_dir
 
         super().__init__(steps=[self.sampling_step])
 
