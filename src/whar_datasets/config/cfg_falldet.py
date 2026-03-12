@@ -31,7 +31,9 @@ FALLDET_FINE_ACTIVITY_NAMES: List[str] = [
 ]
 
 FALLDET_BINARY_ACTIVITY_NAMES: List[str] = ["fall", "non_fall"]
-FALLDET_SESSION_GAP_SECONDS = 180.0
+FALLDET_SAMPLING_FREQ_HZ = 50.0
+FALLDET_MAX_STEP_MULTIPLIER = 3.0
+FALLDET_SESSION_GAP_SECONDS = FALLDET_MAX_STEP_MULTIPLIER / FALLDET_SAMPLING_FREQ_HZ
 
 
 def _normalize_token(token: str) -> str:
@@ -114,6 +116,13 @@ def _load_session_from_csv(file_path: Path) -> pd.DataFrame:
         raise ValueError(f"No valid accelerometer rows left in '{file_path.name}'.")
 
     session_df = session_df.sort_values("timestamp").reset_index(drop=True)
+    # Collapse millisecond collisions to guarantee strictly increasing timestamps.
+    session_df = (
+        session_df.groupby("timestamp", as_index=False)[FALLDET_SENSOR_CHANNELS]
+        .mean()
+        .sort_values("timestamp")
+        .reset_index(drop=True)
+    )
     session_df["timestamp"] = session_df["timestamp"].astype("datetime64[ms]")
     session_df[FALLDET_SENSOR_CHANNELS] = session_df[FALLDET_SENSOR_CHANNELS].astype(
         "float32"

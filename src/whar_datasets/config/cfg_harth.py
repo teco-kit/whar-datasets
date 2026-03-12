@@ -48,7 +48,7 @@ HARTH_SENSOR_CHANNELS: List[str] = [
     "thigh_z",
 ]
 
-HARTH_SESSION_GAP_SECONDS = 10.0
+HARTH_MAX_STEP_MULTIPLIER = 3.0
 _SUBJECT_PATTERN = re.compile(r"^S(\d+)", re.IGNORECASE)
 
 
@@ -74,6 +74,8 @@ def parse_harth(
     global_session_id = 0
 
     required_columns = ["timestamp", *HARTH_SENSOR_CHANNELS, "label"]
+    expected_step_seconds = 1.0 / 50.0
+    max_allowed_gap_seconds = expected_step_seconds * HARTH_MAX_STEP_MULTIPLIER
 
     for csv_path in tqdm(csv_paths, desc="Parsing HARTH"):
         df = pd.read_csv(csv_path, parse_dates=["timestamp"])
@@ -92,7 +94,7 @@ def parse_harth(
 
         time_diff = df["timestamp"].diff().dt.total_seconds().fillna(0.0)
         activity_change = df[activity_id_col] != df[activity_id_col].shift(1)
-        session_gap = time_diff > HARTH_SESSION_GAP_SECONDS
+        session_gap = time_diff > max_allowed_gap_seconds
         session_start = activity_change | session_gap
         session_start.iloc[0] = True
         local_session_ids = session_start.cumsum().astype("int32")

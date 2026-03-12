@@ -30,9 +30,9 @@ HHAR_SENSOR_CHANNELS: List[str] = [
 # HHAR activity data was captured with multiple devices per user in overlapping
 # time windows. We therefore treat each (user, activity, device stream) as an
 # independent session source and do not merge across devices.
-HHAR_GAP_MULTIPLIER = 5.0
-HHAR_MIN_GAP_MS = 250.0
-HHAR_MAX_GAP_MS = 2_000.0
+HHAR_GAP_MULTIPLIER = 3.0
+HHAR_MIN_GAP_MS = 50.0
+HHAR_MAX_GAP_MS = 150.0
 
 
 def _resolve_hhar_root(data_dir: str) -> Path:

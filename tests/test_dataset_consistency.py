@@ -138,11 +138,7 @@ def test_dataset_cfg_parse_function_contract(dataset_id: WHARDatasetID, cfg) -> 
 
 
 def test_whar_dataset_enum_and_registry_are_in_sync() -> None:
-    implemented_ids = {
-        enum_member
-        for enum_member in WHARDatasetID
-        if enum_member != WHARDatasetID.HHAR
-    }
+    implemented_ids = {enum_member for enum_member in WHARDatasetID}
     assert set(har_dataset_dict.keys()) == implemented_ids
 
 
