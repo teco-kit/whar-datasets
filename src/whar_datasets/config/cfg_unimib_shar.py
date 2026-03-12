@@ -127,7 +127,7 @@ cfg_unimib = WHARConfig(
     # Info + common
     dataset_id="unimib_shar",
     dataset_url="http://www.sal.disco.unimib.it/technologies/unimib-shar/",
-    download_url=r"https://uca49515d91834b9e696812321f7.dl.dropboxusercontent.com/cd/0/get/C7Su1jAcRlICf-4t_U5oSJuHvhm2gar11GVbPhu3OTb3gufsm3YlMjJJ9bLluxkyxCWGrEWSgCAMCqUlJxfv3WbSDoVhgZUGkWyNelvt-wScE8WNn5RsEh7D0B60RBRt-JAiNkOVDNUG5D8rJsygjP-i4jE7BLOvGd6juVN2putmYdq0kSyvI2URhmJIQamICnU/file?_download_id=791856115059715474932647043585648413589735310769281530879669014&_log_download_success=1&_notify_domain=www.dropbox.com&dl=1",
+    download_url="https://www.dropbox.com/s/raw/x2fpfqj0bpf8ep6/UniMiB-SHAR.zip",
     sampling_freq=50,
     num_of_subjects=30,
     num_of_activities=17,

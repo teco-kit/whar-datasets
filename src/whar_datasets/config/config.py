@@ -4,6 +4,10 @@ from pydantic import BaseModel, field_serializer
 
 from whar_datasets.utils.types import NormType, Parse, TransformType
 
+WINDOW_TIME_SMALL = 1.0
+WINDOW_TIME_MEDIUM = 3.0
+WINDOW_TIME_LARGE = 5.0
+
 
 class WHARConfig(BaseModel):
     # metadata fields
@@ -28,7 +32,7 @@ class WHARConfig(BaseModel):
     # preprocessing fields
     activity_names: List[str]  # for filtering activities
     sensor_channels: List[str]  # for filtering sensor channels
-    window_time: float  # in seconds
+    window_time: float = WINDOW_TIME_MEDIUM  # in seconds
     window_overlap: float  # in [0,1]
     resampling_freq: Optional[int] = None
 

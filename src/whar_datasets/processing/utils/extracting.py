@@ -7,6 +7,14 @@ import zipfile
 from pathlib import Path
 
 
+def _has_gzip_magic(file_path: Path) -> bool:
+    try:
+        with file_path.open("rb") as handle:
+            return handle.read(2) == b"\x1f\x8b"
+    except OSError:
+        return False
+
+
 def extract(file_path: Path, extract_dir: Path) -> None:
     # 1. Extract depending on file type
     if tarfile.is_tarfile(file_path):
@@ -22,7 +30,7 @@ def extract(file_path: Path, extract_dir: Path) -> None:
         file_path.unlink()
 
     # 2b. Handle single-file .gz archives (e.g. *.csv.gz)
-    elif file_path.suffix.lower() == ".gz":
+    elif file_path.suffix.lower() == ".gz" and _has_gzip_magic(file_path):
         extract_dir.mkdir(parents=True, exist_ok=True)
         output_name = file_path.stem  # remove ".gz"
         output_path = extract_dir / output_name
@@ -57,7 +65,9 @@ def extract(file_path: Path, extract_dir: Path) -> None:
 
             # Check for RAR extension
             is_rar = nested_path.suffix.lower() == ".rar"
-            is_gz = nested_path.suffix.lower() == ".gz"
+            is_gz = nested_path.suffix.lower() == ".gz" and _has_gzip_magic(
+                nested_path
+            )
 
             if (
                 tarfile.is_tarfile(nested_path)
