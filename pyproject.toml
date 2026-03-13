@@ -33,6 +33,7 @@ dependencies = [
     "types-tensorflow>=2.18.0.20250516",
     "types-tqdm>=4.67.0.20250516",
     "umap-learn>=0.5.9.post2",
+    "tslearn>=0.8.0",
 ]
 
 [build-system]
