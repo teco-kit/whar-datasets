@@ -1,4 +1,5 @@
 from whar_datasets import (
+    WINDOW_TIME_MEDIUM,
     Loader,
     LOSOSplitter,
     PostProcessingPipeline,
@@ -10,6 +11,7 @@ from whar_datasets import (
 
 # create cfg for WISDM dataset
 cfg = get_dataset_cfg(WHARDatasetID.WISDM)
+cfg.window_time = WINDOW_TIME_MEDIUM
 
 # create and run pre-processing pipeline
 pre_pipeline = PreProcessingPipeline(cfg)

@@ -1,5 +1,11 @@
 # from whar_datasets.adapters.adapter_tf import TFAdapter
 from whar_datasets.adapters.adapter_torch import TorchAdapter
+from whar_datasets.config.config import (
+    WINDOW_TIME_LARGE,
+    WINDOW_TIME_MEDIUM,
+    WINDOW_TIME_SMALL,
+    WHARConfig,
+)
 from whar_datasets.config.getter import WHARDatasetID, get_dataset_cfg
 from whar_datasets.loading.loader import Loader
 from whar_datasets.processing.pipeline_post import PostProcessingPipeline
@@ -19,4 +25,8 @@ __all__ = [
     "WHARDatasetID",
     # "TFAdapter",
     "TorchAdapter",
+    "WHARConfig",
+    "WINDOW_TIME_SMALL",
+    "WINDOW_TIME_MEDIUM",
+    "WINDOW_TIME_LARGE",
 ]
