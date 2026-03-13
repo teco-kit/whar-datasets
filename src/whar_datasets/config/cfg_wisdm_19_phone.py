@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 LETTER_TO_INT = {
@@ -122,12 +123,16 @@ def parse_wisdm_19_phone(
         complete_df["activity_id"].astype(str).str.strip().map(LETTER_TO_INT)
     )
 
-    complete_df = complete_df.dropna(subset=["subject_id", "activity_id", "timestamp"]).copy()
+    complete_df = complete_df.dropna(
+        subset=["subject_id", "activity_id", "timestamp"]
+    ).copy()
     complete_df["timestamp"] = pd.to_numeric(complete_df["timestamp"], errors="coerce")
     complete_df = complete_df.dropna(subset=["timestamp"])
     complete_df["subject_id"] = complete_df["subject_id"].astype("int32")
     complete_df["activity_id"] = complete_df["activity_id"].astype("int32")
-    complete_df = complete_df.sort_values(by=["subject_id", "activity_id", "timestamp"]).reset_index(drop=True)
+    complete_df = complete_df.sort_values(
+        by=["subject_id", "activity_id", "timestamp"]
+    ).reset_index(drop=True)
     step_ms = int(1e3 / 20)
     complete_df["timestamp"] = (
         complete_df.groupby(["subject_id", "activity_id"]).cumcount().astype("int64")
@@ -188,6 +193,39 @@ def parse_wisdm_19_phone(
 
 # toDO !!Split noch nicht angepasst
 
+ALL_ACTIVITIES = [
+    "walking",
+    "jogging",
+    "stairs",
+    "sitting",
+    "standing",
+    "typing",
+    "teeth",
+    "soup",
+    "chips",
+    "pasta",
+    "drinking",
+    "sandwich",
+    "kicking",
+    "catch",
+    "dribbling",
+    "writing",
+    "clapping",
+    "folding",
+]
+
+ALL_CHANNELS = [
+    "accel_phone_x",
+    "accel_phone_y",
+    "accel_phone_z",
+    "gyro_phone_x",
+    "gyro_phone_y",
+    "gyro_phone_z",
+]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_wisdm_19_phone = WHARConfig(
     # Info + common
     dataset_id="wisdm_19_phone",
@@ -200,34 +238,10 @@ cfg_wisdm_19_phone = WHARConfig(
     # Parsing
     parse=parse_wisdm_19_phone,
     # Preprocessing (selections + sliding window)
-    activity_names=[
-        "walking",
-        "jogging",
-        "stairs",
-        "sitting",
-        "standing",
-        "typing",
-        "teeth",
-        "soup",
-        "chips",
-        "pasta",
-        "drinking",
-        "sandwich",
-        "kicking",
-        "catch",
-        "dribbling",
-        "writing",
-        "clapping",
-        "folding",
-    ],
-    sensor_channels=[
-        "accel_phone_x",
-        "accel_phone_y",
-        "accel_phone_z",
-        "gyro_phone_x",
-        "gyro_phone_y",
-        "gyro_phone_z",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=5,
     window_overlap=0.5,
 )

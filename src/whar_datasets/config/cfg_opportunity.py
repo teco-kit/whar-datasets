@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 SENSOR_COLS = [
@@ -439,9 +440,7 @@ def parse_opportunity(
 
     remap = {old_sid: new_sid for new_sid, old_sid in enumerate(valid_session_ids)}
     session_metadata["session_id"] = session_metadata["session_id"].map(remap)
-    session_metadata = session_metadata.sort_values("session_id").reset_index(
-        drop=True
-    )
+    session_metadata = session_metadata.sort_values("session_id").reset_index(drop=True)
     sessions = {remap[int(old_sid)]: df for old_sid, df in sessions.items()}
 
     # set metadata types
@@ -454,6 +453,48 @@ def parse_opportunity(
 
     return activity_metadata, session_metadata, sessions
 
+
+ALL_ACTIVITIES = [
+    "Unknown",  # 0
+    "Open Door 1",  # 406516
+    "Open Door 2",  # 406517
+    "Close Door 1",  # 404516
+    "Close Door 2",  # 404517
+    "Open Fridge",  # 406520
+    "Close Fridge",  # 404520
+    "Open Dishwasher",  # 406505
+    "Close Dishwasher",  # 404505
+    "Open Drawer 1",  # 406519
+    "Close Drawer 1",  # 404519
+    "Open Drawer 2",  # 406511
+    "Close Drawer 2",  # 404511
+    "Open Drawer 3",  # 406508
+    "Close Drawer 3",  # 404508
+    "Clean Table",  # 408512
+    "Drink from Cup",  # 407521
+    "Toggle Switch",  # 405506
+]
+
+
+SELECTED_ACTIVITIES = [
+    "Open Door 1",
+    "Open Door 2",
+    "Close Door 1",
+    "Close Door 2",
+    "Open Fridge",
+    "Close Fridge",
+    "Open Dishwasher",
+    "Close Dishwasher",
+    "Open Drawer 1",
+    "Close Drawer 1",
+    "Open Drawer 2",
+    "Close Drawer 2",
+    "Open Drawer 3",
+    "Close Drawer 3",
+    "Clean Table",
+    "Drink from Cup",
+    "Toggle Switch",
+]
 
 cfg_opportunity = WHARConfig(
     # Info + common
@@ -470,27 +511,10 @@ cfg_opportunity = WHARConfig(
     parse=parse_opportunity,
     activity_id_col="ML_Both_Arms",
     # Preprocessing (selections + sliding window)
-    activity_names=[
-        "Unknown",  # 0
-        "Open Door 1",  # 406516
-        "Open Door 2",  # 406517
-        "Close Door 1",  # 404516
-        "Close Door 2",  # 404517
-        "Open Fridge",  # 406520
-        "Close Fridge",  # 404520
-        "Open Dishwasher",  # 406505
-        "Close Dishwasher",  # 404505
-        "Open Drawer 1",  # 406519
-        "Close Drawer 1",  # 404519
-        "Open Drawer 2",  # 406511
-        "Close Drawer 2",  # 404511
-        "Open Drawer 3",  # 406508
-        "Close Drawer 3",  # 404508
-        "Clean Table",  # 408512
-        "Drink from Cup",  # 407521
-        "Toggle Switch",  # 405506
-    ],
-    sensor_channels=SENSOR_COLS[1:],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=SENSOR_COLS[1:],
+    selected_channels=SENSOR_COLS[1:],
     window_time=1,
     window_overlap=0.5,
     # Training (split info)

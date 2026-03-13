@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 ACTIVITY_MAP = {
@@ -140,6 +141,30 @@ def parse_daphnet(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "Unknown",
+    "No Freeze",
+    "Freeze",
+]
+
+ALL_CHANNELS = [
+    "shank_acc_x",
+    "shank_acc_y",
+    "shank_acc_z",
+    "thigh_acc_x",
+    "thigh_acc_y",
+    "thigh_acc_z",
+    "trunk_acc_x",
+    "trunk_acc_y",
+    "trunk_acc_z",
+]
+
+
+SELECTED_ACTIVITIES = [
+    "No Freeze",
+    "Freeze",
+]
+
 cfg_daphnet = WHARConfig(
     # Info fields + common
     dataset_id="daphnet",
@@ -154,22 +179,10 @@ cfg_daphnet = WHARConfig(
     parse=parse_daphnet,
     activity_id_col="activity_id",
     # Preprocessing fields (flatten selections + sliding_window)
-    activity_names=[
-        "Unknown",
-        "No Freeze",
-        "Freeze",
-    ],
-    sensor_channels=[
-        "shank_acc_x",
-        "shank_acc_y",
-        "shank_acc_z",
-        "thigh_acc_x",
-        "thigh_acc_y",
-        "thigh_acc_z",
-        "trunk_acc_x",
-        "trunk_acc_y",
-        "trunk_acc_z",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=1.0,
     window_overlap=0.5,
     # Training fields (flattened splits)

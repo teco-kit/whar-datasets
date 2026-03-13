@@ -1,11 +1,10 @@
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 HAR70_ACTIVITY_MAP: Dict[int, str] = {
@@ -114,11 +113,13 @@ def parse_har70(
         local_session_ids = session_start.cumsum().astype("int32")
 
         for _, chunk in df.groupby(local_session_ids):
-            session_df = chunk.reset_index(drop=True)[["timestamp", *HAR70_SENSOR_CHANNELS]]
+            session_df = chunk.reset_index(drop=True)[
+                ["timestamp", *HAR70_SENSOR_CHANNELS]
+            ]
             session_df["timestamp"] = session_df["timestamp"].astype("datetime64[ms]")
-            session_df[HAR70_SENSOR_CHANNELS] = session_df[HAR70_SENSOR_CHANNELS].astype(
-                "float32"
-            )
+            session_df[HAR70_SENSOR_CHANNELS] = session_df[
+                HAR70_SENSOR_CHANNELS
+            ].astype("float32")
 
             if session_df.empty:
                 continue
@@ -169,6 +170,8 @@ def parse_har70(
     return activity_metadata, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = HAR70_ACTIVITY_NAMES
+
 cfg_har70 = WHARConfig(
     # Info + common
     dataset_id="har70",
@@ -183,8 +186,10 @@ cfg_har70 = WHARConfig(
     parse=parse_har70,
     activity_id_col="activity_id",
     # Preprocessing (selections + sliding window)
-    activity_names=HAR70_ACTIVITY_NAMES,
-    sensor_channels=HAR70_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(HAR70_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=HAR70_SENSOR_CHANNELS,
+    selected_channels=HAR70_SENSOR_CHANNELS,
     window_time=3,
     window_overlap=0.5,
     parallelize=True,

@@ -1,10 +1,12 @@
 import os
+import re
 from collections import defaultdict
 from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
 
@@ -92,13 +94,19 @@ def parse_pamap2(
     dir: str, activity_id_col: str
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
     dir = os.path.join(dir, "PAMAP2_Dataset/PAMAP2_Dataset/Protocol/")
-    files = [f for f in os.listdir(dir) if f.endswith(".dat")]
+    files = sorted(
+        f for f in os.listdir(dir) if f.endswith(".dat") and not f.startswith("._")
+    )
 
     sub_dfs = []
 
     for file in files:
-        # get subject id from filename
-        subject_id = file.split(".")[0][-1]
+        # Parse the canonical PAMAP2 file naming scheme: subject<id>.dat.
+        stem = os.path.splitext(file)[0]
+        subject_match = re.search(r"^subject(\d+)$", stem)
+        if subject_match is None:
+            raise ValueError(f"Could not parse subject_id from PAMAP2 file: {file}")
+        subject_id = subject_match.group(1)
 
         # read file as df
         sub_df = pd.read_table(
@@ -206,6 +214,93 @@ def parse_pamap2(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "other",
+    "lying",
+    "sitting",
+    "standing",
+    "ironing",
+    "vacuum cleaning",
+    "ascending stairs",
+    "descending stairs",
+    "walking",
+    "cycling",
+    "nordic walking",
+    "running",
+    "rope jumping",
+]
+
+ALL_CHANNELS = [
+    "heart_rate",
+    "hand_temp",
+    "hand_acc_x",
+    "hand_acc_y",
+    "hand_acc_z",
+    "hand_acc_2_x",
+    "hand_acc_2_y",
+    "hand_acc_2_z",
+    "hand_gyro_x",
+    "hand_gyro_y",
+    "hand_gyro_z",
+    "hand_mag_x",
+    "hand_mag_y",
+    "hand_mag_z",
+    "hand_orient_x",
+    "hand_orient_y",
+    "hand_orient_z",
+    "hand_orient_w",
+    "chest_temp",
+    "chest_acc_x",
+    "chest_acc_y",
+    "chest_acc_z",
+    "chest_acc_2_x",
+    "chest_acc_2_y",
+    "chest_acc_2_z",
+    "chest_gyro_x",
+    "chest_gyro_y",
+    "chest_gyro_z",
+    "chest_mag_x",
+    "chest_mag_y",
+    "chest_mag_z",
+    "chest_orient_x",
+    "chest_orient_y",
+    "chest_orient_z",
+    "chest_orient_w",
+    "ankle_temp",
+    "ankle_acc_x",
+    "ankle_acc_y",
+    "ankle_acc_z",
+    "ankle_acc_2_x",
+    "ankle_acc_2_y",
+    "ankle_acc_2_z",
+    "ankle_gyro_x",
+    "ankle_gyro_y",
+    "ankle_gyro_z",
+    "ankle_mag_x",
+    "ankle_mag_y",
+    "ankle_mag_z",
+    "ankle_orient_x",
+    "ankle_orient_y",
+    "ankle_orient_z",
+    "ankle_orient_w",
+]
+
+
+SELECTED_ACTIVITIES = [
+    "lying",
+    "sitting",
+    "standing",
+    "ironing",
+    "vacuum cleaning",
+    "ascending stairs",
+    "descending stairs",
+    "walking",
+    "cycling",
+    "nordic walking",
+    "running",
+    "rope jumping",
+]
+
 cfg_pamap2 = WHARConfig(
     # Info + common
     dataset_id="pamap2",
@@ -219,75 +314,10 @@ cfg_pamap2 = WHARConfig(
     # Parsing
     parse=parse_pamap2,
     # Preprocessing (selections + sliding window)
-    activity_names=[
-        "other",
-        "lying",
-        "sitting",
-        "standing",
-        "ironing",
-        "vacuum cleaning",
-        "ascending stairs",
-        "descending stairs",
-        "walking",
-        "cycling",
-        "nordic walking",
-        "running",
-        "rope jumping",
-    ],
-    sensor_channels=[
-        "heart_rate",
-        "hand_temp",
-        "hand_acc_x",
-        "hand_acc_y",
-        "hand_acc_z",
-        "hand_acc_2_x",
-        "hand_acc_2_y",
-        "hand_acc_2_z",
-        "hand_gyro_x",
-        "hand_gyro_y",
-        "hand_gyro_z",
-        "hand_mag_x",
-        "hand_mag_y",
-        "hand_mag_z",
-        "hand_orient_x",
-        "hand_orient_y",
-        "hand_orient_z",
-        "hand_orient_w",
-        "chest_temp",
-        "chest_acc_x",
-        "chest_acc_y",
-        "chest_acc_z",
-        "chest_acc_2_x",
-        "chest_acc_2_y",
-        "chest_acc_2_z",
-        "chest_gyro_x",
-        "chest_gyro_y",
-        "chest_gyro_z",
-        "chest_mag_x",
-        "chest_mag_y",
-        "chest_mag_z",
-        "chest_orient_x",
-        "chest_orient_y",
-        "chest_orient_z",
-        "chest_orient_w",
-        "ankle_temp",
-        "ankle_acc_x",
-        "ankle_acc_y",
-        "ankle_acc_z",
-        "ankle_acc_2_x",
-        "ankle_acc_2_y",
-        "ankle_acc_2_z",
-        "ankle_gyro_x",
-        "ankle_gyro_y",
-        "ankle_gyro_z",
-        "ankle_mag_x",
-        "ankle_mag_y",
-        "ankle_mag_z",
-        "ankle_orient_x",
-        "ankle_orient_y",
-        "ankle_orient_z",
-        "ankle_orient_w",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=1.28,
     window_overlap=0.5,
     # Training (split info)

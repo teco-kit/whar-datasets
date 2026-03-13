@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 SENSOR_COLS = [
@@ -210,6 +211,84 @@ def parse_dsads(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "sitting",  # A1
+    "standing",  # A2
+    "lying on back",  # A3
+    "lying on right side",  # A4
+    "ascending stairs",  # A5
+    "descending stairs",  # A6
+    "standing in an elevator still",  # A7
+    "moving around in an elevator",  # A8
+    "walking in a parking lot",  # A9
+    "walking on treadmill (flat, 4 km/h)",  # A10
+    "walking on treadmill (15° incline, 4 km/h)",  # A11
+    "running on treadmill (8 km/h)",  # A12
+    "exercising on a stepper",  # A13
+    "exercising on a cross trainer",  # A14
+    "cycling on exercise bike (horizontal)",  # A15
+    "cycling on exercise bike (vertical)",  # A16
+    "rowing",  # A17
+    "jumping",  # A18
+    "playing basketball",  # A19
+]
+
+ALL_CHANNELS = [
+    # Trunk (T)
+    "T_xacc",
+    "T_yacc",
+    "T_zacc",
+    "T_xgyro",
+    "T_ygyro",
+    "T_zgyro",
+    "T_xmag",
+    "T_ymag",
+    "T_zmag",
+    # Right Arm (RA)
+    "RA_xacc",
+    "RA_yacc",
+    "RA_zacc",
+    "RA_xgyro",
+    "RA_ygyro",
+    "RA_zgyro",
+    "RA_xmag",
+    "RA_ymag",
+    "RA_zmag",
+    # Left Arm (LA)
+    "LA_xacc",
+    "LA_yacc",
+    "LA_zacc",
+    "LA_xgyro",
+    "LA_ygyro",
+    "LA_zgyro",
+    "LA_xmag",
+    "LA_ymag",
+    "LA_zmag",
+    # Right Leg (RL)
+    "RL_xacc",
+    "RL_yacc",
+    "RL_zacc",
+    "RL_xgyro",
+    "RL_ygyro",
+    "RL_zgyro",
+    "RL_xmag",
+    "RL_ymag",
+    "RL_zmag",
+    # Left Leg (LL)
+    "LL_xacc",
+    "LL_yacc",
+    "LL_zacc",
+    "LL_xgyro",
+    "LL_ygyro",
+    "LL_zgyro",
+    "LL_xmag",
+    "LL_ymag",
+    "LL_zmag",
+]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_dsads = WHARConfig(
     # Info fields + common
     dataset_id="dsads",
@@ -224,79 +303,10 @@ cfg_dsads = WHARConfig(
     parse=parse_dsads,
     activity_id_col="activity_id",
     # Preprocessing fields (flatten selections + sliding_window)
-    activity_names=[
-        "sitting",  # A1
-        "standing",  # A2
-        "lying on back",  # A3
-        "lying on right side",  # A4
-        "ascending stairs",  # A5
-        "descending stairs",  # A6
-        "standing in an elevator still",  # A7
-        "moving around in an elevator",  # A8
-        "walking in a parking lot",  # A9
-        "walking on treadmill (flat, 4 km/h)",  # A10
-        "walking on treadmill (15° incline, 4 km/h)",  # A11
-        "running on treadmill (8 km/h)",  # A12
-        "exercising on a stepper",  # A13
-        "exercising on a cross trainer",  # A14
-        "cycling on exercise bike (horizontal)",  # A15
-        "cycling on exercise bike (vertical)",  # A16
-        "rowing",  # A17
-        "jumping",  # A18
-        "playing basketball",  # A19
-    ],
-    sensor_channels=[
-        # Trunk (T)
-        "T_xacc",
-        "T_yacc",
-        "T_zacc",
-        "T_xgyro",
-        "T_ygyro",
-        "T_zgyro",
-        "T_xmag",
-        "T_ymag",
-        "T_zmag",
-        # Right Arm (RA)
-        "RA_xacc",
-        "RA_yacc",
-        "RA_zacc",
-        "RA_xgyro",
-        "RA_ygyro",
-        "RA_zgyro",
-        "RA_xmag",
-        "RA_ymag",
-        "RA_zmag",
-        # Left Arm (LA)
-        "LA_xacc",
-        "LA_yacc",
-        "LA_zacc",
-        "LA_xgyro",
-        "LA_ygyro",
-        "LA_zgyro",
-        "LA_xmag",
-        "LA_ymag",
-        "LA_zmag",
-        # Right Leg (RL)
-        "RL_xacc",
-        "RL_yacc",
-        "RL_zacc",
-        "RL_xgyro",
-        "RL_ygyro",
-        "RL_zgyro",
-        "RL_xmag",
-        "RL_ymag",
-        "RL_zmag",
-        # Left Leg (LL)
-        "LL_xacc",
-        "LL_yacc",
-        "LL_zacc",
-        "LL_xgyro",
-        "LL_ygyro",
-        "LL_zgyro",
-        "LL_xmag",
-        "LL_ymag",
-        "LL_zmag",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=5.0,
     window_overlap=0.5,
 )

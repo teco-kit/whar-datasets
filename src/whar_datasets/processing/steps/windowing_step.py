@@ -46,8 +46,8 @@ class WindowingStep(AbstractStep):
         self.hash_name: str = "windowing_hash"
         self.relevant_cfg_keys: Set[str] = {
             "sampling_freq",
-            "activity_names",
-            "sensor_channels",
+            "selected_activities",
+            "selected_channels",
             "window_time",
             "window_overlap",
             "resampling_freq",
@@ -75,7 +75,7 @@ class WindowingStep(AbstractStep):
         session_df = select_activities(
             session_df,
             activity_df,
-            self.cfg.activity_names,
+            self.cfg.selected_activities or [],
         )
 
         # generate windowing

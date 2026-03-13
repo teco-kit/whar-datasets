@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
@@ -8,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 from whar_datasets.config.getter import WHARDatasetID, har_dataset_dict
-
 
 REQUIRED_ACTIVITY_COLUMNS = {"activity_id"}
 REQUIRED_SESSION_COLUMNS = {"session_id", "subject_id", "activity_id"}
@@ -100,8 +97,7 @@ def validate_required_metadata(
     if unknown_sessions:
         preview = sorted(unknown_sessions)[:10]
         raise ValueError(
-            f"[{dataset_id}] window_df references unknown session_id values: "
-            f"{preview}"
+            f"[{dataset_id}] window_df references unknown session_id values: {preview}"
         )
 
 
@@ -112,9 +108,7 @@ def coerce_integer_series(series: pd.Series, name: str, dataset_id: str) -> pd.S
     normalized = series.astype(str).str.strip().str.strip("[]")
     converted = pd.to_numeric(normalized, errors="coerce")
     if converted.isna().any():
-        raise ValueError(
-            f"[{dataset_id}] Column '{name}' contains non-integer values."
-        )
+        raise ValueError(f"[{dataset_id}] Column '{name}' contains non-integer values.")
     if (converted % 1 != 0).any():
         raise ValueError(
             f"[{dataset_id}] Column '{name}' contains non-integral values."
@@ -181,7 +175,9 @@ def _compute_subject_activity_counts(
         .dropna(subset=["subject_id", "activity_id"])
     )
 
-    window_labels = window_labels.astype({"subject_id": "int64", "activity_id": "int64"})
+    window_labels = window_labels.astype(
+        {"subject_id": "int64", "activity_id": "int64"}
+    )
     counts = (
         window_labels.groupby(["subject_id", "activity_id"], observed=False)
         .size()
@@ -199,7 +195,9 @@ def analyze_dataset_metadata(
 ) -> DatasetAnalysisResult:
     validate_required_metadata(dataset_id, activity_df, session_df, window_df)
 
-    activity_ids = coerce_integer_series(activity_df["activity_id"], "activity_id", dataset_id)
+    activity_ids = coerce_integer_series(
+        activity_df["activity_id"], "activity_id", dataset_id
+    )
     num_classes_total = int(activity_ids.nunique())
     num_samples = int(len(window_df))
     subject_activity_counts = _compute_subject_activity_counts(
@@ -227,7 +225,9 @@ def analyze_dataset_metadata(
     coverage_by_subject = coverage_by_subject / max(num_classes_total, 1)
 
     class_counts_global = per_subject_table.sum(axis=0).to_numpy(dtype=np.float64)
-    global_normalized_entropy = normalized_entropy(class_counts_global, num_classes_total)
+    global_normalized_entropy = normalized_entropy(
+        class_counts_global, num_classes_total
+    )
     global_probs = _probabilities_from_counts(class_counts_global)
 
     subject_entropies: List[float] = []
@@ -270,8 +270,12 @@ def analyze_dataset_metadata(
         num_subjects=num_subjects,
         num_classes_total=num_classes_total,
         num_classes_observed=num_classes_observed,
-        class_coverage_mean=float(np.mean(coverage_by_subject.to_numpy(dtype=np.float64))),
-        class_coverage_std=float(np.std(coverage_by_subject.to_numpy(dtype=np.float64))),
+        class_coverage_mean=float(
+            np.mean(coverage_by_subject.to_numpy(dtype=np.float64))
+        ),
+        class_coverage_std=float(
+            np.std(coverage_by_subject.to_numpy(dtype=np.float64))
+        ),
         global_normalized_entropy=global_normalized_entropy,
         intra_subject_entropy_mean=float(np.mean(np.array(subject_entropies))),
         intra_subject_entropy_std=float(np.std(np.array(subject_entropies))),
@@ -311,7 +315,11 @@ def analyze_cached_datasets(
     datasets_root: Path,
     dataset_ids: Optional[Sequence[str]] = None,
 ) -> pd.DataFrame:
-    chosen_ids = list(dataset_ids) if dataset_ids is not None else available_cached_dataset_ids(datasets_root)
+    chosen_ids = (
+        list(dataset_ids)
+        if dataset_ids is not None
+        else available_cached_dataset_ids(datasets_root)
+    )
     if not chosen_ids:
         raise ValueError(
             f"No cached datasets with metadata found under '{datasets_root}'."

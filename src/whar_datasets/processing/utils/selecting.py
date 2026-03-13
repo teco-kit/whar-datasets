@@ -8,14 +8,14 @@ from whar_datasets.utils.logging import logger
 def select_activities(
     session_df: pd.DataFrame,
     activity_df: pd.DataFrame,
-    activity_names: List[str],
+    selected_activities: List[str],
 ) -> pd.DataFrame:
     logger.info("Selecting activities")
 
-    # get activity ids corresponding to activity names
-    activity_ids = activity_df[activity_df["activity_name"].isin(activity_names)][
-        "activity_id"
-    ]
+    # get activity ids corresponding to selected activity names
+    activity_ids = activity_df[
+        activity_df["activity_name"].isin(selected_activities)
+    ]["activity_id"]
 
     # get session ids corresponding to activiy ids
     session_ids = session_df[session_df["activity_id"].isin(activity_ids)]

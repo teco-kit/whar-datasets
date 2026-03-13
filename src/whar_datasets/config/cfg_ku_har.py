@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import NormType, WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
 
@@ -171,6 +172,39 @@ def parse_ku_har(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "Stand",
+    "Sit",
+    "Talk-sit",
+    "Talk-stand",
+    "Stand-sit",
+    "Lay",
+    "Lay-stand",
+    "Pick",
+    "Jump",
+    "Push-up",
+    "Sit-up",
+    "Walk",
+    "Walk-backward",
+    "Walk-circle",
+    "Run",
+    "Stair-up",
+    "Stair-down",
+    "Table-tennis",
+]
+
+ALL_CHANNELS = [
+    "acc_x",
+    "acc_y",
+    "acc_z",
+    "gyro_x",
+    "gyro_y",
+    "gyro_z",
+]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_ku_har = WHARConfig(
     # Info fields + common
     dataset_id="ku_har",
@@ -185,34 +219,10 @@ cfg_ku_har = WHARConfig(
     parse=parse_ku_har,
     activity_id_col="activity_id",
     # Preprocessing fields (flatten selections + sliding_window)
-    activity_names=[
-        "Stand",
-        "Sit",
-        "Talk-sit",
-        "Talk-stand",
-        "Stand-sit",
-        "Lay",
-        "Lay-stand",
-        "Pick",
-        "Jump",
-        "Push-up",
-        "Sit-up",
-        "Walk",
-        "Walk-backward",
-        "Walk-circle",
-        "Run",
-        "Stair-up",
-        "Stair-down",
-        "Table-tennis",
-    ],
-    sensor_channels=[
-        "acc_x",
-        "acc_y",
-        "acc_z",
-        "gyro_x",
-        "gyro_y",
-        "gyro_z",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=2.56,
     window_overlap=0.5,
     # Training fields (flattened splits)

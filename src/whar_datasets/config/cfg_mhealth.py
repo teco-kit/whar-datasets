@@ -5,6 +5,7 @@ from typing import Dict, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 SENSOR_COLS = [
@@ -175,6 +176,64 @@ def parse_mhealth(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "Unknown",
+    "Standing still",
+    "Sitting and relaxing",
+    "Lying down",
+    "Walking",
+    "Climbing stairs",
+    "Waist bends forward",
+    "Frontal elevation of arms",
+    "Knees bending (crouching)",
+    "Cycling",
+    "Jogging",
+    "Running",
+    "Jump front and back",
+]
+
+ALL_CHANNELS = [
+    "chest_acc_x",
+    "chest_acc_y",
+    "chest_acc_z",
+    "ecg_1",
+    "ecg_2",
+    "lankle_acc_x",
+    "lankle_acc_y",
+    "lankle_acc_z",
+    "lankle_gyro_x",
+    "lankle_gyro_y",
+    "lankle_gyro_z",
+    "lankle_mag_x",
+    "lankle_mag_y",
+    "lankle_mag_z",
+    "rarm_acc_x",
+    "rarm_acc_y",
+    "rarm_acc_z",
+    "rarm_gyro_x",
+    "rarm_gyro_y",
+    "rarm_gyro_z",
+    "rarm_mag_x",
+    "rarm_mag_y",
+    "rarm_mag_z",
+]
+
+
+SELECTED_ACTIVITIES = [
+    "Standing still",
+    "Sitting and relaxing",
+    "Lying down",
+    "Walking",
+    "Climbing stairs",
+    "Waist bends forward",
+    "Frontal elevation of arms",
+    "Knees bending (crouching)",
+    "Cycling",
+    "Jogging",
+    "Running",
+    "Jump front and back",
+]
+
 cfg_mhealth = WHARConfig(
     # Info fields + common
     dataset_id="mhealth",
@@ -189,46 +248,10 @@ cfg_mhealth = WHARConfig(
     parse=parse_mhealth,
     activity_id_col="activity_id",
     # Preprocessing fields (flatten selections + sliding_window)
-    activity_names=[
-        "Unknown",
-        "Standing still",
-        "Sitting and relaxing",
-        "Lying down",
-        "Walking",
-        "Climbing stairs",
-        "Waist bends forward",
-        "Frontal elevation of arms",
-        "Knees bending (crouching)",
-        "Cycling",
-        "Jogging",
-        "Running",
-        "Jump front and back",
-    ],
-    sensor_channels=[
-        "chest_acc_x",
-        "chest_acc_y",
-        "chest_acc_z",
-        "ecg_1",
-        "ecg_2",
-        "lankle_acc_x",
-        "lankle_acc_y",
-        "lankle_acc_z",
-        "lankle_gyro_x",
-        "lankle_gyro_y",
-        "lankle_gyro_z",
-        "lankle_mag_x",
-        "lankle_mag_y",
-        "lankle_mag_z",
-        "rarm_acc_x",
-        "rarm_acc_y",
-        "rarm_acc_z",
-        "rarm_gyro_x",
-        "rarm_gyro_y",
-        "rarm_gyro_z",
-        "rarm_mag_x",
-        "rarm_mag_y",
-        "rarm_mag_z",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=2.56,
     window_overlap=0.5,
 )

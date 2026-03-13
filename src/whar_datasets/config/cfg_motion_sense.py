@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 ACTIVITY_MAP = {
@@ -165,6 +166,39 @@ def parse_motion_sense(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "downstairs",
+    "upstairs",
+    "walking",
+    "jogging",
+    "sitting",
+    "standing",
+]
+
+ALL_CHANNELS = [
+    "attitude.roll",
+    "attitude.pitch",
+    "attitude.yaw",
+    "gravity.x",
+    "gravity.y",
+    "gravity.z",
+    "rotationRate.x",
+    "rotationRate.y",
+    "rotationRate.z",
+    "userAcceleration.x",
+    "userAcceleration.y",
+    "userAcceleration.z",
+    "accel_x",
+    "accel_y",
+    "accel_z",
+    "gyro_x",
+    "gyro_y",
+    "gyro_z",
+]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_motion_sense = WHARConfig(
     # Info + common
     dataset_id="motion_sense",
@@ -179,34 +213,10 @@ cfg_motion_sense = WHARConfig(
     parse=parse_motion_sense,
     activity_id_col="activity_id",
     # Preprocessing (selections + sliding window)
-    activity_names=[
-        "downstairs",
-        "upstairs",
-        "walking",
-        "jogging",
-        "sitting",
-        "standing",
-    ],
-    sensor_channels=[
-        "attitude.roll",
-        "attitude.pitch",
-        "attitude.yaw",
-        "gravity.x",
-        "gravity.y",
-        "gravity.z",
-        "rotationRate.x",
-        "rotationRate.y",
-        "rotationRate.z",
-        "userAcceleration.x",
-        "userAcceleration.y",
-        "userAcceleration.z",
-        "accel_x",
-        "accel_y",
-        "accel_z",
-        "gyro_x",
-        "gyro_y",
-        "gyro_z",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=2.56,
     window_overlap=0.5,
     # Training (split info)

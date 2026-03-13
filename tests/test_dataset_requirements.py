@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
@@ -231,7 +229,7 @@ def _assert_windowing_integrity(
         window = generated_windows[wid]
         assert len(window) > 0
         assert len(window) <= window_size
-        assert list(window.columns) == list(cfg.sensor_channels)
+        assert list(window.columns) == list(cfg.selected_channels or [])
         assert not window.isna().any().any()
         assert all(pd.api.types.is_float_dtype(window[col]) for col in window.columns)
 
@@ -245,7 +243,7 @@ def test_cached_dataset_common_format_meets_requirements(
     )
 
     _assert_metadata_contract(cfg, activity_df, session_df)
-    _assert_non_time_series_modalities_are_excluded(cfg.sensor_channels)
+    _assert_non_time_series_modalities_are_excluded(cfg.selected_channels or [])
     _assert_parquet_sessions_integrity(cfg, session_df, sessions_path)
 
 
@@ -276,7 +274,7 @@ def test_parser_output_requirements_when_raw_data_is_available(
         pytest.skip(f"Raw dataset layout for '{dataset_id.value}' is incomplete: {exc}")
 
     _assert_metadata_contract(cfg, activity_df, session_df)
-    _assert_non_time_series_modalities_are_excluded(cfg.sensor_channels)
+    _assert_non_time_series_modalities_are_excluded(cfg.selected_channels or [])
 
     assert len(sessions) == len(session_df)
     assert set(int(sid) for sid in sessions.keys()) == set(

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -7,6 +5,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 GOTOV_SENSOR_CHANNELS: List[str] = [
@@ -234,6 +233,8 @@ def parse_gotov(
     return activity_df, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = GOTOV_ACTIVITY_NAMES_ORIGINAL
+
 cfg_gotov = WHARConfig(
     # Info + common
     dataset_id="gotov",
@@ -248,8 +249,10 @@ cfg_gotov = WHARConfig(
     parse=parse_gotov,
     activity_id_col="original_activity_labels",
     # Preprocessing (selections + sliding window)
-    activity_names=GOTOV_ACTIVITY_NAMES_ORIGINAL,
-    sensor_channels=GOTOV_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(GOTOV_ACTIVITY_NAMES_ORIGINAL),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=GOTOV_SENSOR_CHANNELS,
+    selected_channels=GOTOV_SENSOR_CHANNELS,
     window_time=2,
     window_overlap=0.5,
     # Training (split info)

@@ -1,11 +1,10 @@
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 UP_FALL_ACTIVITY_NAMES: List[str] = [f"activity_{idx}" for idx in range(1, 12)]
@@ -240,6 +239,8 @@ def parse_up_fall(
     return activity_metadata, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = UP_FALL_ACTIVITY_NAMES
+
 cfg_up_fall = WHARConfig(
     dataset_id="up_fall",
     dataset_url="https://sites.google.com/up.edu.mx/har-up/",
@@ -251,8 +252,10 @@ cfg_up_fall = WHARConfig(
     datasets_dir="./datasets",
     parse=parse_up_fall,
     activity_id_col="activity_id",
-    activity_names=UP_FALL_ACTIVITY_NAMES,
-    sensor_channels=UP_FALL_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(UP_FALL_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=UP_FALL_SENSOR_CHANNELS,
+    selected_channels=UP_FALL_SENSOR_CHANNELS,
     window_time=2,
     window_overlap=0.5,
     parallelize=True,

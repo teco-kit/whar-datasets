@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 SAD_SENSOR_POSITIONS: List[str] = [
@@ -51,7 +52,11 @@ def _find_sad_dataset_root(data_dir: str) -> Path:
     candidates = [
         base / "DataSet",
         base / "sad" / "data" / "DataSet",
-        base / "sad" / "data" / "sensors-activity-recognition-dataset-shoaib" / "DataSet",
+        base
+        / "sad"
+        / "data"
+        / "sensors-activity-recognition-dataset-shoaib"
+        / "DataSet",
     ]
     for candidate in candidates:
         if candidate.is_dir():
@@ -103,11 +108,18 @@ def parse_sad(
     if not participant_files:
         raise FileNotFoundError(f"No participant CSV files found in '{root}'.")
 
-    all_dfs = [_load_participant_csv(participant_file) for participant_file in participant_files]
+    all_dfs = [
+        _load_participant_csv(participant_file)
+        for participant_file in participant_files
+    ]
     df = pd.concat(all_dfs, ignore_index=True)
 
     df["activity_name"] = (
-        df["activity_name"].astype(str).str.strip().str.lower().replace(SAD_ACTIVITY_NORMALIZATION)
+        df["activity_name"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .replace(SAD_ACTIVITY_NORMALIZATION)
     )
 
     df["subject_id"] = pd.factorize(df["participant_raw_id"], sort=True)[0]
@@ -181,6 +193,72 @@ def parse_sad(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_CHANNELS = [
+    "Left_pocket_Ax",
+    "Left_pocket_Ay",
+    "Left_pocket_Az",
+    "Left_pocket_Lx",
+    "Left_pocket_Ly",
+    "Left_pocket_Lz",
+    "Left_pocket_Gx",
+    "Left_pocket_Gy",
+    "Left_pocket_Gz",
+    "Left_pocket_Mx",
+    "Left_pocket_My",
+    "Left_pocket_Mz",
+    "Right_pocket_Ax",
+    "Right_pocket_Ay",
+    "Right_pocket_Az",
+    "Right_pocket_Lx",
+    "Right_pocket_Ly",
+    "Right_pocket_Lz",
+    "Right_pocket_Gx",
+    "Right_pocket_Gy",
+    "Right_pocket_Gz",
+    "Right_pocket_Mx",
+    "Right_pocket_My",
+    "Right_pocket_Mz",
+    "Wrist_Ax",
+    "Wrist_Ay",
+    "Wrist_Az",
+    "Wrist_Lx",
+    "Wrist_Ly",
+    "Wrist_Lz",
+    "Wrist_Gx",
+    "Wrist_Gy",
+    "Wrist_Gz",
+    "Wrist_Mx",
+    "Wrist_My",
+    "Wrist_Mz",
+    "Upper_arm_Ax",
+    "Upper_arm_Ay",
+    "Upper_arm_Az",
+    "Upper_arm_Lx",
+    "Upper_arm_Ly",
+    "Upper_arm_Lz",
+    "Upper_arm_Gx",
+    "Upper_arm_Gy",
+    "Upper_arm_Gz",
+    "Upper_arm_Mx",
+    "Upper_arm_My",
+    "Upper_arm_Mz",
+    "Belt_Ax",
+    "Belt_Ay",
+    "Belt_Az",
+    "Belt_Lx",
+    "Belt_Ly",
+    "Belt_Lz",
+    "Belt_Gx",
+    "Belt_Gy",
+    "Belt_Gz",
+    "Belt_Mx",
+    "Belt_My",
+    "Belt_Mz",
+]
+
+
+SELECTED_ACTIVITIES = SAD_ACTIVITY_NAMES
+
 cfg_sad = WHARConfig(
     # Info + common
     dataset_id="sad",
@@ -192,69 +270,10 @@ cfg_sad = WHARConfig(
     num_of_channels=60,
     datasets_dir="./datasets",
     parse=parse_sad,
-    activity_names=SAD_ACTIVITY_NAMES,
-    sensor_channels=[
-        "Left_pocket_Ax",
-        "Left_pocket_Ay",
-        "Left_pocket_Az",
-        "Left_pocket_Lx",
-        "Left_pocket_Ly",
-        "Left_pocket_Lz",
-        "Left_pocket_Gx",
-        "Left_pocket_Gy",
-        "Left_pocket_Gz",
-        "Left_pocket_Mx",
-        "Left_pocket_My",
-        "Left_pocket_Mz",
-        "Right_pocket_Ax",
-        "Right_pocket_Ay",
-        "Right_pocket_Az",
-        "Right_pocket_Lx",
-        "Right_pocket_Ly",
-        "Right_pocket_Lz",
-        "Right_pocket_Gx",
-        "Right_pocket_Gy",
-        "Right_pocket_Gz",
-        "Right_pocket_Mx",
-        "Right_pocket_My",
-        "Right_pocket_Mz",
-        "Wrist_Ax",
-        "Wrist_Ay",
-        "Wrist_Az",
-        "Wrist_Lx",
-        "Wrist_Ly",
-        "Wrist_Lz",
-        "Wrist_Gx",
-        "Wrist_Gy",
-        "Wrist_Gz",
-        "Wrist_Mx",
-        "Wrist_My",
-        "Wrist_Mz",
-        "Upper_arm_Ax",
-        "Upper_arm_Ay",
-        "Upper_arm_Az",
-        "Upper_arm_Lx",
-        "Upper_arm_Ly",
-        "Upper_arm_Lz",
-        "Upper_arm_Gx",
-        "Upper_arm_Gy",
-        "Upper_arm_Gz",
-        "Upper_arm_Mx",
-        "Upper_arm_My",
-        "Upper_arm_Mz",
-        "Belt_Ax",
-        "Belt_Ay",
-        "Belt_Az",
-        "Belt_Lx",
-        "Belt_Ly",
-        "Belt_Lz",
-        "Belt_Gx",
-        "Belt_Gy",
-        "Belt_Gz",
-        "Belt_Mx",
-        "Belt_My",
-        "Belt_Mz",
-    ],
+    available_activities=canonicalize_activity_name_list(SAD_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=2.56,
     window_overlap=0.5,
 )

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import pandas as pd
 
 from whar_datasets.config.timestamps import to_datetime64_ms

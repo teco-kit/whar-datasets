@@ -24,8 +24,10 @@ cfg_dummy = WHARConfig(
     # Parsing
     parse=parse_dummy,
     # Preprocessing (selections + sliding window)
-    activity_names=[],
-    sensor_channels=[],
+    available_activities=[],
+    selected_activities=[],
+    available_channels=[],
+    selected_channels=[],
     window_time=2,
     window_overlap=0.5,
     # Training (split info)

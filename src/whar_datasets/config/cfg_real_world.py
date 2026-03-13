@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 REAL_WORLD_ACTIVITY_NAMES = [
@@ -364,6 +365,8 @@ def parse_real_world(
     return activity_metadata, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = REAL_WORLD_ACTIVITY_NAMES
+
 cfg_real_world = WHARConfig(
     # Info + common
     dataset_id="real_world",
@@ -377,8 +380,10 @@ cfg_real_world = WHARConfig(
     # Parsing
     parse=parse_real_world,
     # Preprocessing (selections + sliding window)
-    activity_names=REAL_WORLD_ACTIVITY_NAMES,
-    sensor_channels=REAL_WORLD_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(REAL_WORLD_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=REAL_WORLD_SENSOR_CHANNELS,
+    selected_channels=REAL_WORLD_SENSOR_CHANNELS,
     window_time=2.56,
     window_overlap=0.5,
 )

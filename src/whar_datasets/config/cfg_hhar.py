@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -7,6 +5,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 HHAR_ACTIVITY_NAMES: List[str] = [
@@ -40,7 +39,11 @@ def _resolve_hhar_root(data_dir: str) -> Path:
     candidates = [
         base / "Activity recognition exp" / "Activity recognition exp",
         base / "Activity recognition exp",
-        base / "hhar" / "data" / "Activity recognition exp" / "Activity recognition exp",
+        base
+        / "hhar"
+        / "data"
+        / "Activity recognition exp"
+        / "Activity recognition exp",
     ]
     for candidate in candidates:
         if candidate.is_dir() and (candidate / "Phones_accelerometer.csv").exists():
@@ -126,9 +129,9 @@ def _merge_accel_gyro(
         subset=["gyro_x", "gyro_y", "gyro_z", "arrival_time", "arrival_time_gyro"]
     ).copy()
     merged["arrival_time"] = (
-        (merged["arrival_time"].astype("int64") + merged["arrival_time_gyro"].astype("int64"))
-        // 2
-    )
+        merged["arrival_time"].astype("int64")
+        + merged["arrival_time_gyro"].astype("int64")
+    ) // 2
     merged["modality"] = modality
     merged = merged[
         [
@@ -215,7 +218,9 @@ def parse_hhar(
     local_session_ids = _split_sessions(df)
 
     activity_id_map = {name: idx for idx, name in enumerate(HHAR_ACTIVITY_NAMES)}
-    subject_raw_unique = sorted(df["subject_raw"].dropna().astype(str).unique().tolist())
+    subject_raw_unique = sorted(
+        df["subject_raw"].dropna().astype(str).unique().tolist()
+    )
     subject_id_map = {name: idx for idx, name in enumerate(subject_raw_unique)}
 
     sessions: Dict[int, pd.DataFrame] = {}
@@ -228,7 +233,10 @@ def parse_hhar(
         session_df = session_df.rename(columns={"arrival_time": "timestamp"})
         session_df["timestamp"] = pd.to_datetime(session_df["timestamp"], unit="ms")
         session_df = session_df.astype(
-            {"timestamp": "datetime64[ms]", **{col: "float32" for col in HHAR_SENSOR_CHANNELS}}
+            {
+                "timestamp": "datetime64[ms]",
+                **{col: "float32" for col in HHAR_SENSOR_CHANNELS},
+            }
         )
         session_df[HHAR_SENSOR_CHANNELS] = session_df[HHAR_SENSOR_CHANNELS].round(6)
         if session_df.empty:
@@ -251,7 +259,10 @@ def parse_hhar(
         raise ValueError("No HHAR sessions were produced.")
 
     activity_metadata = pd.DataFrame(
-        {"activity_id": list(range(len(HHAR_ACTIVITY_NAMES))), "activity_name": HHAR_ACTIVITY_NAMES}
+        {
+            "activity_id": list(range(len(HHAR_ACTIVITY_NAMES))),
+            "activity_name": HHAR_ACTIVITY_NAMES,
+        }
     ).astype({"activity_id": "int32", "activity_name": "string"})
     session_metadata = pd.DataFrame(session_rows).astype(
         {"session_id": "int32", "subject_id": "int32", "activity_id": "int32"}
@@ -259,6 +270,8 @@ def parse_hhar(
 
     return activity_metadata, session_metadata, sessions
 
+
+SELECTED_ACTIVITIES = HHAR_ACTIVITY_NAMES
 
 cfg_hhar = WHARConfig(
     # Info + common
@@ -274,8 +287,10 @@ cfg_hhar = WHARConfig(
     parse=parse_hhar,
     activity_id_col="activity_id",
     # Preprocessing (selections + sliding window)
-    activity_names=HHAR_ACTIVITY_NAMES,
-    sensor_channels=HHAR_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(HHAR_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=HHAR_SENSOR_CHANNELS,
+    selected_channels=HHAR_SENSOR_CHANNELS,
     window_time=5,
     window_overlap=0.5,
     parallelize=True,

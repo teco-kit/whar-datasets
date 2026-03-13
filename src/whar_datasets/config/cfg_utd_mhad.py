@@ -7,8 +7,8 @@ import pandas as pd
 import scipy.io
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
-
 
 ID_TO_ACTIVITY = {
     0: "Swipe Left",
@@ -83,7 +83,9 @@ def parse_utd_mhad(
 
         arr = np.asarray(mat["d_iner"], dtype=np.float64)
         if arr.ndim != 2:
-            raise ValueError(f"Unexpected shape for 'd_iner' in {file_path}: {arr.shape}")
+            raise ValueError(
+                f"Unexpected shape for 'd_iner' in {file_path}: {arr.shape}"
+            )
 
         if arr.shape[1] == len(sensor_cols):
             data = arr
@@ -132,6 +134,11 @@ def parse_utd_mhad(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_CHANNELS = ["Ax", "Ay", "Az", "GyroX", "GyroY", "GyroZ"]
+
+
+SELECTED_ACTIVITIES = list(ID_TO_ACTIVITY.values())
+
 cfg_utd_mhad = WHARConfig(
     # Info + common
     dataset_id="utd_mhad",
@@ -145,8 +152,10 @@ cfg_utd_mhad = WHARConfig(
     # Parsing
     parse=parse_utd_mhad,
     # Preprocessing (selections + sliding window)
-    activity_names=list(ID_TO_ACTIVITY.values()),
-    sensor_channels=["Ax", "Ay", "Az", "GyroX", "GyroY", "GyroZ"],
+    available_activities=canonicalize_activity_name_list(list(ID_TO_ACTIVITY.values())),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=2,
     window_overlap=0.5,
     # Training (split info)

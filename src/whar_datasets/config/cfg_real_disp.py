@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -8,6 +6,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 SENSOR_POSITIONS: List[str] = [
@@ -152,10 +151,9 @@ def parse_real_disp(
             )
 
         df[activity_id_col] = df[activity_id_col].astype("int32")
-        timestamp_total_us = (
-            df["timestamp_s"].astype("int64") * 1_000_000
-            + df["timestamp_us"].astype("int64")
-        )
+        timestamp_total_us = df["timestamp_s"].astype("int64") * 1_000_000 + df[
+            "timestamp_us"
+        ].astype("int64")
         observed_activity_ids.update(df[activity_id_col].unique().tolist())
 
         timestamp_diff = timestamp_total_us.diff()
@@ -181,13 +179,19 @@ def parse_real_disp(
         local_session_id = session_breaks.cumsum()
         sensor_values = df[SENSOR_COLUMNS].copy()
         if sensor_values.isna().any().any():
-            sensor_values = sensor_values.groupby(local_session_id, sort=False).transform(
-                lambda g: g.interpolate(method="linear", limit_direction="both")
-                .ffill()
-                .bfill()
+            sensor_values = sensor_values.groupby(
+                local_session_id, sort=False
+            ).transform(
+                lambda g: (
+                    g.interpolate(method="linear", limit_direction="both")
+                    .ffill()
+                    .bfill()
+                )
             )
         sensor_values = sensor_values.astype("float32")
-        timestamps = pd.to_datetime(timestamp_total_us, unit="us").astype("datetime64[ms]")
+        timestamps = pd.to_datetime(timestamp_total_us, unit="us").astype(
+            "datetime64[ms]"
+        )
         grouped_indices = df.groupby(local_session_id, sort=False).indices
 
         for idx in grouped_indices.values():
@@ -256,6 +260,9 @@ def parse_real_disp(
     return activity_df, session_df, sessions
 
 
+# Exclude the background class.
+SELECTED_ACTIVITIES = ACTIVITY_NAMES[1:]
+
 cfg_real_disp = WHARConfig(
     # Info + common
     dataset_id="real_disp",
@@ -270,8 +277,10 @@ cfg_real_disp = WHARConfig(
     parse=parse_real_disp,
     activity_id_col="activity_id",
     # Preprocessing (selections + sliding window)
-    activity_names=ACTIVITY_NAMES,
-    sensor_channels=SENSOR_COLUMNS,
+    available_activities=canonicalize_activity_name_list(ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=SENSOR_COLUMNS,
+    selected_channels=SENSOR_COLUMNS,
     window_time=3,
     window_overlap=0.5,
 )

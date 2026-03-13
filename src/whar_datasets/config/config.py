@@ -1,6 +1,6 @@
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, Field, field_serializer
 
 from whar_datasets.utils.types import NormType, Parse, TransformType
 
@@ -18,6 +18,8 @@ class WHARConfig(BaseModel):
     num_of_subjects: int
     num_of_activities: int
     num_of_channels: int
+    available_activities: List[str]
+    available_channels: List[str]
 
     # flow fields
     datasets_dir: str = "./datasets/"  # directory to cache datasets
@@ -30,8 +32,8 @@ class WHARConfig(BaseModel):
     activity_id_col: str = "activity_id"  # column to use as activity id
 
     # preprocessing fields
-    activity_names: List[str]  # for filtering activities
-    sensor_channels: List[str]  # for filtering sensor channels
+    selected_activities: Optional[List[str]]
+    selected_channels: Optional[List[str]]
     window_time: float = WINDOW_TIME_MEDIUM  # in seconds
     window_overlap: float  # in [0,1]
     resampling_freq: Optional[int] = None

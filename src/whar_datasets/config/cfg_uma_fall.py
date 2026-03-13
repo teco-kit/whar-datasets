@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 UMA_FILENAME_PATTERN = re.compile(
@@ -264,6 +265,8 @@ def parse_uma_fall(
     return activity_metadata, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = UMA_ACTIVITY_NAMES
+
 cfg_uma_fall = WHARConfig(
     # Info + common
     dataset_id="uma_fall",
@@ -277,8 +280,10 @@ cfg_uma_fall = WHARConfig(
     # Parsing
     parse=parse_uma_fall,
     # Preprocessing (selections + sliding window)
-    activity_names=UMA_ACTIVITY_NAMES,
-    sensor_channels=UMA_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(UMA_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=UMA_SENSOR_CHANNELS,
+    selected_channels=UMA_SENSOR_CHANNELS,
     window_time=3,
     window_overlap=0.5,
 )

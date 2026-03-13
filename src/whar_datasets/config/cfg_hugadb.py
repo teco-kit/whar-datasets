@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
 
@@ -36,7 +37,7 @@ def parse_hugadb(
 
             full_path = os.path.join(root, file)
 
-            df = pd.read_csv(full_path, sep="\s+", skiprows=3)  # type: ignore
+            df = pd.read_csv(full_path, sep="\s+", skiprows=3)
 
             df.rename(columns={"act": "activity_id"}, inplace=True)
 
@@ -134,6 +135,65 @@ def parse_hugadb(
 
 # toDO !!Split noch nicht angepasst
 
+ALL_ACTIVITIES = [
+    "walking",
+    "running",
+    "going_up",
+    "going_down",
+    "sitting",
+    "sitting down",
+    "standing up",
+    "standing",
+    "bicycling",
+    "up_by_elevator",
+    "down_by_elevator",
+    "sitting in car",
+]
+
+ALL_CHANNELS = [
+    "RF_acc_x",
+    "RF_acc_y",
+    "RF_acc_z",
+    "RF_gyro_x",
+    "RF_gyro_y",
+    "RF_gyro_z",
+    "RS_acc_x",
+    "RS_acc_y",
+    "RS_acc_z",
+    "RS_gyro_x",
+    "RS_gyro_y",
+    "RS_gyro_z",
+    "RT_acc_x",
+    "RT_acc_y",
+    "RT_acc_z",
+    "RT_gyro_x",
+    "RT_gyro_y",
+    "RT_gyro_z",
+    "LF_acc_x",
+    "LF_acc_y",
+    "LF_acc_z",
+    "LF_gyro_x",
+    "LF_gyro_y",
+    "LF_gyro_z",
+    "LS_acc_x",
+    "LS_acc_y",
+    "LS_acc_z",
+    "LS_gyro_x",
+    "LS_gyro_y",
+    "LS_gyro_z",
+    "LT_acc_x",
+    "LT_acc_y",
+    "LT_acc_z",
+    "LT_gyro_x",
+    "LT_gyro_y",
+    "LT_gyro_z",
+    "R_EMG",
+    "L_EMG",
+]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_hugadb = WHARConfig(
     # Info + common
     dataset_id="hugadb",
@@ -147,60 +207,10 @@ cfg_hugadb = WHARConfig(
     # Parsing
     parse=parse_hugadb,
     # Preprocessing (selections + sliding window)
-    activity_names=[
-        "walking",
-        "running",
-        "going_up",
-        "going_down",
-        "sitting",
-        "sitting down",
-        "standing up",
-        "standing",
-        "bicycling",
-        "up_by_elevator",
-        "down_by_elevator",
-        "sitting in car",
-    ],
-    sensor_channels=[
-        "RF_acc_x",
-        "RF_acc_y",
-        "RF_acc_z",
-        "RF_gyro_x",
-        "RF_gyro_y",
-        "RF_gyro_z",
-        "RS_acc_x",
-        "RS_acc_y",
-        "RS_acc_z",
-        "RS_gyro_x",
-        "RS_gyro_y",
-        "RS_gyro_z",
-        "RT_acc_x",
-        "RT_acc_y",
-        "RT_acc_z",
-        "RT_gyro_x",
-        "RT_gyro_y",
-        "RT_gyro_z",
-        "LF_acc_x",
-        "LF_acc_y",
-        "LF_acc_z",
-        "LF_gyro_x",
-        "LF_gyro_y",
-        "LF_gyro_z",
-        "LS_acc_x",
-        "LS_acc_y",
-        "LS_acc_z",
-        "LS_gyro_x",
-        "LS_gyro_y",
-        "LS_gyro_z",
-        "LT_acc_x",
-        "LT_acc_y",
-        "LT_acc_z",
-        "LT_gyro_x",
-        "LT_gyro_y",
-        "LT_gyro_z",
-        "R_EMG",
-        "L_EMG",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=2,
     window_overlap=0.5,
 )

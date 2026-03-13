@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import inspect
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -19,7 +17,7 @@ CFG_ITEMS: List[Tuple[WHARDatasetID, object]] = sorted(
 
 
 def _make_activity_names(cfg) -> List[str]:
-    names = list(cfg.activity_names)
+    names = list(cfg.selected_activities or [])
 
     if len(names) < cfg.num_of_activities:
         names.extend(
@@ -30,7 +28,7 @@ def _make_activity_names(cfg) -> List[str]:
 
 
 def _make_all_channel_names(cfg) -> List[str]:
-    channel_names = list(cfg.sensor_channels)
+    channel_names = list(cfg.selected_channels or [])
     extra_needed = cfg.num_of_channels - len(channel_names)
 
     for idx in range(max(extra_needed, 0)):
@@ -114,17 +112,24 @@ def test_dataset_cfg_basic_semantics(dataset_id: WHARDatasetID, cfg) -> None:
     assert 0 <= cfg.window_overlap < 1
     assert isinstance(cfg.activity_id_col, str) and cfg.activity_id_col
 
-    assert len(cfg.sensor_channels) > 0
-    assert len(cfg.sensor_channels) == len(set(cfg.sensor_channels))
-    assert all(isinstance(ch, str) and ch for ch in cfg.sensor_channels)
+    assert len(cfg.available_channels) > 0
+    assert len(cfg.available_channels) == len(set(cfg.available_channels))
+    assert all(isinstance(ch, str) and ch for ch in cfg.available_channels)
 
-    assert len(cfg.activity_names) > 0
-    assert len(cfg.activity_names) == len(set(cfg.activity_names))
-    assert all(isinstance(name, str) and name for name in cfg.activity_names)
+    assert len(cfg.available_activities) > 0
+    assert len(cfg.available_activities) == len(set(cfg.available_activities))
+    assert all(isinstance(name, str) and name for name in cfg.available_activities)
+
+    assert cfg.selected_activities is not None
+    assert cfg.selected_channels is not None
+    assert len(cfg.selected_channels) > 0
+    assert len(cfg.selected_activities) > 0
 
     # Some datasets expose only a selected subset for downstream usage.
-    assert cfg.num_of_channels >= len(cfg.sensor_channels)
-    assert cfg.num_of_activities >= len(cfg.activity_names)
+    assert cfg.num_of_channels >= len(cfg.available_channels)
+    assert cfg.num_of_activities >= len(cfg.available_activities)
+    assert set(cfg.selected_channels).issubset(set(cfg.available_channels))
+    assert set(cfg.selected_activities).issubset(set(cfg.available_activities))
 
 
 @pytest.mark.parametrize(("dataset_id", "cfg"), CFG_ITEMS)
@@ -140,6 +145,12 @@ def test_dataset_cfg_parse_function_contract(dataset_id: WHARDatasetID, cfg) -> 
 def test_whar_dataset_enum_and_registry_are_in_sync() -> None:
     implemented_ids = {enum_member for enum_member in WHARDatasetID}
     assert set(har_dataset_dict.keys()) == implemented_ids
+
+
+def test_w_har_defaults_exclude_unknown_activity() -> None:
+    cfg = har_dataset_dict[WHARDatasetID.W_HAR]
+    assert "Unknown" in cfg.available_activities
+    assert "Unknown" not in (cfg.selected_activities or [])
 
 
 @pytest.mark.parametrize(("dataset_id", "cfg"), CFG_ITEMS)
@@ -218,7 +229,7 @@ def test_process_session_windowing_semantics_hold_for_all_datasets(
     first_window_id = window_df["window_id"].iloc[0]
     first_window = windows[first_window_id]
 
-    assert list(first_window.columns) == cfg.sensor_channels
+    assert list(first_window.columns) == (cfg.selected_channels or [])
     assert not first_window.isna().any().any()
     assert all(
         pd.api.types.is_float_dtype(first_window[col]) for col in first_window.columns

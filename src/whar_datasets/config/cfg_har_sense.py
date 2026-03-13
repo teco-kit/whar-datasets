@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 
@@ -122,6 +123,38 @@ def parse_har_sense(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "Walking",
+    "Standing",
+    "Upstairs",
+    "Downstairs",
+    "Running",
+    "Sitting",
+    "Sleeping",
+]
+
+ALL_CHANNELS = [
+    "AG-X",
+    "AG-Y",
+    "AG-Z",
+    "Acc-X",
+    "Acc-Y",
+    "Acc-Z",
+    "Gravity-X",
+    "Gravity-Y",
+    "Gravity-Z",
+    "RR-X",
+    "RR-Y",
+    "RR-Z",
+    "RV-X",
+    "RV-Y",
+    "RV-Z",
+    "cos",
+]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_har_sense = WHARConfig(
     # Info fields + common
     dataset_id="har_sense",
@@ -136,33 +169,10 @@ cfg_har_sense = WHARConfig(
     parse=parse_har_sense,
     activity_id_col="activity_id",
     # Preprocessing fields (flatten selections + sliding_window)
-    activity_names=[
-        "Walking",
-        "Standing",
-        "Upstairs",
-        "Downstairs",
-        "Running",
-        "Sitting",
-        "Sleeping",
-    ],
-    sensor_channels=[
-        "AG-X",
-        "AG-Y",
-        "AG-Z",
-        "Acc-X",
-        "Acc-Y",
-        "Acc-Z",
-        "Gravity-X",
-        "Gravity-Y",
-        "Gravity-Z",
-        "RR-X",
-        "RR-Y",
-        "RR-Z",
-        "RV-X",
-        "RV-Y",
-        "RV-Z",
-        "cos",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=2.56,
     window_overlap=0.0,
     # Training fields (flattened splits)

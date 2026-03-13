@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -7,6 +5,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
 
@@ -213,6 +212,8 @@ def parse_falldet(
     return activity_metadata, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = FALLDET_FINE_ACTIVITY_NAMES
+
 cfg_falldet = WHARConfig(
     dataset_id="falldet",
     dataset_url="https://www.kaggle.com/datasets/harnoor343/fall-detection-accelerometer-data",
@@ -224,8 +225,10 @@ cfg_falldet = WHARConfig(
     datasets_dir="./datasets",
     parse=parse_falldet,
     activity_id_col="activity_id",
-    activity_names=FALLDET_FINE_ACTIVITY_NAMES,
-    sensor_channels=FALLDET_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(FALLDET_FINE_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=FALLDET_SENSOR_CHANNELS,
+    selected_channels=FALLDET_SENSOR_CHANNELS,
     window_time=3,
     window_overlap=0.5,
     parallelize=True,

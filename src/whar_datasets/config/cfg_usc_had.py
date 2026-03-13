@@ -6,6 +6,7 @@ import pandas as pd
 import scipy.io
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 ID_TO_ACTIVITY = {
@@ -143,6 +144,26 @@ def parse_usc_had(
 
 
 # config Zeugs
+ALL_ACTIVITIES = [
+    "Walking Forward",
+    "Walking Left",
+    "Walking Right",
+    "Walking Upstairs",
+    "Walking Downstairs",
+    "Running Forward",
+    "Jumping Up",
+    "Sitting",
+    "Standing",
+    "Sleeping",
+    "Elevator Up",
+    "Elevator Down",
+]
+
+ALL_CHANNELS = ["Ax", "Ay", "Az", "GyroX", "GyroY", "GyroZ"]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_usc_had = WHARConfig(
     dataset_id="usc_had",
     dataset_url="https://sipi.usc.edu/had/",
@@ -155,21 +176,10 @@ cfg_usc_had = WHARConfig(
     parse=parse_usc_had,
     # Preprocessing (selections + sliding window)
     # verschiedene Aktivitäten
-    activity_names=[
-        "Walking Forward",
-        "Walking Left",
-        "Walking Right",
-        "Walking Upstairs",
-        "Walking Downstairs",
-        "Running Forward",
-        "Jumping Up",
-        "Sitting",
-        "Standing",
-        "Sleeping",
-        "Elevator Up",
-        "Elevator Down",
-    ],
-    sensor_channels=["Ax", "Ay", "Az", "GyroX", "GyroY", "GyroZ"],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=1.28,
     window_overlap=0.5,
 )

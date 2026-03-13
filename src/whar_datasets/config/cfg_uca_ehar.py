@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -7,6 +5,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 UCA_EHAR_FILENAME_PATTERN = re.compile(
@@ -116,8 +115,7 @@ def parse_uca_ehar(
         raise ValueError("UCA-EHAR subject identifiers are missing.")
     subject_map = {subject_raw: idx for idx, subject_raw in enumerate(subject_values)}
     activity_map = {
-        activity_name: idx
-        for idx, activity_name in enumerate(UCA_EHAR_ACTIVITY_NAMES)
+        activity_name: idx for idx, activity_name in enumerate(UCA_EHAR_ACTIVITY_NAMES)
     }
 
     df["subject_id"] = df["subject_raw"].map(subject_map)
@@ -200,6 +198,8 @@ def parse_uca_ehar(
     return activity_df, session_df, sessions
 
 
+SELECTED_ACTIVITIES = UCA_EHAR_ACTIVITY_NAMES
+
 cfg_uca_ehar = WHARConfig(
     # Info + common
     dataset_id="uca_ehar",
@@ -214,8 +214,10 @@ cfg_uca_ehar = WHARConfig(
     parse=parse_uca_ehar,
     activity_id_col="activity_id",
     # Preprocessing (selections + sliding window)
-    activity_names=UCA_EHAR_ACTIVITY_NAMES,
-    sensor_channels=UCA_EHAR_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(UCA_EHAR_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=UCA_EHAR_SENSOR_CHANNELS,
+    selected_channels=UCA_EHAR_SENSOR_CHANNELS,
     window_time=2,
     window_overlap=0.5,
     parallelize=True,

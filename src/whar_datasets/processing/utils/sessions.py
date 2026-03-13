@@ -67,7 +67,9 @@ def process_sessions_para(
             session_data = group.drop(columns=["session_id"]).reset_index(drop=True)
 
             # Process session logic
-            session_data = select_channels(session_data, cfg.sensor_channels)
+            session_data = select_channels(
+                session_data, cfg.selected_channels or []
+            )
             session_data = resample(session_data, cfg.sampling_freq)
 
             window_df_local, windows_local = generate_windowing(
@@ -126,7 +128,7 @@ def process_session(
 ) -> Tuple[pd.DataFrame | None, Dict[str, pd.DataFrame] | None]:
     # laod and process session
     session = load_session(sessions_dir, session_id)
-    session = select_channels(session, cfg.sensor_channels)
+    session = select_channels(session, cfg.selected_channels or [])
     session = resample(session, cfg.sampling_freq)
 
     # generate windowing

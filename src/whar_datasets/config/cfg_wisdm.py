@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 
@@ -89,13 +90,14 @@ def parse_wisdm_12(
     value_cols = ["accel_x", "accel_y", "accel_z"]
     df[value_cols] = df[value_cols].apply(pd.to_numeric, errors="coerce")
     df = df.dropna(subset=value_cols)
-    df = (
-        df.groupby(["subject_id", "activity_id", "timestamp"], as_index=False)[value_cols]
-        .mean()
-    )
+    df = df.groupby(["subject_id", "activity_id", "timestamp"], as_index=False)[
+        value_cols
+    ].mean()
     df["activity_name"] = df["activity_id"].map(id_to_activity)
 
-    df = df.sort_values(by=["subject_id", "activity_id", "timestamp"]).reset_index(drop=True)
+    df = df.sort_values(by=["subject_id", "activity_id", "timestamp"]).reset_index(
+        drop=True
+    )
     step_ms = int(1e3 / 20)
     df["timestamp"] = (
         df.groupby(["subject_id", "activity_id"]).cumcount().astype("int64") * step_ms
@@ -168,6 +170,24 @@ def parse_wisdm_12(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "Walking",
+    "Jogging",
+    "Upstairs",
+    "Downstairs",
+    "Sitting",
+    "Standing",
+]
+
+ALL_CHANNELS = [
+    "accel_x",
+    "accel_y",
+    "accel_z",
+]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_wisdm = WHARConfig(
     # Info + common
     dataset_id="wisdm",
@@ -181,19 +201,10 @@ cfg_wisdm = WHARConfig(
     # Parsing
     parse=parse_wisdm_12,
     # Preprocessing (selections + sliding window)
-    activity_names=[
-        "Walking",
-        "Jogging",
-        "Upstairs",
-        "Downstairs",
-        "Sitting",
-        "Standing",
-    ],
-    sensor_channels=[
-        "accel_x",
-        "accel_y",
-        "accel_z",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=5,
     window_overlap=0.5,
     # Training (split info)

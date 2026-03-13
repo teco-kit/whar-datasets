@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 ACTIVITY_MAP = {
@@ -94,7 +95,9 @@ def parse_hapt(
 
         cache_key = (exp_id, user_id)
         if cache_key not in signals_cache:
-            acc_path = os.path.join(raw_dir, f"acc_exp{exp_id:02d}_user{user_id:02d}.txt")
+            acc_path = os.path.join(
+                raw_dir, f"acc_exp{exp_id:02d}_user{user_id:02d}.txt"
+            )
             gyro_path = os.path.join(
                 raw_dir, f"gyro_exp{exp_id:02d}_user{user_id:02d}.txt"
             )
@@ -105,7 +108,10 @@ def parse_hapt(
             # Both files describe the same timeline.
             n = min(len(acc_df), len(gyro_df))
             merged_df = pd.concat(
-                [acc_df.iloc[:n].reset_index(drop=True), gyro_df.iloc[:n].reset_index(drop=True)],
+                [
+                    acc_df.iloc[:n].reset_index(drop=True),
+                    gyro_df.iloc[:n].reset_index(drop=True),
+                ],
                 axis=1,
             )
             signals_cache[cache_key] = merged_df
@@ -163,6 +169,33 @@ def parse_hapt(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "WALKING",
+    "WALKING_UPSTAIRS",
+    "WALKING_DOWNSTAIRS",
+    "SITTING",
+    "STANDING",
+    "LAYING",
+    "STAND_TO_SIT",
+    "SIT_TO_STAND",
+    "SIT_TO_LIE",
+    "LIE_TO_SIT",
+    "STAND_TO_LIE",
+    "LIE_TO_STAND",
+]
+
+ALL_CHANNELS = [
+    "acc_x",
+    "acc_y",
+    "acc_z",
+    "gyro_x",
+    "gyro_y",
+    "gyro_z",
+]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_hapt = WHARConfig(
     # Info + common
     dataset_id="hapt",
@@ -176,28 +209,10 @@ cfg_hapt = WHARConfig(
     # Parsing
     parse=parse_hapt,
     # Preprocessing (selections + sliding window)
-    activity_names=[
-        "WALKING",
-        "WALKING_UPSTAIRS",
-        "WALKING_DOWNSTAIRS",
-        "SITTING",
-        "STANDING",
-        "LAYING",
-        "STAND_TO_SIT",
-        "SIT_TO_STAND",
-        "SIT_TO_LIE",
-        "LIE_TO_SIT",
-        "STAND_TO_LIE",
-        "LIE_TO_STAND",
-    ],
-    sensor_channels=[
-        "acc_x",
-        "acc_y",
-        "acc_z",
-        "gyro_x",
-        "gyro_y",
-        "gyro_z",
-    ],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=2.56,
     window_overlap=0.5,
 )

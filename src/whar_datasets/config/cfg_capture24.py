@@ -1,9 +1,10 @@
 import os
 import re
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Tuple
 
 import pandas as pd
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
 
@@ -99,7 +100,9 @@ def _find_subject_files(dir: str, dictionary_file: str | None) -> List[str]:
                 preferred_by_subject[subject_token] = full_path
                 continue
             # Prefer uncompressed CSV over CSV.GZ when both are present.
-            if current.lower().endswith(".gz") and not full_path.lower().endswith(".gz"):
+            if current.lower().endswith(".gz") and not full_path.lower().endswith(
+                ".gz"
+            ):
                 preferred_by_subject[subject_token] = full_path
 
     return sorted(preferred_by_subject.values())
@@ -265,7 +268,9 @@ def parse_capture24(
         annotation_col, scheme_col = _resolve_dictionary_columns(
             dictionary_df, activity_id_col
         )
-        annotation_map = _build_annotation_map(dictionary_df, annotation_col, scheme_col)
+        annotation_map = _build_annotation_map(
+            dictionary_df, annotation_col, scheme_col
+        )
 
     subject_files = _find_subject_files(dir, dictionary_file)
 
@@ -323,17 +328,21 @@ def parse_capture24(
 
         normalized_annotation = df["annotation"].astype(str).map(_normalize_token)
         if annotation_map:
-            df["activity_name"] = normalized_annotation.map(annotation_map).fillna("mixed")
+            df["activity_name"] = normalized_annotation.map(annotation_map).fillna(
+                "mixed"
+            )
         else:
-            df["activity_name"] = df["annotation"].astype(str).map(_canonicalize_activity)
+            df["activity_name"] = (
+                df["annotation"].astype(str).map(_canonicalize_activity)
+            )
 
-        df = df.sort_values("timestamp").drop_duplicates(subset=["timestamp"], keep="first")
+        df = df.sort_values("timestamp").drop_duplicates(
+            subset=["timestamp"], keep="first"
+        )
         if df.empty:
             continue
 
-        time_diff_ms = (
-            df["timestamp"].diff().dt.total_seconds().fillna(0.0) * 1000.0
-        )
+        time_diff_ms = df["timestamp"].diff().dt.total_seconds().fillna(0.0) * 1000.0
         is_new_session = (
             (df["activity_name"] != df["activity_name"].shift(1))
             | (time_diff_ms > CAPTURE24_GAP_THRESHOLD_MS)
@@ -349,12 +358,14 @@ def parse_capture24(
                 continue
 
             activity_name = str(group["activity_name"].iloc[0])
-            activity_id = CAPTURE24_ACTIVITY_TO_ID.get(activity_name, CAPTURE24_ACTIVITY_TO_ID["mixed"])
+            activity_id = CAPTURE24_ACTIVITY_TO_ID.get(
+                activity_name, CAPTURE24_ACTIVITY_TO_ID["mixed"]
+            )
 
             session_df = group[["timestamp"] + CAPTURE24_SENSOR_CHANNELS].copy()
-            session_df[CAPTURE24_SENSOR_CHANNELS] = session_df[
-                CAPTURE24_SENSOR_CHANNELS
-            ].astype("float32").round(6)
+            session_df[CAPTURE24_SENSOR_CHANNELS] = (
+                session_df[CAPTURE24_SENSOR_CHANNELS].astype("float32").round(6)
+            )
             session_df["timestamp"] = session_df["timestamp"].astype("datetime64[ms]")
             session_df = session_df.astype(
                 {
@@ -392,6 +403,8 @@ def parse_capture24(
     return activity_metadata, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = CAPTURE24_ACTIVITY_NAMES
+
 cfg_capture_24 = WHARConfig(
     dataset_id="capture_24",
     dataset_url="https://ora.ox.ac.uk/objects/uuid:99d7c092-d865-4a19-b096-cc16440cd001",
@@ -402,8 +415,10 @@ cfg_capture_24 = WHARConfig(
     num_of_channels=len(CAPTURE24_SENSOR_CHANNELS),
     parse=parse_capture24,
     activity_id_col="label:Walmsley2020",
-    activity_names=CAPTURE24_ACTIVITY_NAMES,
-    sensor_channels=CAPTURE24_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(CAPTURE24_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=CAPTURE24_SENSOR_CHANNELS,
+    selected_channels=CAPTURE24_SENSOR_CHANNELS,
     window_time=2.56,
     window_overlap=0.5,
 )

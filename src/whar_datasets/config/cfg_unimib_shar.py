@@ -5,6 +5,7 @@ import pandas as pd
 import scipy
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 
@@ -123,6 +124,31 @@ def parse_unimib(
     return activity_metadata, session_metadata, sessions
 
 
+ALL_ACTIVITIES = [
+    "StandingUpFS",
+    "StandingUpFL",
+    "Walking",
+    "Running",
+    "GoingUpS",
+    "Jumping",
+    "GoingDownS",
+    "LyingDownFS",
+    "SittingDown",
+    "FallingForw",
+    "FallingRight",
+    "FallingBack",
+    "HittingObstacle",
+    "FallingWithPS",
+    "FallingBackSC",
+    "Syncope",
+    "FallingLeft",
+]
+
+ALL_CHANNELS = ["acc_x", "acc_y", "acc_z"]
+
+
+SELECTED_ACTIVITIES = ALL_ACTIVITIES
+
 cfg_unimib = WHARConfig(
     # Info + common
     dataset_id="unimib_shar",
@@ -134,26 +160,10 @@ cfg_unimib = WHARConfig(
     num_of_channels=3,
     datasets_dir="./datasets",
     parse=parse_unimib,
-    activity_names=[
-        "StandingUpFS",
-        "StandingUpFL",
-        "Walking",
-        "Running",
-        "GoingUpS",
-        "Jumping",
-        "GoingDownS",
-        "LyingDownFS",
-        "SittingDown",
-        "FallingForw",
-        "FallingRight",
-        "FallingBack",
-        "HittingObstacle",
-        "FallingWithPS",
-        "FallingBackSC",
-        "Syncope",
-        "FallingLeft",
-    ],
-    sensor_channels=["acc_x", "acc_y", "acc_z"],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=3.02,
     window_overlap=0.5,
 )

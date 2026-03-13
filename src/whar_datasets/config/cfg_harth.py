@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -7,6 +5,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
 HARTH_ACTIVITY_NAMES: List[str] = [
@@ -155,6 +154,8 @@ def parse_harth(
     return activity_metadata, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = HARTH_ACTIVITY_NAMES
+
 cfg_harth = WHARConfig(
     dataset_id="harth",
     dataset_url="https://archive.ics.uci.edu/dataset/779/harth",
@@ -166,8 +167,10 @@ cfg_harth = WHARConfig(
     datasets_dir="./datasets",
     parse=parse_harth,
     activity_id_col="activity_id",
-    activity_names=HARTH_ACTIVITY_NAMES,
-    sensor_channels=HARTH_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(HARTH_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=HARTH_SENSOR_CHANNELS,
+    selected_channels=HARTH_SENSOR_CHANNELS,
     window_time=3,
     window_overlap=0.5,
     parallelize=True,

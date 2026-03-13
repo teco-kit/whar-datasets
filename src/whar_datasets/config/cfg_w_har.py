@@ -4,13 +4,46 @@ from typing import Dict, Tuple
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
+
+
+def _canonical_activity_label(raw_label: str) -> str:
+    token = "".join(ch for ch in str(raw_label).strip().lower() if ch.isalnum())
+    mapping = {
+        "walk": "Walking",
+        "walking": "Walking",
+        "transition": "Transition",
+        "sit": "Sitting",
+        "sitting": "Sitting",
+        "stand": "Standing",
+        "standing": "Standing",
+        "jumpundefined": "Jumping",
+        "jump": "Jumping",
+        "jumping": "Jumping",
+        "liedown": "Lying",
+        "laydown": "Lying",
+        "lie": "Lying",
+        "lying": "Lying",
+        "stairsup": "Upstairs",
+        "upstairs": "Upstairs",
+        "walkingupstairs": "Upstairs",
+        "stairsdown": "Downstairs",
+        "downstairs": "Downstairs",
+        "walkingdownstairs": "Downstairs",
+        "unknown": "Unknown",
+        "unkown": "Unknown",
+    }
+    return mapping.get(
+        token, (token[:1].upper() + token[1:].lower()) if token else "Unknown"
+    )
 
 
 def parse_w_har(
     dir: str, activity_id_col: str
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+    del activity_id_col
     file_path = os.path.join(dir, "motion_data_22_users.csv")
 
     with open(file_path, "r") as file:
@@ -27,8 +60,9 @@ def parse_w_har(
     # subject id muss mit 0 anfangen
     df["subject_id"] = pd.factorize(df["subject_id"], sort=True)[0]
 
-    # codes ist activity spalte jz in ids, uniques sind Namen sodass 0.te ist walk, 1. transition...
-    codes, uniques = pd.factorize(df["activity_id"])
+    # Map raw labels to a standardized, single-word naming scheme.
+    df["activity_name"] = df["activity_id"].astype(str).map(_canonical_activity_label)
+    codes, uniques = pd.factorize(df["activity_name"], sort=False)
 
     df["activity_id"] = codes
 
@@ -62,7 +96,14 @@ def parse_w_har(
 
         # drop metadata cols
         session_df = session_df.drop(
-            columns=["session_id", "subject_id", "activity_id", "Trial", "Scenerio"]
+            columns=[
+                "session_id",
+                "subject_id",
+                "activity_id",
+                "activity_name",
+                "Trial",
+                "Scenerio",
+            ]
         ).reset_index(drop=True)
 
         # set types
@@ -92,6 +133,31 @@ def parse_w_har(
 
 
 # config Zeugs
+ALL_ACTIVITIES = [
+    "Walking",
+    "Transition",
+    "Sitting",
+    "Standing",
+    "Jumping",
+    "Lying",
+    "Upstairs",
+    "Downstairs",
+    "Unknown",
+]
+SELECTED_ACTIVITIES = [
+    "Walking",
+    "Transition",
+    "Sitting",
+    "Standing",
+    "Jumping",
+    "Lying",
+    "Upstairs",
+    "Downstairs",
+]
+
+ALL_CHANNELS = ["Ax", "Ay", "Az", "GyroX", "GyroY", "GyroZ"]
+
+
 cfg_w_har = WHARConfig(
     dataset_id="w_har",
     dataset_url="https://github.com/gmbhat/human-activity-recognition",
@@ -102,19 +168,10 @@ cfg_w_har = WHARConfig(
     num_of_channels=6,
     # Parsing
     parse=parse_w_har,
-    # Preprocessing (selections + sliding window)
-    # verschiedene Aktivitäten
-    activity_names=[
-        "walk",
-        "transition",
-        "sit",
-        "stand",
-        "jumpundefined",
-        "liedown",
-        "stairsup",
-        "stairsdown",
-    ],
-    sensor_channels=["Ax", "Ay", "Az", "GyroX", "GyroY", "GyroZ"],
+    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=ALL_CHANNELS,
+    selected_channels=ALL_CHANNELS,
     window_time=1.28,
     window_overlap=0.5,
 )

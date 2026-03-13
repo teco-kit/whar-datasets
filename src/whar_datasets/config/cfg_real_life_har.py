@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
 
@@ -340,6 +341,8 @@ def parse_real_life_har(
     return activity_metadata, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = REAL_LIFE_HAR_ACTIVITY_NAMES
+
 cfg_real_life_har = WHARConfig(
     # Info + common
     dataset_id="real_life_har",
@@ -355,8 +358,10 @@ cfg_real_life_har = WHARConfig(
     parse=parse_real_life_har,
     activity_id_col="activity_id",
     # Preprocessing
-    activity_names=REAL_LIFE_HAR_ACTIVITY_NAMES,
-    sensor_channels=REAL_LIFE_HAR_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(REAL_LIFE_HAR_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=REAL_LIFE_HAR_SENSOR_CHANNELS,
+    selected_channels=REAL_LIFE_HAR_SENSOR_CHANNELS,
     window_time=2.56,
     window_overlap=0.5,
 )

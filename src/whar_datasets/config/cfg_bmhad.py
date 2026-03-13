@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -8,6 +6,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
 
@@ -120,9 +119,7 @@ def parse_bmhad(
         )
         sensor_values = sensor_values.fillna(0.0)
 
-        session_df = pd.concat(
-            [timestamp.rename("timestamp"), sensor_values], axis=1, copy=False
-        )
+        session_df = pd.concat([timestamp.rename("timestamp"), sensor_values], axis=1)
         session_df = session_df.dropna(subset=["timestamp"]).reset_index(drop=True)
         if session_df.empty:
             raise ValueError(f"No valid timestamps parsed in '{file_path.name}'.")
@@ -161,6 +158,8 @@ def parse_bmhad(
     return activity_metadata, session_metadata, sessions
 
 
+SELECTED_ACTIVITIES = BMHAD_ACTIVITY_NAMES
+
 cfg_bmhad = WHARConfig(
     # Info + common
     dataset_id="bmhad",
@@ -174,8 +173,10 @@ cfg_bmhad = WHARConfig(
     # Parsing
     parse=parse_bmhad,
     # Preprocessing (selections + sliding window)
-    activity_names=BMHAD_ACTIVITY_NAMES,
-    sensor_channels=BMHAD_SENSOR_CHANNELS,
+    available_activities=canonicalize_activity_name_list(BMHAD_ACTIVITY_NAMES),
+    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_channels=BMHAD_SENSOR_CHANNELS,
+    selected_channels=BMHAD_SENSOR_CHANNELS,
     window_time=2,
     window_overlap=0.5,
     parallelize=True,
