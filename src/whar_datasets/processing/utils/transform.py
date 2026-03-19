@@ -3,7 +3,7 @@ from typing import Callable, List
 import numpy as np
 
 from whar_datasets.config.config import TransformType, WHARConfig
-from whar_datasets.processing.features.wavelet_transform import signal_to_dwt_grid
+from whar_datasets.processing.transforms.dwt import signal_to_dwt_grid
 
 
 def get_transform(cfg: WHARConfig) -> Callable[[np.ndarray], List[np.ndarray]]:
