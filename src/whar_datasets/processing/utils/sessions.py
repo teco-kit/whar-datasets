@@ -45,45 +45,18 @@ def process_sessions_para(
     # Read sessions parquet with dask
     ddf = dd.read_parquet(sessions_dir / "sessions.parquet", engine="pyarrow")
 
-    def process_partition(
-        df: pd.DataFrame,
-    ) -> List[Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]]:
-        results: List[Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]] = []
+    def process_partition(df: pd.DataFrame) -> pd.DataFrame:
         if df.empty:
-            return results
+            return pd.DataFrame()
 
         if "session_id" not in df.columns:
-            return results
+            return pd.DataFrame()
 
-        # Filter for relevant sessions
         mask = df["session_id"].isin(relevant_ids)
         if not mask.any():
-            return results
+            return pd.DataFrame()
 
-        subset = df[mask]
-
-        for session_id, group in subset.groupby("session_id"):
-            # Drop session_id to match load_session behavior
-            session_data = group.drop(columns=["session_id"]).reset_index(drop=True)
-
-            # Process session logic
-            session_data = select_channels(
-                session_data, cfg.selected_channels or []
-            )
-            session_data = resample(session_data, cfg.sampling_freq)
-
-            window_df_local, windows_local = generate_windowing(
-                int(session_id),  # type: ignore
-                session_data,
-                cfg.window_time,
-                cfg.window_overlap,
-                cfg.sampling_freq,
-            )
-
-            if window_df_local is not None and windows_local is not None:
-                results.append((window_df_local, windows_local))
-
-        return results
+        return df.loc[mask].copy()
 
     logger.info("Processing sessions (parallelized)")
 
@@ -99,13 +72,32 @@ def process_sessions_para(
     # execute tasks in parallel
     pbar = ProgressBar()
     pbar.register()
-    results_list = list(compute(*tasks, scheduler="processes"))
+    partition_subsets = list(compute(*tasks, scheduler="processes"))
     pbar.unregister()
 
-    # Flatten results
-    all_pairs = []
-    for partition_results in results_list:
-        all_pairs.extend(partition_results)
+    non_empty_subsets = [df for df in partition_subsets if not df.empty]
+    if not non_empty_subsets:
+        return pd.DataFrame(columns=["window_id"]), {}
+
+    # Important: group globally (not per-partition), otherwise one session can be
+    # split across partitions and produce incomplete windows.
+    full_subset = pd.concat(non_empty_subsets, axis=0, ignore_index=True)
+
+    all_pairs: List[Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]] = []
+    for session_id, group in full_subset.groupby("session_id", sort=False):
+        session_data = group.drop(columns=["session_id"]).reset_index(drop=True)
+        session_data = select_channels(session_data, cfg.selected_channels or [])
+        session_data = resample(session_data, cfg.sampling_freq)
+
+        window_df_local, windows_local = generate_windowing(
+            int(session_id),  # type: ignore[arg-type]
+            session_data,
+            cfg.window_time,
+            cfg.window_overlap,
+            cfg.sampling_freq,
+        )
+        if window_df_local is not None and windows_local is not None:
+            all_pairs.append((window_df_local, windows_local))
 
     if not all_pairs:
         return pd.DataFrame(columns=["window_id"]), {}

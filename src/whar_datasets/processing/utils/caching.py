@@ -45,7 +45,7 @@ def cache_windows(
     if window_list:
         combined_windows = pd.concat(window_list)
         # Sort by window_id to optimize read filtering
-        combined_windows = combined_windows.sort_values("window_id")
+        combined_windows = combined_windows.sort_values("window_id", kind="stable")
 
         combined_windows.to_parquet(
             windows_dir / "windows.parquet", index=False, engine="pyarrow"
@@ -96,7 +96,7 @@ def cache_common_format(
     if session_list:
         combined_sessions = pd.concat(session_list)
         # Sort by session_id to optimize read filtering
-        combined_sessions = combined_sessions.sort_values("session_id")
+        combined_sessions = combined_sessions.sort_values("session_id", kind="stable")
 
         combined_sessions.to_parquet(
             sessions_dir / "sessions.parquet", index=False, engine="pyarrow"

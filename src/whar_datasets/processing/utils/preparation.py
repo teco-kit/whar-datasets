@@ -59,33 +59,18 @@ def prepare_windows_para(
     # Read parquet with dask to handle partitions efficiently
     ddf = dd.read_parquet(windows_dir / "windows.parquet", engine="pyarrow")
 
-    def process_partition(df: pd.DataFrame) -> List[Tuple[str, List[np.ndarray]]]:
-        results: List[Tuple[str, List[np.ndarray]]] = []
+    def process_partition(df: pd.DataFrame) -> pd.DataFrame:
         if df.empty:
-            return results
+            return pd.DataFrame()
 
-        # Check if any window in this partition is relevant
-        # This avoids processing partitions that don't contain any relevant windows
         if "window_id" not in df.columns:
-            return results
+            return pd.DataFrame()
 
-        # Filter for relevant windows in this partition
         mask = df["window_id"].isin(relevant_ids)
         if not mask.any():
-            return results
+            return pd.DataFrame()
 
-        subset = df[mask]
-
-        # Group by window_id and process
-        for window_id, group in subset.groupby("window_id"):
-            # Drop window_id column to match load_window behavior
-            window_data = group.drop(columns=["window_id"]).reset_index(drop=True)
-
-            normalized = normalize(window_data).values
-            transformed = transform(normalized)
-            results.append((str(window_id), [normalized, *transformed]))
-
-        return results
+        return df.loc[mask].copy()
 
     # Create delayed tasks for each partition
     delayed_partitions = ddf.to_delayed()
@@ -99,13 +84,22 @@ def prepare_windows_para(
     # execute tasks in parallel
     pbar = ProgressBar()
     pbar.register()
-    results_list = list(compute(*tasks, scheduler="processes"))
+    partition_subsets = list(compute(*tasks, scheduler="processes"))
     pbar.unregister()
 
-    # Flatten results
+    non_empty_subsets = [df for df in partition_subsets if not df.empty]
+    if not non_empty_subsets:
+        return {}
+
+    # Important: group globally (not per-partition), otherwise one window can be
+    # split across partitions and produce truncated arrays.
+    full_subset = pd.concat(non_empty_subsets, axis=0, ignore_index=True)
+
     prepared: Dict[str, List[np.ndarray]] = {}
-    for partition_results in results_list:
-        for window_id, data in partition_results:
-            prepared[window_id] = data
+    for window_id, group in full_subset.groupby("window_id", sort=False):
+        window_data = group.drop(columns=["window_id"]).reset_index(drop=True)
+        normalized = normalize(window_data).values
+        transformed = transform(normalized)
+        prepared[str(window_id)] = [normalized, *transformed]
 
     return prepared
