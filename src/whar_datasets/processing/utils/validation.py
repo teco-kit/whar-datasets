@@ -5,10 +5,10 @@ import dask.dataframe as dd
 import pandas as pd
 from dask.base import compute
 from dask.delayed import delayed
-from dask.diagnostics.progress import ProgressBar
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
+from whar_datasets.processing.utils.dask_progress import SharedTqdmDaskCallback
 from whar_datasets.utils.loading import load_session
 from whar_datasets.utils.logging import logger
 
@@ -164,10 +164,14 @@ def validate_sessions_para(
     tasks = [validate_delayed(part) for part in delayed_partitions]
 
     # execute tasks in parallel
-    pbar = ProgressBar()
-    pbar.register()
-    results_list = list(compute(*tasks, scheduler="processes"))
-    pbar.unregister()
+    with tqdm(
+        total=max(len(tasks), 1),
+        desc="Validating sessions (dask)",
+        leave=True,
+    ) as pbar:
+        with SharedTqdmDaskCallback(pbar):
+            results_list = list(compute(*tasks, scheduler="processes"))
+        pbar.refresh()
 
     # Flatten results
     all_results = []

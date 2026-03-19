@@ -5,10 +5,10 @@ import dask.dataframe as dd
 import pandas as pd
 from dask.base import compute
 from dask.delayed import delayed
-from dask.diagnostics.progress import ProgressBar
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
+from whar_datasets.processing.utils.dask_progress import SharedTqdmDaskCallback
 from whar_datasets.processing.utils.resampling import resample
 from whar_datasets.processing.utils.selecting import select_channels
 from whar_datasets.processing.utils.windowing import generate_windowing
@@ -69,35 +69,43 @@ def process_sessions_para(
 
     tasks = [process_delayed(part) for part in delayed_partitions]
 
-    # execute tasks in parallel
-    pbar = ProgressBar()
-    pbar.register()
-    partition_subsets = list(compute(*tasks, scheduler="processes"))
-    pbar.unregister()
+    expected_sessions = int(session_df["session_id"].nunique())
+    with tqdm(
+        total=max(len(tasks) + expected_sessions, 1),
+        desc="Processing sessions (dask)",
+        leave=True,
+    ) as pbar:
+        # execute partition filtering in parallel
+        with SharedTqdmDaskCallback(pbar):
+            partition_subsets = list(compute(*tasks, scheduler="processes"))
 
-    non_empty_subsets = [df for df in partition_subsets if not df.empty]
-    if not non_empty_subsets:
-        return pd.DataFrame(columns=["window_id"]), {}
+        non_empty_subsets = [df for df in partition_subsets if not df.empty]
+        if not non_empty_subsets:
+            return pd.DataFrame(columns=["window_id"]), {}
 
-    # Important: group globally (not per-partition), otherwise one session can be
-    # split across partitions and produce incomplete windows.
-    full_subset = pd.concat(non_empty_subsets, axis=0, ignore_index=True)
+        # Important: group globally (not per-partition), otherwise one session can be
+        # split across partitions and produce incomplete windows.
+        full_subset = pd.concat(non_empty_subsets, axis=0, ignore_index=True)
 
-    all_pairs: List[Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]] = []
-    for session_id, group in full_subset.groupby("session_id", sort=False):
-        session_data = group.drop(columns=["session_id"]).reset_index(drop=True)
-        session_data = select_channels(session_data, cfg.selected_channels or [])
-        session_data = resample(session_data, cfg.sampling_freq)
+        all_pairs: List[Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]] = []
+        grouped = full_subset.groupby("session_id", sort=False)
+        for session_id, group in grouped:
+            session_data = group.drop(columns=["session_id"]).reset_index(drop=True)
+            session_data = select_channels(session_data, cfg.selected_channels or [])
+            session_data = resample(session_data, cfg.sampling_freq)
 
-        window_df_local, windows_local = generate_windowing(
-            int(session_id),  # type: ignore[arg-type]
-            session_data,
-            cfg.window_time,
-            cfg.window_overlap,
-            cfg.sampling_freq,
-        )
-        if window_df_local is not None and windows_local is not None:
-            all_pairs.append((window_df_local, windows_local))
+            window_df_local, windows_local = generate_windowing(
+                int(session_id),  # type: ignore[arg-type]
+                session_data,
+                cfg.window_time,
+                cfg.window_overlap,
+                cfg.sampling_freq,
+            )
+            if window_df_local is not None and windows_local is not None:
+                all_pairs.append((window_df_local, windows_local))
+            pbar.update(1)
+
+        pbar.refresh()
 
     if not all_pairs:
         return pd.DataFrame(columns=["window_id"]), {}

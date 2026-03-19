@@ -6,10 +6,10 @@ import numpy as np
 import pandas as pd
 from dask.base import compute
 from dask.delayed import delayed
-from dask.diagnostics.progress import ProgressBar
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
+from whar_datasets.processing.utils.dask_progress import SharedTqdmDaskCallback
 from whar_datasets.processing.utils.normalization import NormParams, get_normalize
 from whar_datasets.processing.utils.transform import get_transform
 from whar_datasets.utils.loading import load_window
@@ -81,25 +81,33 @@ def prepare_windows_para(
 
     tasks = [process_delayed(part) for part in delayed_partitions]
 
-    # execute tasks in parallel
-    pbar = ProgressBar()
-    pbar.register()
-    partition_subsets = list(compute(*tasks, scheduler="processes"))
-    pbar.unregister()
+    expected_windows = len(relevant_ids)
+    with tqdm(
+        total=max(len(tasks) + expected_windows, 1),
+        desc="Preparing windows (dask)",
+        leave=True,
+    ) as pbar:
+        # execute partition filtering in parallel
+        with SharedTqdmDaskCallback(pbar):
+            partition_subsets = list(compute(*tasks, scheduler="processes"))
 
-    non_empty_subsets = [df for df in partition_subsets if not df.empty]
-    if not non_empty_subsets:
-        return {}
+        non_empty_subsets = [df for df in partition_subsets if not df.empty]
+        if not non_empty_subsets:
+            return {}
 
-    # Important: group globally (not per-partition), otherwise one window can be
-    # split across partitions and produce truncated arrays.
-    full_subset = pd.concat(non_empty_subsets, axis=0, ignore_index=True)
+        # Important: group globally (not per-partition), otherwise one window can be
+        # split across partitions and produce truncated arrays.
+        full_subset = pd.concat(non_empty_subsets, axis=0, ignore_index=True)
 
-    prepared: Dict[str, List[np.ndarray]] = {}
-    for window_id, group in full_subset.groupby("window_id", sort=False):
-        window_data = group.drop(columns=["window_id"]).reset_index(drop=True)
-        normalized = normalize(window_data).values
-        transformed = transform(normalized)
-        prepared[str(window_id)] = [normalized, *transformed]
+        prepared: Dict[str, List[np.ndarray]] = {}
+        grouped = full_subset.groupby("window_id", sort=False)
+        for window_id, group in grouped:
+            window_data = group.drop(columns=["window_id"]).reset_index(drop=True)
+            normalized = normalize(window_data).values
+            transformed = transform(normalized)
+            prepared[str(window_id)] = [normalized, *transformed]
+            pbar.update(1)
+
+        pbar.refresh()
 
     return prepared

@@ -1,6 +1,6 @@
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, field_serializer
 
 from whar_datasets.utils.types import NormType, Parse, TransformType
 
