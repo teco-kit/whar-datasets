@@ -236,6 +236,7 @@ def parse_gotov(
 
         eq_channels = list(GOTOV_EQUIVITAL_SOURCE_TO_CHANNEL.values())
         eq_df[eq_channels] = eq_df[eq_channels].apply(pd.to_numeric, errors="coerce")
+        eq_df[eq_channels] = eq_df[eq_channels].replace([np.inf, -np.inf], np.nan)
         eq_df = eq_df.dropna(subset=eq_channels)
         if eq_df.empty:
             skipped_subject_tokens.append(file_path.stem)
@@ -257,6 +258,9 @@ def parse_gotov(
 
         work_df[GOTOV_SENSOR_CHANNELS] = work_df[GOTOV_SENSOR_CHANNELS].apply(
             pd.to_numeric, errors="coerce"
+        )
+        work_df[GOTOV_SENSOR_CHANNELS] = work_df[GOTOV_SENSOR_CHANNELS].replace(
+            [np.inf, -np.inf], np.nan
         )
         # COSMED channels are lower-rate; carry nearest known value to keep
         # a synchronized multichannel timeline with dense IMU samples.

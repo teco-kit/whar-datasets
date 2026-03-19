@@ -1,6 +1,7 @@
 from functools import partial
 from typing import Callable, Dict, List, Tuple, TypeAlias
 
+import numpy as np
 import pandas as pd
 
 from whar_datasets.config.config import NormType, WHARConfig
@@ -8,6 +9,17 @@ from whar_datasets.utils.loading import load_window
 from whar_datasets.utils.logging import logger
 
 NormParams: TypeAlias = Tuple[Dict[str, float], Dict[str, float]]
+
+
+def _safe_denominator(values: pd.Series, eps: float = 1e-12) -> pd.Series:
+    safe = pd.to_numeric(values, errors="coerce").astype("float64")
+    safe = safe.replace([np.inf, -np.inf], np.nan)
+    safe = safe.mask(safe.abs() <= eps)
+    return safe.fillna(1.0)
+
+
+def _sanitize_normalized(df: pd.DataFrame) -> pd.DataFrame:
+    return df.replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
 
 def get_normalize(
@@ -122,9 +134,10 @@ def min_max(
     max_values = pd.Series(norm_params[1])
 
     # Apply min-max normalization
-    df_normalized = (df - min_values) / (max_values - min_values)
+    denom = _safe_denominator(max_values - min_values)
+    df_normalized = (df - min_values) / denom
 
-    return df_normalized
+    return _sanitize_normalized(df_normalized)
 
 
 def standardize(
@@ -140,9 +153,10 @@ def standardize(
     std_values = pd.Series(norm_params[1])
 
     # Apply standardization
-    df_normalized = (df - mean_values) / std_values
+    denom = _safe_denominator(std_values)
+    df_normalized = (df - mean_values) / denom
 
-    return df_normalized
+    return _sanitize_normalized(df_normalized)
 
 
 def robust_scale(
@@ -158,6 +172,7 @@ def robust_scale(
     iqr = pd.Series(norm_params[1])
 
     # Apply robust scaling
-    df_normalized = (df - median_values) / iqr
+    denom = _safe_denominator(iqr)
+    df_normalized = (df - median_values) / denom
 
-    return df_normalized
+    return _sanitize_normalized(df_normalized)
