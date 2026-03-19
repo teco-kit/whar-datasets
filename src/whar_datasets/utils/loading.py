@@ -1,5 +1,5 @@
-from pathlib import Path
 import pickle
+from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
@@ -21,9 +21,7 @@ def load_activity_df(cache_dir: Path) -> pd.DataFrame:
     return pd.read_csv(activity_df_path)
 
 
-def load_samples(
-    window_df: pd.DataFrame, samples_dir: Path
-) -> Dict[str, List[np.ndarray]]:
+def load_samples(samples_dir: Path) -> Dict[str, List[np.ndarray]]:
     pickle_path = samples_dir / "samples.pkl"
     if pickle_path.exists():
         with pickle_path.open("rb") as f:
@@ -43,7 +41,7 @@ def load_samples(
     raise FileNotFoundError(f"No samples found at {pickle_path} or {legacy_path}")
 
 
-def load_windows(window_df: pd.DataFrame, windows_dir: Path) -> Dict[str, pd.DataFrame]:
+def load_windows(windows_dir: Path) -> Dict[str, pd.DataFrame]:
     window_path = windows_dir / "windows.parquet"
 
     # Load all windows at once
@@ -59,9 +57,7 @@ def load_windows(window_df: pd.DataFrame, windows_dir: Path) -> Dict[str, pd.Dat
     return windows
 
 
-def load_sessions(
-    sessions_dir: Path, session_df: pd.DataFrame
-) -> Dict[int, pd.DataFrame]:
+def load_sessions(sessions_dir: Path) -> Dict[int, pd.DataFrame]:
     session_path = sessions_dir / "sessions.parquet"
 
     # Load all sessions at once

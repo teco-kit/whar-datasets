@@ -64,7 +64,7 @@ class SamplingStep(AbstractStep):
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     def get_base(self) -> base_type:
-        windows = load_windows(self.window_df, self.windows_dir)
+        windows = load_windows(self.windows_dir)
         return windows
 
     def check_initial_format(self, base: base_type) -> bool:
@@ -94,4 +94,4 @@ class SamplingStep(AbstractStep):
 
     def load_results(self) -> result_type:
         logger.info("Loading samples")
-        return load_samples(self.window_df, self.samples_dir)
+        return load_samples(self.samples_dir)
