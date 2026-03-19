@@ -23,6 +23,12 @@ This library does not host any datasets. To use a dataset, please visit its orig
 pip install "git+https://github.com/teco-kit/whar-datasets.git"
 ```
 
+Optional TensorFlow support:
+
+```
+pip install "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"
+```
+
 ### Example with PyTorch
 
 ```python

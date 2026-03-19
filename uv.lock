@@ -3977,13 +3977,21 @@ dependencies = [
     { name = "sempyro" },
     { name = "short-unique-id" },
     { name = "shortuuid" },
-    { name = "tensorflow" },
     { name = "torch" },
     { name = "tqdm" },
     { name = "tslearn" },
-    { name = "types-tensorflow" },
     { name = "types-tqdm" },
     { name = "umap-learn" },
+]
+
+[package.optional-dependencies]
+tensorflow = [
+    { name = "tensorflow" },
+    { name = "types-tensorflow" },
+]
+tf = [
+    { name = "tensorflow" },
+    { name = "types-tensorflow" },
 ]
 
 [package.metadata]
@@ -4010,14 +4018,17 @@ requires-dist = [
     { name = "sempyro", specifier = ">=2.0.1" },
     { name = "short-unique-id", specifier = ">=0.2.1" },
     { name = "shortuuid", specifier = ">=1.0.13" },
-    { name = "tensorflow", specifier = ">=2.20.0" },
+    { name = "tensorflow", marker = "extra == 'tensorflow'", specifier = ">=2.20.0" },
+    { name = "tensorflow", marker = "extra == 'tf'", specifier = ">=2.20.0" },
     { name = "torch", specifier = ">=2.7.1" },
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "tslearn", specifier = ">=0.8.0" },
-    { name = "types-tensorflow", specifier = ">=2.18.0.20250516" },
+    { name = "types-tensorflow", marker = "extra == 'tensorflow'", specifier = ">=2.18.0.20250516" },
+    { name = "types-tensorflow", marker = "extra == 'tf'", specifier = ">=2.18.0.20250516" },
     { name = "types-tqdm", specifier = ">=4.67.0.20250516" },
     { name = "umap-learn", specifier = ">=0.5.9.post2" },
 ]
+provides-extras = ["tf", "tensorflow"]
 
 [[package]]
 name = "wheel"
