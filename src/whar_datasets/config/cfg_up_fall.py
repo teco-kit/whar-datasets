@@ -7,7 +7,23 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-UP_FALL_ACTIVITY_NAMES: List[str] = [f"activity_{idx}" for idx in range(1, 12)]
+UP_FALL_ACTIVITY_MAP: Dict[int, str] = {
+    1: "falling forward using hands",
+    2: "falling forward using knees",
+    3: "falling backwards",
+    4: "falling sideward",
+    5: "falling sitting in empty chair",
+    6: "walking",
+    7: "standing",
+    8: "sitting",
+    9: "picking up an object",
+    10: "jumping",
+    11: "laying",
+}
+
+UP_FALL_ACTIVITY_NAMES: List[str] = [
+    UP_FALL_ACTIVITY_MAP[idx] for idx in sorted(UP_FALL_ACTIVITY_MAP)
+]
 
 UP_FALL_SENSOR_CHANNELS: List[str] = [
     "ankle_acc_x",
@@ -118,7 +134,7 @@ def _load_up_fall_raw(csv_path: Path) -> pd.DataFrame:
     df["trial_raw_id"] = pd.to_numeric(df["Trial"], errors="coerce")
 
     valid_mask = df[["timestamp", "subject_raw_id", "activity_raw_id", "trial_raw_id"]]
-    df = df[~valid_mask.isna().any(axis=1)].copy()
+    df = df[~valid_mask.isna().any(axis=1)].copy()  # type: ignore[union-attr]
     if df.empty:
         raise ValueError(
             f"No valid UP-Fall rows with timestamp/subject/activity/trial in '{csv_path.name}'."
@@ -209,25 +225,36 @@ def parse_up_fall(
         raise ValueError("No UP-Fall sessions could be parsed.")
 
     session_metadata = pd.DataFrame(session_rows)
+    unknown_activity_ids = sorted(
+        set(session_metadata["activity_raw_id"].astype(int).tolist())
+        - set(UP_FALL_ACTIVITY_MAP.keys())
+    )
+    if unknown_activity_ids:
+        raise ValueError(
+            "UP-Fall contains activity IDs not covered by the configured mapping: "
+            + ", ".join(str(activity_id) for activity_id in unknown_activity_ids)
+        )
+
     session_metadata["subject_id"] = pd.factorize(
         session_metadata["subject_raw_id"], sort=True
     )[0]
-    session_metadata["activity_id"] = pd.factorize(
-        session_metadata["activity_raw_id"], sort=True
-    )[0]
+    session_metadata["activity_id"] = (
+        session_metadata["activity_raw_id"].astype(int) - 1
+    ).astype("int32")
     session_metadata = session_metadata[["session_id", "subject_id", "activity_id"]]
 
-    activity_metadata = (
-        session_metadata[["activity_id"]].drop_duplicates().sort_values("activity_id")
+    observed_activity_ids = sorted(
+        session_metadata["activity_id"].astype(int).unique().tolist()
     )
-    activity_metadata["activity_name"] = activity_metadata["activity_id"].map(
-        lambda idx: (
-            UP_FALL_ACTIVITY_NAMES[int(idx)]
-            if int(idx) < len(UP_FALL_ACTIVITY_NAMES)
-            else f"activity_{int(idx) + 1}"
-        )
+    activity_metadata = pd.DataFrame(
+        {
+            "activity_id": observed_activity_ids,
+            "activity_name": [
+                UP_FALL_ACTIVITY_MAP[activity_id + 1]
+                for activity_id in observed_activity_ids
+            ],
+        }
     )
-    activity_metadata = activity_metadata[["activity_id", "activity_name"]]
 
     activity_metadata = activity_metadata.astype(
         {"activity_id": "int32", "activity_name": "string"}

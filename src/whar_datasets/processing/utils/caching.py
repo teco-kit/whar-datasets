@@ -1,5 +1,5 @@
-import shutil
 import pickle
+import shutil
 from pathlib import Path
 from typing import Dict, List
 
@@ -60,7 +60,7 @@ def cache_window_df(metadata_dir: Path, window_df: pd.DataFrame) -> None:
     window_df_path = metadata_dir / "window_df.csv"
 
     # save window index
-    window_df.to_csv(window_df_path, index=False)
+    window_df.to_csv(window_df_path)
 
 
 def cache_common_format(
