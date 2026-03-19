@@ -204,9 +204,9 @@ def test_process_session_windowing_semantics_hold_for_all_datasets(
     ts = pd.date_range("2020-01-01", periods=session_length, freq=f"{base_freq_ms}ms")
     session_data = {"timestamp": ts}
     for col_idx, col_name in enumerate(channels):
-        session_data[col_name] = [
-            float(col_idx + row_idx) for row_idx in range(session_length)
-        ]
+        session_data[col_name] = pd.DatetimeIndex(
+            [float(col_idx + row_idx) for row_idx in range(session_length)]
+        )
     sessions = {
         0: pd.DataFrame(session_data).astype(
             {
