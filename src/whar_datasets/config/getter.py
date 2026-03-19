@@ -123,3 +123,40 @@ def get_dataset_cfg(
     cfg.datasets_dir = datasets_dir
 
     return cfg
+
+
+# Dataset IDs listed in README.md (Supported Datasets), excluding CAPTURE-24.
+BENCHMARK_DATASET_IDS: list[WHARDatasetID] = [
+    # Single-Sensor Datasets
+    WHARDatasetID.WISDM,
+    WHARDatasetID.UCI_HAR,
+    WHARDatasetID.UTD_MHAD,
+    WHARDatasetID.HAPT,
+    WHARDatasetID.USC_HAD,
+    WHARDatasetID.UNIMIB_SHAR,
+    WHARDatasetID.MOTION_SENSE,
+    WHARDatasetID.REAL_LIFE_HAR,
+    WHARDatasetID.WISDM_19_PHONE,
+    WHARDatasetID.WISDM_19_WATCH,
+    WHARDatasetID.KU_HAR,
+    WHARDatasetID.HANG_TIME,
+    # Multi-Sensor Datasets
+    WHARDatasetID.PAMAP2,
+    WHARDatasetID.OPPORTUNITY,
+    WHARDatasetID.HHAR,
+    WHARDatasetID.MHEALTH,
+    WHARDatasetID.DSADS,
+    WHARDatasetID.SAD,
+    WHARDatasetID.DAPHNET,
+    WHARDatasetID.REAL_WORLD,
+    WHARDatasetID.UP_FALL,
+    WHARDatasetID.UMA_FALL,
+    WHARDatasetID.REAL_DISP,
+    WHARDatasetID.HUGADB,
+    WHARDatasetID.HARTH,
+    WHARDatasetID.W_HAR,
+    WHARDatasetID.WEAR,
+    WHARDatasetID.HAR70,
+    WHARDatasetID.UCA_EHAR,
+    WHARDatasetID.GOTOV,
+]
