@@ -71,10 +71,10 @@ class WindowingStep(AbstractStep):
 
         logger.info("Compute windowing")
 
-        # select activities
-        session_df = select_activities(
-            session_df,
+        # Select and remap activity labels to contiguous ids for downstream training.
+        activity_df, session_df = select_activities(
             activity_df,
+            session_df,
             self.cfg.selected_activities or [],
         )
 
@@ -101,6 +101,11 @@ class WindowingStep(AbstractStep):
         activity_df = load_activity_df(self.metadata_dir)
         session_df = load_session_df(self.metadata_dir)
         window_df = load_window_df(self.metadata_dir)
+        activity_df, session_df = select_activities(
+            activity_df,
+            session_df,
+            self.cfg.selected_activities or [],
+        )
 
         df = activity_df["activity_id"]
         logger.info(f"activity_ids from {df.min()} to {df.max()}")

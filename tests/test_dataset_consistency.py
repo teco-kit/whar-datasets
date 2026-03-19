@@ -7,6 +7,7 @@ import pytest
 
 from whar_datasets.config.getter import WHARDatasetID, get_dataset_cfg, har_dataset_dict
 from whar_datasets.processing.utils.caching import cache_common_format
+from whar_datasets.processing.utils.selecting import select_activities
 from whar_datasets.processing.utils.sessions import process_session
 from whar_datasets.processing.utils.validation import validate_common_format
 
@@ -77,9 +78,9 @@ def _make_common_format_payload(
         )
         data = {"timestamp": ts}
         for col_idx, col_name in enumerate(channels):
-            data[col_name] = [
-                float(col_idx + row_idx) for row_idx in range(session_length)
-            ]
+            data[col_name] = pd.DatetimeIndex(
+                [float(col_idx + row_idx) for row_idx in range(session_length)]
+            )
 
         sessions[session_id] = pd.DataFrame(data).astype(
             {
@@ -235,3 +236,34 @@ def test_process_session_windowing_semantics_hold_for_all_datasets(
         pd.api.types.is_float_dtype(first_window[col]) for col in first_window.columns
     )
     assert len(first_window) <= window_size
+
+
+def test_select_activities_remaps_activity_ids_to_contiguous_range() -> None:
+    activity_df = pd.DataFrame(
+        {
+            "activity_id": [0, 1, 4, 7],
+            "activity_name": ["other", "lying", "walking", "running"],
+        }
+    ).astype({"activity_id": "int32", "activity_name": "string"})
+
+    session_df = pd.DataFrame(
+        {
+            "session_id": [10, 11, 12, 13],
+            "subject_id": [0, 0, 1, 1],
+            "activity_id": [0, 1, 4, 7],
+        }
+    ).astype({"session_id": "int32", "subject_id": "int32", "activity_id": "int32"})
+
+    selected_activity_df, selected_session_df = select_activities(
+        activity_df=activity_df,
+        session_df=session_df,
+        selected_activities=["lying", "walking", "running"],
+    )
+
+    assert selected_activity_df["activity_id"].tolist() == [0, 1, 2]
+    assert selected_activity_df["activity_name"].tolist() == [
+        "lying",
+        "walking",
+        "running",
+    ]
+    assert selected_session_df["activity_id"].tolist() == [0, 1, 2]
