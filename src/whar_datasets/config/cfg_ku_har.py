@@ -1,4 +1,5 @@
 import os
+import re
 from collections import defaultdict
 from typing import Dict, Tuple
 
@@ -40,7 +41,14 @@ def parse_ku_har(
     session_metadata_dict = defaultdict(list)
     session_dfs = []
 
-    activity_dirs = [d for d in os.listdir(dir) if d != "download_hash.txt"]
+    # Only keep activity directories with names like "0.Stand".
+    # This skips cache/hash artifacts such as "download_hash.txt" and
+    # "extracting_hash.txt" that may be present in the same directory.
+    activity_dirs = [
+        entry
+        for entry in os.listdir(dir)
+        if os.path.isdir(os.path.join(dir, entry)) and re.match(r"^\d+\.", entry)
+    ]
 
     for activity_dir in activity_dirs:
         # get activity from dirname
