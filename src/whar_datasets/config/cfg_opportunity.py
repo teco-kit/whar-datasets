@@ -454,47 +454,47 @@ def parse_opportunity(
     return activity_metadata, session_metadata, sessions
 
 
-ALL_ACTIVITIES = [
-    "Unknown",  # 0
-    "Open Door 1",  # 406516
-    "Open Door 2",  # 406517
-    "Close Door 1",  # 404516
-    "Close Door 2",  # 404517
-    "Open Fridge",  # 406520
-    "Close Fridge",  # 404520
-    "Open Dishwasher",  # 406505
-    "Close Dishwasher",  # 404505
-    "Open Drawer 1",  # 406519
-    "Close Drawer 1",  # 404519
-    "Open Drawer 2",  # 406511
-    "Close Drawer 2",  # 404511
-    "Open Drawer 3",  # 406508
-    "Close Drawer 3",  # 404508
-    "Clean Table",  # 408512
-    "Drink from Cup",  # 407521
-    "Toggle Switch",  # 405506
-]
+# ALL_ACTIVITIES = [
+#     "Unknown",  # 0
+#     "Open Door 1",  # 406516
+#     "Open Door 2",  # 406517
+#     "Close Door 1",  # 404516
+#     "Close Door 2",  # 404517
+#     "Open Fridge",  # 406520
+#     "Close Fridge",  # 404520
+#     "Open Dishwasher",  # 406505
+#     "Close Dishwasher",  # 404505
+#     "Open Drawer 1",  # 406519
+#     "Close Drawer 1",  # 404519
+#     "Open Drawer 2",  # 406511
+#     "Close Drawer 2",  # 404511
+#     "Open Drawer 3",  # 406508
+#     "Close Drawer 3",  # 404508
+#     "Clean Table",  # 408512
+#     "Drink from Cup",  # 407521
+#     "Toggle Switch",  # 405506
+# ]
 
 
-SELECTED_ACTIVITIES = [
-    "Open Door 1",
-    "Open Door 2",
-    "Close Door 1",
-    "Close Door 2",
-    "Open Fridge",
-    "Close Fridge",
-    "Open Dishwasher",
-    "Close Dishwasher",
-    "Open Drawer 1",
-    "Close Drawer 1",
-    "Open Drawer 2",
-    "Close Drawer 2",
-    "Open Drawer 3",
-    "Close Drawer 3",
-    "Clean Table",
-    "Drink from Cup",
-    "Toggle Switch",
-]
+# SELECTED_ACTIVITIES = [
+#     "Open Door 1",
+#     "Open Door 2",
+#     "Close Door 1",
+#     "Close Door 2",
+#     "Open Fridge",
+#     "Close Fridge",
+#     "Open Dishwasher",
+#     "Close Dishwasher",
+#     "Open Drawer 1",
+#     "Close Drawer 1",
+#     "Open Drawer 2",
+#     "Close Drawer 2",
+#     "Open Drawer 3",
+#     "Close Drawer 3",
+#     "Clean Table",
+#     "Drink from Cup",
+#     "Toggle Switch",
+# ]
 
 cfg_opportunity = WHARConfig(
     # Info + common
@@ -503,16 +503,18 @@ cfg_opportunity = WHARConfig(
     download_url="https://archive.ics.uci.edu/static/public/226/opportunity+activity+recognition.zip",
     sampling_freq=30,
     num_of_subjects=4,
-    num_of_activities=18,
+    num_of_activities=5,  # 18,
     num_of_channels=133,
     datasets_dir="./datasets",
     parallelize=True,
     # Parsing
     parse=parse_opportunity,
-    activity_id_col="ML_Both_Arms",
+    activity_id_col="Locomotion",  # "ML_Both_Arms"
     # Preprocessing (selections + sliding window)
-    available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
-    selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
+    available_activities=canonicalize_activity_name_list(list(LOCOMOTION_MAP.values())),
+    selected_activities=canonicalize_activity_name_list(
+        [act for act in list(LOCOMOTION_MAP.values()) if act != "Unknown"]
+    ),
     available_channels=SENSOR_COLS[1:],
     selected_channels=SENSOR_COLS[1:],
     window_time=1,
