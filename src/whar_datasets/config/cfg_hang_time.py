@@ -384,7 +384,9 @@ ALL_ACTIVITIES = [
 ALL_CHANNELS = ["acc_x", "acc_y", "acc_z"]
 
 
-SELECTED_ACTIVITIES = ALL_ACTIVITIES
+SELECTED_ACTIVITIES = [
+    a for a in ALL_ACTIVITIES if a != "not_labeled"
+]  # Only "not_labeled" activity, which is the most common and has the most samples.
 
 cfg_hang_time = WHARConfig(
     dataset_id="hang_time",
