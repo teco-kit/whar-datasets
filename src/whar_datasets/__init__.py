@@ -14,12 +14,14 @@ from whar_datasets.loading.loader import Loader
 from whar_datasets.processing.pipeline_post import PostProcessingPipeline
 from whar_datasets.processing.pipeline_pre import PreProcessingPipeline
 from whar_datasets.splitting.splitter_kfold import KFoldSplitter
+from whar_datasets.splitting.splitter_lkso import LKSOSplitter
 from whar_datasets.splitting.splitter_lgso import LGSOSplitter
 from whar_datasets.splitting.splitter_loso import LOSOSplitter
 
 __all__ = [
     "Loader",
     "KFoldSplitter",
+    "GroupKFoldSplitter",
     "LOSOSplitter",
     "LGSOSplitter",
     "PreProcessingPipeline",
