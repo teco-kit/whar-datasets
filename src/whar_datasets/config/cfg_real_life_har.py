@@ -70,19 +70,47 @@ REAL_LIFE_HAR_SENSOR_SPECS: Dict[str, Dict[str, str | List[str]]] = {
 }
 
 
+REAL_LIFE_HAR_REQUIRED_FILES = [
+    "validSessions_20.csv",
+    "sensoringData_acc_prepared_20.csv",
+    "sensoringData_gyro_prepared_20.csv",
+    "sensoringData_magn_prepared_20.csv",
+    "sensoringData_gps_prepared_20.csv",
+]
+
+
+def _is_real_life_har_root(path: str) -> bool:
+    return all(
+        os.path.isfile(os.path.join(path, file_name))
+        for file_name in REAL_LIFE_HAR_REQUIRED_FILES
+    )
+
+
 def _find_real_life_har_root(dir: str) -> str:
+    # Some mirrors/extractors place the CSVs directly into `data/` without
+    # creating a `data_cleaned_adapted_full` wrapper directory.
+    if _is_real_life_har_root(dir):
+        return dir
+
     direct = os.path.join(dir, "data_cleaned_adapted_full")
-    if os.path.isdir(direct):
+    if os.path.isdir(direct) and _is_real_life_har_root(direct):
         return direct
 
     for entry in os.listdir(dir):
         candidate = os.path.join(dir, entry)
+        if not os.path.isdir(candidate):
+            continue
+
+        if _is_real_life_har_root(candidate):
+            return candidate
+
         nested = os.path.join(candidate, "data_cleaned_adapted_full")
-        if os.path.isdir(nested):
+        if os.path.isdir(nested) and _is_real_life_har_root(nested):
             return nested
 
     raise FileNotFoundError(
-        f"Could not locate 'data_cleaned_adapted_full' under '{dir}'."
+        "Could not locate RealLifeHAR data root under "
+        f"'{dir}'. Expected files: {REAL_LIFE_HAR_REQUIRED_FILES}."
     )
 
 
