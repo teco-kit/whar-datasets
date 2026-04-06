@@ -44,7 +44,7 @@ class TorchAdapter(Dataset):
         val_set = Subset(self, self.split.val_indices)
 
         train_loader = DataLoader(train_set, batch_size, True, generator=self.generator)
-        val_loader = DataLoader(val_set, len(val_set), False, generator=self.generator)
-        test_loader = DataLoader(test_set, 1, False, generator=self.generator)
+        val_loader = DataLoader(val_set, batch_size, False, generator=self.generator)
+        test_loader = DataLoader(test_set, batch_size, False, generator=self.generator)
 
         return {"train": train_loader, "val": val_loader, "test": test_loader}
