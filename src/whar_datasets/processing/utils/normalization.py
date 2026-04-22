@@ -59,6 +59,14 @@ def get_norm_params(
     ):
         return None
 
+    if len(indices) == 0:
+        raise ValueError(
+            "Cannot compute global normalization parameters from an empty "
+            "training split. This usually happens when LOSO is used with a "
+            "single-subject dataset (e.g. SKODA). Use KFold splitting or a "
+            "per-sample normalization mode."
+        )
+
     # concat to single df
     windows_df = pd.concat(
         [windows[window_df.at[index, "window_id"]] for index in indices],

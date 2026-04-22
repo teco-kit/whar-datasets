@@ -6,10 +6,10 @@ This library offers comprehensive support for widely used WHAR (Wearable Human A
 - parsing into a unified, standardized data format
 - configurable pre-processing (e.g., resampling, windowing) and post-processing (e.g., normalization)
 - dataset splitting for common evaluation protocols such as LOSO and K-Fold cross-validation
-- built-in caching and multi-processing for improved performance
+- built-in caching and multi-processing for improved efficiency
 - seamless integration with PyTorch and TensorFlow
 
-The library currently includes out-of-the-box support for 33 datasets (listed below). Additional WHAR datasets can be easily integrated by defining a custom configuration with an associated parser and registering it with the framework.
+The library currently includes out-of-the-box support for 36 datasets (listed below). Additional WHAR datasets can be easily integrated by defining a custom configuration with an associated parser and registering it with the framework.
 
 # Notice 
 
@@ -89,6 +89,8 @@ dataloaders = adapter.get_dataloaders(batch_size=64)
 
 | Supported | Name | Year | Paper | Citations |
 | --- | --- | --- | --- | --- |
+| ✅ | [ActRecTut-Gestures](https://github.com/andreas-bulling/ActRecTut) | 2014 | *A tutorial on human activity recognition using body-worn inertial sensors.* | 2086 |
+| ✅ | [ActRecTut-Walking](https://github.com/andreas-bulling/ActRecTut) | 2014 | *A tutorial on human activity recognition using body-worn inertial sensors.* | 2086 |
 | ✅ | [PAMAP2](https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring) | 2012 | *Introducing a New Benchmarked Dataset for Activity Monitoring* | 1758 |
 | ✅ | [OPPORTUNITY](https://archive.ics.uci.edu/dataset/226/opportunity+activity+recognition) | 2010 | *Collecting complex activity datasets in highly rich networked sensor environments* | 1024 |
 | ✅ | [HHAR](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition) | 2015 | *Smart Devices are Different: Assessing and Mitigating Mobile Sensing Heterogeneities for Activity Recognition* | 1019 |
@@ -96,6 +98,7 @@ dataloaders = adapter.get_dataloaders(batch_size=64)
 | ✅ | [DSADS](https://archive.ics.uci.edu/dataset/256/daily+and+sports+activities) | 2010 | *Comparative study on classifying human activities with miniature inertial and magnetic sensors* | 780 |
 | ✅ | [SAD](https://www.utwente.nl/en/eemcs/ps/research/dataset/) | 2014 | *Fusion of Smartphone Motion Sensors for Physical Activity Recognition* | 752 |
 | ✅ | [Daphnet](https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait) | 2009 | *Ambulatory monitoring of freezing of gait in Parkinson’s disease* | 652 |
+| ✅ | [SKODA](http://har-dataset.org/doku.php?id=wiki%3Adataset) | 2008 | *Wearable activity tracking in car manufacturing* | 504 |
 | ✅ | [RealWorld](https://www.uni-mannheim.de/dws/research/projects/activity-recognition/dataset/dataset-realworld/) | 2016 | *On-body Localization of Wearable Devices: An Investigation of Position-Aware Activity Recognition* | 482 |
 | ✅ | [UP-Fall](https://sites.google.com/up.edu.mx/har-up/) | 2019 | *UP-fall detection dataset: A multimodal approach* | 462 |
 | ✅ | [UMAFall](https://figshare.com/articles/dataset/UMA_ADL_FALL_Dataset_zip/4214283) | 2017 | *Umafall: A multisensor dataset for the research on automatic fall detection* | 243 |

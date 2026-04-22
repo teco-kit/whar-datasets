@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Dict
 
+from whar_datasets.config.cfg_actrectut_gestures import cfg_actrectut_gestures
+from whar_datasets.config.cfg_actrectut_walking import cfg_actrectut_walking
 from whar_datasets.config.cfg_bmhad import cfg_bmhad
 from whar_datasets.config.cfg_capture24 import cfg_capture_24
 from whar_datasets.config.cfg_daphnet import cfg_daphnet
@@ -23,6 +25,7 @@ from whar_datasets.config.cfg_real_disp import cfg_real_disp
 from whar_datasets.config.cfg_real_life_har import cfg_real_life_har
 from whar_datasets.config.cfg_real_world import cfg_real_world
 from whar_datasets.config.cfg_sad import cfg_sad
+from whar_datasets.config.cfg_skoda import cfg_skoda
 from whar_datasets.config.cfg_uca_ehar import cfg_uca_ehar
 from whar_datasets.config.cfg_uci_har import cfg_uci_har
 from whar_datasets.config.cfg_uma_fall import cfg_uma_fall
@@ -73,6 +76,9 @@ class WHARDatasetID(Enum):
     BMHAD = "bmhad"
     UCA_EHAR = "uca_ehar"
     WEAR = "wear"
+    SKODA = "skoda"
+    ACTRECTUT_GESTURES = "actrectut_gestures"
+    ACTRECTUT_WALKING = "actrectut_walking"
 
 
 har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
@@ -110,6 +116,9 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
     WHARDatasetID.BMHAD: (cfg_bmhad),
     WHARDatasetID.UCA_EHAR: (cfg_uca_ehar),
     WHARDatasetID.WEAR: (cfg_wear),
+    WHARDatasetID.SKODA: (cfg_skoda),
+    WHARDatasetID.ACTRECTUT_GESTURES: (cfg_actrectut_gestures),
+    WHARDatasetID.ACTRECTUT_WALKING: (cfg_actrectut_walking),
 }
 
 
@@ -125,7 +134,6 @@ def get_dataset_cfg(
     return cfg
 
 
-# Dataset IDs listed in README.md (Supported Datasets), excluding CAPTURE-24.
 BENCHMARK_DATASET_IDS: list[WHARDatasetID] = [
     # Single-Sensor Datasets
     WHARDatasetID.WISDM,
@@ -138,7 +146,6 @@ BENCHMARK_DATASET_IDS: list[WHARDatasetID] = [
     WHARDatasetID.REAL_LIFE_HAR,
     WHARDatasetID.WISDM_19_PHONE,
     WHARDatasetID.WISDM_19_WATCH,
-    WHARDatasetID.KU_HAR,
     WHARDatasetID.HANG_TIME,
     # Multi-Sensor Datasets
     WHARDatasetID.PAMAP2,
@@ -159,4 +166,5 @@ BENCHMARK_DATASET_IDS: list[WHARDatasetID] = [
     WHARDatasetID.HAR70,
     WHARDatasetID.UCA_EHAR,
     WHARDatasetID.GOTOV,
+    WHARDatasetID.ACTRECTUT_GESTURES,
 ]
