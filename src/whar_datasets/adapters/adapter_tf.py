@@ -1,14 +1,11 @@
-from typing import TYPE_CHECKING, Any, Dict, List
 import random
+from typing import Any, Dict, List
 
 import numpy as np
 
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.loading.loader import Loader
 from whar_datasets.splitting.split import Split
-
-if TYPE_CHECKING:
-    import tensorflow as tf
 
 
 class TFAdapter:
@@ -29,13 +26,13 @@ class TFAdapter:
         except ModuleNotFoundError as exc:
             raise ModuleNotFoundError(
                 "TensorFlow is not installed. Install the optional dependency with "
-                "`pip install \"whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git\"` "
+                '`pip install "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"` '
                 "or `pip install tensorflow`."
             ) from exc
 
         return tf
 
-    def _infer_shapes(self) -> "tf.TensorShape":
+    def _infer_shapes(self) -> Any:
         _, _, sample = self.loader.get_item(0)
         # Create a list of shapes for each sensor in the sample.
         return self.tf.TensorShape(sample[0].shape)
@@ -59,7 +56,9 @@ class TFAdapter:
         # Define the explicit signature.
         output_signature = (
             self.tf.TensorSpec(shape=(), dtype=self.tf.int64),  # Label
-            self.tf.TensorSpec(shape=self._input_shape, dtype=self.tf.float32),  # Sample
+            self.tf.TensorSpec(
+                shape=self._input_shape, dtype=self.tf.float32
+            ),  # Sample
         )
 
         return self.tf.data.Dataset.from_generator(
@@ -78,7 +77,9 @@ class TFAdapter:
             .prefetch(self.tf.data.AUTOTUNE)
         )
 
-        val_ds = val_ds.batch(len(self.split.val_indices)).prefetch(self.tf.data.AUTOTUNE)
+        val_ds = val_ds.batch(len(self.split.val_indices)).prefetch(
+            self.tf.data.AUTOTUNE
+        )
         test_ds = test_ds.batch(1).prefetch(self.tf.data.AUTOTUNE)
 
         return {"train": train_ds, "val": val_ds, "test": test_ds}

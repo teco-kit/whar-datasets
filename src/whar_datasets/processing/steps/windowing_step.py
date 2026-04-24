@@ -19,8 +19,8 @@ from whar_datasets.utils.loading import (
 )
 from whar_datasets.utils.logging import logger
 
-base_type: TypeAlias = Tuple[pd.DataFrame, pd.DataFrame]
-result_type: TypeAlias = Tuple[
+InputT: TypeAlias = Tuple[pd.DataFrame, pd.DataFrame]
+OutputT: TypeAlias = Tuple[
     pd.DataFrame,
     pd.DataFrame,
     pd.DataFrame,
@@ -28,7 +28,9 @@ result_type: TypeAlias = Tuple[
 ]
 
 
-class WindowingStep(AbstractStep):
+class WindowingStep(AbstractStep[InputT, OutputT]):
+    """Create fixed-length windows from session-level recordings."""
+
     def __init__(
         self,
         cfg: WHARConfig,
@@ -53,21 +55,19 @@ class WindowingStep(AbstractStep):
             "resampling_freq",
         }
 
-    def get_base(self) -> base_type:
+    def load_input(self) -> InputT:
         activity_df = load_activity_df(self.metadata_dir)
         session_df = load_session_df(self.metadata_dir)
-
         return activity_df, session_df
 
-    def check_initial_format(self, base: base_type) -> bool:
-        activity_df, session_df = base
-
+    def validate_input(self, step_input: InputT) -> bool:
+        activity_df, session_df = step_input
         return validate_common_format(
             self.cfg, self.sessions_dir, activity_df, session_df
         )
 
-    def compute_results(self, base: base_type) -> result_type:
-        activity_df, session_df = base
+    def build_output(self, step_input: InputT) -> OutputT:
+        activity_df, session_df = step_input
 
         logger.info("Compute windowing")
 
@@ -87,15 +87,14 @@ class WindowingStep(AbstractStep):
 
         return activity_df, session_df, window_df, windows
 
-    def save_results(self, results: result_type) -> None:
+    def save_output(self, step_output: OutputT) -> None:
         logger.info("Saving windowing")
 
-        _, _, window_df, windows = results
-
+        _, _, window_df, windows = step_output
         cache_window_df(self.metadata_dir, window_df)
         cache_windows(self.windows_dir, window_df, windows)
 
-    def load_results(self) -> result_type:
+    def load_output(self) -> OutputT:
         logger.info("Loading windowing")
 
         activity_df = load_activity_df(self.metadata_dir)

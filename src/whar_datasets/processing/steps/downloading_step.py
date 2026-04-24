@@ -3,7 +3,7 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Any, List, Set, TypeAlias
+from typing import List, Set, TypeAlias
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -13,11 +13,16 @@ from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.steps.abstract_step import AbstractStep
 from whar_datasets.utils.logging import logger
 
-base_type: TypeAlias = Any
-result_type: TypeAlias = None
+InputT: TypeAlias = None
+OutputT: TypeAlias = None
 
 
-class DownloadingStep(AbstractStep):
+class DownloadingStep(AbstractStep[InputT, OutputT]):
+    """Download raw dataset artifacts into the dataset `data` directory.
+
+    Input/output are `None` because this step operates via side effects on disk.
+    """
+
     def __init__(
         self,
         cfg: WHARConfig,
@@ -34,10 +39,10 @@ class DownloadingStep(AbstractStep):
         self.hash_name: str = "download_hash"
         self.relevant_cfg_keys: Set[str] = {"dataset_id", "download_url"}
 
-    def get_base(self) -> base_type:
+    def load_input(self) -> InputT:
         return None
 
-    def check_initial_format(self, base: base_type) -> bool:
+    def validate_input(self, step_input: InputT) -> bool:
         return True
 
     @staticmethod
@@ -142,18 +147,18 @@ class DownloadingStep(AbstractStep):
         index: int,
         used_filenames: Set[str],
     ) -> Path:
-        base_name = self._filename_from_url(url)
-        candidate = base_name
+        input_name = self._filename_from_url(url)
+        candidate = input_name
 
         if candidate in used_filenames:
-            stem = Path(base_name).stem
-            suffix = Path(base_name).suffix
+            stem = Path(input_name).stem
+            suffix = Path(input_name).suffix
             candidate = f"{stem}_{index + 1}{suffix}"
 
         dedupe_idx = 2
         while candidate in used_filenames:
-            stem = Path(base_name).stem
-            suffix = Path(base_name).suffix
+            stem = Path(input_name).stem
+            suffix = Path(input_name).suffix
             candidate = f"{stem}_{index + 1}_{dedupe_idx}{suffix}"
             dedupe_idx += 1
 
@@ -341,11 +346,13 @@ class DownloadingStep(AbstractStep):
             logger.error(f"Async download failed: {e}")
             raise
 
-    def compute_results(self, base: base_type) -> result_type:
+    def build_output(self, step_input: InputT) -> OutputT:
         download_urls = self._normalize_download_urls()
         used_filenames: Set[str] = set()
 
-        logger.info(f"Downloading {self.cfg.dataset_id} from {len(download_urls)} URL(s)")
+        logger.info(
+            f"Downloading {self.cfg.dataset_id} from {len(download_urls)} URL(s)"
+        )
 
         for index, url in enumerate(download_urls):
             file_path = self._build_download_path(url, index, used_filenames)
@@ -354,8 +361,8 @@ class DownloadingStep(AbstractStep):
             )
             self._download_single_url(url, file_path)
 
-    def save_results(self, results: result_type) -> None:
+    def save_output(self, step_output: OutputT) -> None:
         return None
 
-    def load_results(self) -> result_type:
+    def load_output(self) -> OutputT:
         return None

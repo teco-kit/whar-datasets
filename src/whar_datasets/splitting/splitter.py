@@ -19,7 +19,7 @@ class Splitter(ABC):
     ) -> List[Split]:
         pass
 
-    def get_train_val_indices(self, indices: List[int]) -> Tuple[List[int], List[int]]:
+    def _get_train_val_indices(self, indices: List[int]) -> Tuple[List[int], List[int]]:
         n_train = len(indices)
         n_val = int(n_train * self.val_percentage)
 
@@ -30,7 +30,7 @@ class Splitter(ABC):
 
         return train_indices, val_indices
 
-    def check_indices_overlap(
+    def _check_indices_overlap(
         self, train_indices: List[int], val_indices: List[int], test_indices: List[int]
     ) -> bool:
         train_set = set(train_indices)

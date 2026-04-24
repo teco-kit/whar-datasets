@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 
 import pandas as pd
 
@@ -15,7 +15,7 @@ def compute_class_weights(session_df: pd.DataFrame, window_df: pd.DataFrame) -> 
 
     # Compute inverse frequency
     total = label_counts.sum()
-    class_weights: Dict[int, float] = (total / label_counts).to_dict()
+    class_weights: Dict[Any, float] = (total / label_counts).to_dict()
 
     # Normalize weights to have mean = 1
     mean_weight = sum(class_weights.values()) / len(class_weights)

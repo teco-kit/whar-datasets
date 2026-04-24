@@ -31,7 +31,7 @@ class KFoldSplitter(Splitter):
                 idx for i, fold in enumerate(folds) if i != fold_idx for idx in fold
             ]
 
-            train_indices, val_indices = self.get_train_val_indices(train_val_indices)
+            train_indices, val_indices = self._get_train_val_indices(train_val_indices)
 
             split = Split(
                 identifier=f"fold_{fold_idx}",
@@ -40,7 +40,7 @@ class KFoldSplitter(Splitter):
                 test_indices=test_indices,
             )
 
-            assert not self.check_indices_overlap(
+            assert not self._check_indices_overlap(
                 split.train_indices, split.val_indices, split.test_indices
             ), "Overlap detected in indices!"
 

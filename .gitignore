@@ -20,3 +20,7 @@ scripts
 .pytest_cache/
 
 experiments_01042026
+src/whar_datasets/analysis
+src/whar_datasets/benchmarking
+plots_tradeoff
+plot_model_tradeoffs.py

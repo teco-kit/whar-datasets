@@ -1,7 +1,7 @@
 import os
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Set, Tuple, TypeAlias
+from typing import Dict, Iterator, List, Set, Tuple, TypeAlias
 
 import pandas as pd
 
@@ -11,15 +11,17 @@ from whar_datasets.processing.utils.caching import cache_common_format
 from whar_datasets.utils.loading import load_activity_df, load_session_df, load_sessions
 from whar_datasets.utils.logging import logger
 
-base_type: TypeAlias = Any
-result_type: TypeAlias = Tuple[
+InputT: TypeAlias = None
+OutputT: TypeAlias = Tuple[
     pd.DataFrame,
     pd.DataFrame,
     Dict[int, pd.DataFrame],
 ]
 
 
-class ParsingStep(AbstractStep):
+class ParsingStep(AbstractStep[InputT, OutputT]):
+    """Parse extracted raw files into the common WHAR dataset format."""
+
     def __init__(
         self,
         cfg: WHARConfig,
@@ -41,10 +43,10 @@ class ParsingStep(AbstractStep):
             "available_activities",
         }
 
-    def get_base(self) -> base_type:
+    def load_input(self) -> InputT:
         return None
 
-    def check_initial_format(self, base: base_type) -> bool:
+    def validate_input(self, step_input: InputT) -> bool:
         logger.info("Checking extracted data")
 
         if not self.data_dir.exists():
@@ -54,7 +56,7 @@ class ParsingStep(AbstractStep):
         logger.info("Data directory exists")
         return True
 
-    def compute_results(self, base: base_type) -> result_type:
+    def build_output(self, step_input: InputT) -> OutputT:
         logger.info("Parsing to common format")
 
         with _ignore_sidecar_files():
@@ -75,8 +77,8 @@ class ParsingStep(AbstractStep):
 
         return activity_df, session_df, sessions
 
-    def save_results(self, results: result_type) -> None:
-        activity_df, session_df, sessions = results
+    def save_output(self, step_output: OutputT) -> None:
+        activity_df, session_df, sessions = step_output
 
         logger.info("Saving common format")
 
@@ -84,7 +86,7 @@ class ParsingStep(AbstractStep):
             self.metadata_dir, self.sessions_dir, activity_df, session_df, sessions
         )
 
-    def load_results(self) -> result_type:
+    def load_output(self) -> OutputT:
         logger.info("Loading common format")
 
         session_df = load_session_df(self.metadata_dir)

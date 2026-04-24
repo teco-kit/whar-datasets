@@ -17,11 +17,13 @@ from whar_datasets.processing.utils.preparation import (
 from whar_datasets.utils.loading import load_samples, load_windows
 from whar_datasets.utils.logging import logger
 
-base_type: TypeAlias = Dict[str, pd.DataFrame]
-result_type: TypeAlias = Dict[str, List[np.ndarray]]
+InputT: TypeAlias = Dict[str, pd.DataFrame]
+OutputT: TypeAlias = Dict[str, List[np.ndarray]]
 
 
-class SamplingStep(AbstractStep):
+class SamplingStep(AbstractStep[InputT, OutputT]):
+    """Materialize model-ready samples from cached window artifacts."""
+
     def __init__(
         self,
         cfg: WHARConfig,
@@ -57,21 +59,15 @@ class SamplingStep(AbstractStep):
         }
         self.relevant_values = [str(i) for i in self.indices]
 
-    @staticmethod
-    def _compute_split_hash(indices: List[int]) -> str:
-        # Hash normalized train indices so identical splits map to one cache directory.
-        payload = json.dumps(sorted(indices), separators=(",", ":"))
-        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-    def get_base(self) -> base_type:
+    def load_input(self) -> InputT:
         windows = load_windows(self.windows_dir)
         return windows
 
-    def check_initial_format(self, base: base_type) -> bool:
+    def validate_input(self, step_input: InputT) -> bool:
         return True
 
-    def compute_results(self, base: base_type) -> result_type:
-        windows = base
+    def build_output(self, step_input: InputT) -> OutputT:
+        windows = step_input
 
         logger.info("Computing samples")
 
@@ -87,11 +83,18 @@ class SamplingStep(AbstractStep):
 
         return samples
 
-    def save_results(self, results: result_type) -> None:
-        samples = results
+    def save_output(self, step_output: OutputT) -> None:
         logger.info("Saving samples")
+
+        samples = step_output
         cache_samples(self.samples_dir, self.window_df, samples)
 
-    def load_results(self) -> result_type:
+    def load_output(self) -> OutputT:
         logger.info("Loading samples")
+
         return load_samples(self.samples_dir)
+
+    def _compute_split_hash(self, indices: List[int]) -> str:
+        # Hash normalized train indices so identical splits map to one cache directory.
+        payload = json.dumps(sorted(indices), separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()

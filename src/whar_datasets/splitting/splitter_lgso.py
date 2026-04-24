@@ -48,7 +48,7 @@ class LGSOSplitter(Splitter):
             ].index.tolist()
 
             # 5. Handle internal train/val split logic
-            train_indices, val_indices = self.get_train_val_indices(train_val_indices)
+            train_indices, val_indices = self._get_train_val_indices(train_val_indices)
 
             split = Split(
                 identifier=f"group_{i}",
@@ -58,7 +58,7 @@ class LGSOSplitter(Splitter):
             )
 
             # Safety check
-            assert not self.check_indices_overlap(
+            assert not self._check_indices_overlap(
                 split.train_indices, split.val_indices, split.test_indices
             ), f"Overlap detected in group {i} indices!"
 

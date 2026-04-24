@@ -1,6 +1,5 @@
 from typing import List
 
-import numpy as np
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
@@ -70,7 +69,7 @@ class LKSOSplitter(Splitter):
             ].index.tolist()
 
             # 6. Internal train/val split
-            train_indices, val_indices = self.get_train_val_indices(train_val_indices)
+            train_indices, val_indices = self._get_train_val_indices(train_val_indices)
 
             split = Split(
                 identifier=f"group_kfold_{fold_idx}",
@@ -80,7 +79,7 @@ class LKSOSplitter(Splitter):
             )
 
             # Safety check: ensure no overlaps between index sets
-            assert not self.check_indices_overlap(
+            assert not self._check_indices_overlap(
                 split.train_indices, split.val_indices, split.test_indices
             ), f"Overlap detected in group_kfold_{fold_idx} indices!"
 

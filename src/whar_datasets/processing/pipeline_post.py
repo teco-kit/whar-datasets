@@ -10,6 +10,8 @@ from whar_datasets.processing.steps.sampling_step import SamplingStep
 
 
 class PostProcessingPipeline(ProcessingPipeline):
+    """Build split-specific training samples from precomputed windows."""
+
     def __init__(
         self,
         cfg: WHARConfig,
@@ -40,6 +42,6 @@ class PostProcessingPipeline(ProcessingPipeline):
     ) -> Dict[str, List[np.ndarray]] | None:
         super().run(force_recompute)
 
-        samples = self.sampling_step.load_results() if self.cfg.in_memory else None
+        samples = self.sampling_step.load_output() if self.cfg.in_memory else None
 
         return samples

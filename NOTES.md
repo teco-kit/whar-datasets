@@ -98,7 +98,7 @@ Here are the newly adjusted tables. Group 1 and Group 4 remain exactly as they w
 | Supported | Name | Year | Paper | Citations | Subjects | Activities | Sensors |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | ⬜ | [Bon]() | 2022 | *Bon: An extended public domain dataset for human activity recognition* | 6 | - | - | Camera |
-| ⬜ | [EPIC-KITCHENS-100]() | 2022 | *Rescaling Egocentric Vision: Collection, Pipeline and Challenges for EPIC-KITCHENS-100* | 792 | 37 participants | ~90k fine-grained action segments capturing unscripted daily activities in 45 kitchens, involving 97 verb classes and 300 noun classes (hand-object interactions) | Head-mounted GoPro Hero7 Black (RGB video at 50fps, Audio) |
+| ⬜ | [EPIC-KITCHENS-100]() | 2022 | *Scaling Egocentric Vision: The EPIC-KITCHENS Dataset* | 1698 | 37 participants | ~90k fine-grained action segments capturing unscripted daily activities in 45 kitchens, involving 97 verb classes and 300 noun classes (hand-object interactions) | Head-mounted GoPro Hero7 Black (RGB video at 50fps, Audio) |
 | ⬜ | [DamenHAR]() | 2022 | *Rescaling egocentric vision: Collection, pipeline and challenges for epic-kitchens-100* | 796 | - | - | Camera |
 | ⬜ | [WETLAB](https://www.eti.uni-siegen.de/ubicomp/home/datasets/ubicomp15/) | 2015 | *Wearables in the Wetlab: a Laboratory System for Capturing and Guiding Experiments* | 66 | 22 | 18 steps of a DNA extraction protocol (onion and tomato) involving actions such as pouring, transfer, pipetting, stirring, peeling, cutting, mixing, pestling, filtrating, and inverting | Google Glass (POV video/audio capture, head-up display, voice recognition, and touchpad) paired with a wrist-worn 3D accelerometer (50Hz sampling, $\pm4g$ range) |
 ---

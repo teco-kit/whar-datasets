@@ -5,6 +5,24 @@ import subprocess
 import tarfile
 import zipfile
 from pathlib import Path
+from typing import List
+
+
+def find_archives(root_dir: Path) -> List[Path]:
+    archive_paths: List[Path] = []
+
+    for file_path in root_dir.rglob("*"):
+        if not file_path.is_file():
+            continue
+
+        if (
+            tarfile.is_tarfile(file_path)
+            or zipfile.is_zipfile(file_path)
+            or file_path.suffix.lower() in {".rar", ".gz"}
+        ):
+            archive_paths.append(file_path)
+
+    return archive_paths
 
 
 def _has_gzip_magic(file_path: Path) -> bool:
@@ -65,9 +83,7 @@ def extract(file_path: Path, extract_dir: Path) -> None:
 
             # Check for RAR extension
             is_rar = nested_path.suffix.lower() == ".rar"
-            is_gz = nested_path.suffix.lower() == ".gz" and _has_gzip_magic(
-                nested_path
-            )
+            is_gz = nested_path.suffix.lower() == ".gz" and _has_gzip_magic(nested_path)
 
             if (
                 tarfile.is_tarfile(nested_path)

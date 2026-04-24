@@ -12,6 +12,8 @@ from whar_datasets.processing.steps.windowing_step import WindowingStep
 
 
 class PreProcessingPipeline(ProcessingPipeline):
+    """Build common-format metadata and window artifacts from raw dataset files."""
+
     def __init__(self, cfg: WHARConfig):
         # define directories
         self.datasets_dir = Path(cfg.datasets_dir)
@@ -34,7 +36,7 @@ class PreProcessingPipeline(ProcessingPipeline):
             with open(gitignore_path, "w") as f:
                 f.write("*")
 
-        # define steos
+        # define steps
         self.downloading_step = DownloadingStep(
             cfg=cfg,
             datasets_dir=self.datasets_dir,
@@ -78,6 +80,6 @@ class PreProcessingPipeline(ProcessingPipeline):
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         super().run(force_recompute)
 
-        activity_df, session_df, window_df, _ = self.windowing_step.load_results()
+        activity_df, session_df, window_df, _ = self.windowing_step.load_output()
 
         return activity_df, session_df, window_df
