@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable, Dict, List, Tuple, TypeAlias
+from typing import Callable, Dict, Hashable, List, Tuple, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -8,7 +8,9 @@ from whar_datasets.config.config import NormType, WHARConfig
 from whar_datasets.utils.loading import load_window
 from whar_datasets.utils.logging import logger
 
-NormParams: TypeAlias = Tuple[Dict[str, float], Dict[str, float]]
+NormParams: TypeAlias = Tuple[
+    Dict[Hashable, float], Dict[Hashable, float]
+]  # Tuple[Dict[str, float], Dict[str, float]]
 
 
 def _safe_denominator(values: pd.Series, eps: float = 1e-12) -> pd.Series:
@@ -71,7 +73,7 @@ def get_norm_params(
 
     # concat to single df
     windows_df = pd.concat(
-        [windows[window_df.at[index, "window_id"]] for index in indices],
+        [windows[str(window_df.at[index, "window_id"])] for index in indices],
         ignore_index=True,
     )
 
