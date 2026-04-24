@@ -10,6 +10,8 @@ WINDOW_TIME_LARGE = 5.0
 
 
 class WHARConfig(BaseModel):
+    """Unified configuration model used across parsing, preprocessing, and training."""
+
     # metadata fields
     dataset_id: str
     dataset_url: str
@@ -53,4 +55,5 @@ class WHARConfig(BaseModel):
 
     @field_serializer("parse")
     def serialize_func(self, func, _info):
+        """Serialize parser callables by their function name."""
         return func.__name__

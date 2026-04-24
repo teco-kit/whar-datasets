@@ -22,6 +22,7 @@ def prepare_windows_seq(
     window_df: pd.DataFrame,
     windows_dir: Path,
 ) -> Dict[str, List[np.ndarray]]:
+    """Normalize/transform windows sequentially and return sample tensors."""
     logger.info("Normalizing and transforming windows")
 
     normalize = get_normalize(cfg, norm_params)
@@ -49,6 +50,7 @@ def prepare_windows_para(
     window_df: pd.DataFrame,
     windows_dir: Path,
 ) -> Dict[str, List[np.ndarray]]:
+    """Normalize/transform windows in parallel using Dask partitions."""
     logger.info("Normalizing and transforming windows (parallelized)")
 
     normalize = get_normalize(cfg, norm_params)

@@ -10,6 +10,7 @@ def select_activities(
     session_df: pd.DataFrame,
     selected_activities: List[str],
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Filter activities and remap activity ids to contiguous integers."""
     logger.info("Selecting activities")
 
     selected_activity_df = activity_df.copy()
@@ -62,5 +63,6 @@ def select_activities(
 
 
 def select_channels(session_df: pd.DataFrame, channels: List[str]) -> pd.DataFrame:
+    """Return selected sensor channels plus timestamp."""
     # if channels is empty, return df
     return session_df[channels + ["timestamp"]] if len(channels) != 0 else session_df

@@ -12,6 +12,7 @@ def cache_samples(
     window_df: pd.DataFrame,
     samples: Dict[str, List[np.ndarray]],
 ) -> None:
+    """Persist prepared sample tensors/features for a split."""
     # delete windowing directory if it exists
     if samples_dir.exists():
         shutil.rmtree(samples_dir)
@@ -28,6 +29,7 @@ def cache_samples(
 def cache_windows(
     windows_dir: Path, window_df: pd.DataFrame, windows: Dict[str, pd.DataFrame]
 ) -> None:
+    """Persist window payloads into a single parquet artifact."""
     # delete windowing directory if it exists
     if windows_dir.exists():
         shutil.rmtree(windows_dir)
@@ -53,6 +55,7 @@ def cache_windows(
 
 
 def cache_window_df(metadata_dir: Path, window_df: pd.DataFrame) -> None:
+    """Persist window metadata dataframe to CSV."""
     # create directories if do not exist
     metadata_dir.mkdir(parents=True, exist_ok=True)
 
@@ -70,6 +73,7 @@ def cache_common_format(
     session_df: pd.DataFrame,
     sessions: Dict[int, pd.DataFrame],
 ) -> None:
+    """Persist parsed dataset artifacts in the WHAR common cache format."""
     # delete sessions directory if it exists
     if sessions_dir.exists():
         shutil.rmtree(sessions_dir)

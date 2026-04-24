@@ -2,6 +2,7 @@ from typing import Iterable, List
 
 
 def canonicalize_activity_name_list(activity_names: Iterable[object]) -> List[str]:
+    """Normalize activity labels for cross-dataset matching/comparison."""
     canonical: List[str] = []
     for name in activity_names:
         text = str(name).strip()

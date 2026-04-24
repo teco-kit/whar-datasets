@@ -4,6 +4,11 @@ import pandas as pd
 
 
 def compute_class_weights(session_df: pd.DataFrame, window_df: pd.DataFrame) -> dict:
+    """Compute inverse-frequency activity weights for a window subset.
+
+    Labels present in ``session_df`` but absent in ``window_df`` receive weight ``-1``.
+    """
+
     # Get all possible labels
     possible_labels = [int(label) for label in session_df["activity_id"].unique()]
 

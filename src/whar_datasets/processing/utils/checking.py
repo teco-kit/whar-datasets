@@ -4,6 +4,7 @@ from whar_datasets.utils.logging import logger
 
 
 def check_windowing(cache_dir: Path, windows_dir: Path) -> bool:
+    """Check whether required cached windowing artifacts are present."""
     logger.info("Checking windowing")
 
     if not windows_dir.exists():

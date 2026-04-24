@@ -42,6 +42,8 @@ from whar_datasets.config.config import WHARConfig
 
 
 class WHARDatasetID(Enum):
+    """Identifiers for all built-in dataset configurations."""
+
     UCI_HAR = "uci_har"
     WISDM = "wisdm"
     PAMAP2 = "pamap2"
@@ -125,6 +127,7 @@ har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
 def get_dataset_cfg(
     dataset_id: WHARDatasetID, datasets_dir: str = "./datasets/"
 ) -> WHARConfig:
+    """Return a dataset configuration with an overridden cache directory."""
     # load dataset-specific config and parser
     cfg = har_dataset_dict[dataset_id]
 

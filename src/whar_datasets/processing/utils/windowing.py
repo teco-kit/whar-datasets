@@ -11,6 +11,7 @@ def generate_windowing(
     overlap: float,
     sampling_freq: float,
 ) -> Tuple[pd.DataFrame | None, Dict[str, pd.DataFrame] | None]:
+    """Generate fixed-length sliding windows for one session."""
     # create containers for windows and index
     window_df_dict: Dict[str, list] = {
         "session_id": [],

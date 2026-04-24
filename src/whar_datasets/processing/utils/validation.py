@@ -19,6 +19,7 @@ def validate_common_format(
     activity_df: pd.DataFrame,
     session_df: pd.DataFrame,
 ) -> bool:
+    """Validate common-format metadata and session payload dtypes/shapes."""
     logger.info("Validating common format")
 
     # Check session_df
@@ -81,6 +82,7 @@ def validate_common_format(
 def validate_sessions_seq(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
 ) -> bool:
+    """Validate all sessions sequentially."""
     loop = tqdm(session_df["session_id"])
     loop.set_description("Validating sessions")
 
@@ -94,6 +96,7 @@ def validate_sessions_seq(
 def validate_sessions_para(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
 ) -> bool:
+    """Validate all sessions in parallel using Dask partitions."""
     relevant_ids = set(session_df["session_id"])
 
     # Read sessions parquet with dask
@@ -182,6 +185,7 @@ def validate_sessions_para(
 
 
 def validate_session(cfg: WHARConfig, sessions_dir: Path, session_id: int) -> bool:
+    """Validate one cached session dataframe against config expectations."""
     session = load_session(sessions_dir, session_id)
 
     if not pd.api.types.is_datetime64_dtype(session["timestamp"]):

@@ -7,21 +7,25 @@ import pandas as pd
 
 
 def load_window_df(cache_dir: Path) -> pd.DataFrame:
+    """Load cached window metadata."""
     window_df_path = cache_dir / "window_df.csv"
     return pd.read_csv(window_df_path)
 
 
 def load_session_df(cache_dir: Path) -> pd.DataFrame:
+    """Load cached session metadata."""
     session_df_path = cache_dir / "session_df.csv"
     return pd.read_csv(session_df_path)
 
 
 def load_activity_df(cache_dir: Path) -> pd.DataFrame:
+    """Load cached activity metadata."""
     activity_df_path = cache_dir / "activity_df.csv"
     return pd.read_csv(activity_df_path)
 
 
 def load_samples(samples_dir: Path) -> Dict[str, List[np.ndarray]]:
+    """Load all cached samples as ``window_id -> feature list`` mapping."""
     pickle_path = samples_dir / "samples.pkl"
     if pickle_path.exists():
         with pickle_path.open("rb") as f:
@@ -42,6 +46,7 @@ def load_samples(samples_dir: Path) -> Dict[str, List[np.ndarray]]:
 
 
 def load_windows(windows_dir: Path) -> Dict[str, pd.DataFrame]:
+    """Load all cached windows from parquet into a dictionary."""
     window_path = windows_dir / "windows.parquet"
 
     # Load all windows at once
@@ -58,6 +63,7 @@ def load_windows(windows_dir: Path) -> Dict[str, pd.DataFrame]:
 
 
 def load_sessions(sessions_dir: Path) -> Dict[int, pd.DataFrame]:
+    """Load all cached sessions from parquet into a dictionary."""
     session_path = sessions_dir / "sessions.parquet"
 
     # Load all sessions at once
@@ -73,6 +79,7 @@ def load_sessions(sessions_dir: Path) -> Dict[int, pd.DataFrame]:
 
 
 def load_sample(samples_dir: Path, window_id: str) -> List[np.ndarray]:
+    """Load one cached sample by ``window_id``."""
     # Try loading from single file first
     pickle_path = samples_dir / "samples.pkl"
     if pickle_path.exists():
@@ -95,6 +102,7 @@ def load_sample(samples_dir: Path, window_id: str) -> List[np.ndarray]:
 
 
 def load_window(windows_dir: Path, window_id: str) -> pd.DataFrame:
+    """Load one window by id from the window parquet cache."""
     window_path = windows_dir / "windows.parquet"
     # Use filters to efficiently read only the specific window
     df = pd.read_parquet(
@@ -107,6 +115,7 @@ def load_window(windows_dir: Path, window_id: str) -> pd.DataFrame:
 
 
 def load_session(sessions_dir: Path, session_id: int) -> pd.DataFrame:
+    """Load one session by id from the session parquet cache."""
     session_path = sessions_dir / "sessions.parquet"
     # Use filters to efficiently read only the specific session
     df = pd.read_parquet(

@@ -9,6 +9,8 @@ from whar_datasets.splitting.splitter import Splitter
 
 
 class KFoldSplitter(Splitter):
+    """Random K-fold split over window indices."""
+
     def __init__(self, cfg: WHARConfig):
         super().__init__(cfg)
 
@@ -19,6 +21,7 @@ class KFoldSplitter(Splitter):
     def get_splits(
         self, session_df: pd.DataFrame, window_df: pd.DataFrame
     ) -> List[Split]:
+        """Create ``n_folds`` train/val/test splits over shuffled window indices."""
         indices = list(window_df.index)
         self.rng.shuffle(indices)
 

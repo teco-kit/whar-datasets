@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 
 
 def repeat_each_cell(arr: np.ndarray, target_len: int) -> np.ndarray:
+    """Repeat each entry so the returned array reaches ``target_len``."""
     original_len = len(arr)
     repeat_count = target_len // original_len
     remainder = target_len % original_len
@@ -30,6 +31,7 @@ def signal_to_dwt_grid(
     mode: str = "periodization",
     level: int | None = None,
 ) -> Tuple[np.ndarray, List[List[int]]]:
+    """Convert ``(time, channels)`` signals into padded multi-level DWT grids."""
     # (time_steps, sensor_channels)
 
     level = level or int(
@@ -69,6 +71,7 @@ def dtw_grid_to_signal(
     wavelet: str = "db4",
     mode: str = "periodization",
 ) -> np.ndarray:
+    """Approximate inverse transform from DWT grid representation to signal."""
     # (sensor_channels, levels+1, max_len)
 
     C = grid.shape[0]

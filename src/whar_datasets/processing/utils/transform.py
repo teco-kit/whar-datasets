@@ -8,6 +8,7 @@ from whar_datasets.processing.transforms.stft import signal_to_stft
 
 
 def get_transform(cfg: WHARConfig) -> Callable[[np.ndarray], List[np.ndarray]]:
+    """Build an optional feature-transform callable from config."""
     transform: Callable[[np.ndarray], List[np.ndarray]]
     match cfg.transform:
         case TransformType.DWT:

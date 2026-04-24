@@ -9,6 +9,7 @@ from typing import List
 
 
 def find_archives(root_dir: Path) -> List[Path]:
+    """Return archive files recursively discovered under ``root_dir``."""
     archive_paths: List[Path] = []
 
     for file_path in root_dir.rglob("*"):
@@ -34,6 +35,7 @@ def _has_gzip_magic(file_path: Path) -> bool:
 
 
 def extract(file_path: Path, extract_dir: Path) -> None:
+    """Extract one archive and recursively unpack nested archives."""
     # 1. Extract depending on file type
     if tarfile.is_tarfile(file_path):
         with tarfile.open(file_path) as tar:

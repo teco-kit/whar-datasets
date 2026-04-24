@@ -19,6 +19,7 @@ from whar_datasets.utils.logging import logger
 def process_sessions_seq(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
 ) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
+    """Generate windows from sessions sequentially."""
     # loop over sessions
     loop = tqdm([int(x) for x in session_df["session_id"].unique()])
     loop.set_description("Processing sessions")
@@ -40,6 +41,7 @@ def process_sessions_seq(
 def process_sessions_para(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
 ) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
+    """Generate windows from sessions in parallel using Dask."""
     relevant_ids = set(session_df["session_id"])
 
     # Read sessions parquet with dask
@@ -126,7 +128,8 @@ def process_sessions_para(
 def process_session(
     cfg: WHARConfig, sessions_dir: Path, session_id: int
 ) -> Tuple[pd.DataFrame | None, Dict[str, pd.DataFrame] | None]:
-    # laod and process session
+    """Generate window metadata/data for one cached session."""
+    # load and process session
     session = load_session(sessions_dir, session_id)
     session = select_channels(session, cfg.selected_channels or [])
     session = resample(session, cfg.sampling_freq)

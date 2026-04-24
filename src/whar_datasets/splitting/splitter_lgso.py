@@ -9,6 +9,8 @@ from whar_datasets.splitting.splitter import Splitter
 
 
 class LGSOSplitter(Splitter):
+    """Leave-group-of-subjects-out splitting strategy."""
+
     def __init__(self, cfg: WHARConfig, subject_ids: List[int] | None = None):
         super().__init__(cfg)
 
@@ -22,6 +24,7 @@ class LGSOSplitter(Splitter):
         session_df: pd.DataFrame,
         window_df: pd.DataFrame,
     ) -> List[Split]:
+        """Split subjects into groups and hold out one group per split."""
         # 1. Identify unique subjects
         unique_subjects = self.subject_ids or session_df["subject_id"].unique().tolist()
         unique_subjects = np.array(unique_subjects)

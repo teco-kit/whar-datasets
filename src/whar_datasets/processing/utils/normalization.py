@@ -25,6 +25,7 @@ def _sanitize_normalized(df: pd.DataFrame) -> pd.DataFrame:
 def get_normalize(
     cfg: WHARConfig, norm_params: NormParams | None
 ) -> Callable[[pd.DataFrame], pd.DataFrame]:
+    """Build a normalization callable from the configured normalization mode."""
     match cfg.normalization:
         case NormType.MIN_MAX_PER_SAMPLE:
             normalize = partial(min_max, norm_params=None)
@@ -49,6 +50,7 @@ def get_norm_params(
     window_df: pd.DataFrame,
     windows: Dict[str, pd.DataFrame],
 ) -> NormParams | None:
+    """Compute global normalization statistics for the provided train indices."""
     logger.info("Getting normalization parameters")
 
     # return None if per sample normalization
@@ -86,6 +88,7 @@ def get_norm_params(
 
 
 def get_min_max_params(df: pd.DataFrame, exclude_columns: List[str] = []) -> NormParams:
+    """Compute min/max statistics used by min-max normalization."""
     cols = df.columns.difference(exclude_columns)
 
     # Compute min and max for each column
@@ -102,6 +105,7 @@ def get_min_max_params(df: pd.DataFrame, exclude_columns: List[str] = []) -> Nor
 def get_standardize_params(
     df: pd.DataFrame, exclude_columns: List[str] = []
 ) -> NormParams:
+    """Compute mean/std statistics used by standardization."""
     cols = df.columns.difference(exclude_columns)
 
     # Compute mean and standard deviation for each column
@@ -118,6 +122,7 @@ def get_standardize_params(
 def get_robust_scale_params(
     df: pd.DataFrame, exclude_columns: List[str] = []
 ) -> NormParams:
+    """Compute median/IQR statistics used by robust scaling."""
     cols = df.columns.difference(exclude_columns)
 
     # Compute median and IQR (q3 - q1) for each column
@@ -134,6 +139,7 @@ def get_robust_scale_params(
 def min_max(
     df: pd.DataFrame, norm_params: NormParams | None, exclude_columns: List[str] = []
 ) -> pd.DataFrame:
+    """Apply min-max normalization to numeric columns."""
     norm_params = (
         get_min_max_params(df, exclude_columns) if norm_params is None else norm_params
     )
@@ -151,6 +157,7 @@ def min_max(
 def standardize(
     df: pd.DataFrame, norm_params: NormParams | None, exclude_columns: List[str] = []
 ) -> pd.DataFrame:
+    """Apply z-score standardization to numeric columns."""
     norm_params = (
         get_standardize_params(df, exclude_columns)
         if norm_params is None
@@ -170,6 +177,7 @@ def standardize(
 def robust_scale(
     df: pd.DataFrame, norm_params: NormParams | None, exclude_columns: List[str] = []
 ) -> pd.DataFrame:
+    """Apply robust scaling (median/IQR) to numeric columns."""
     norm_params = (
         get_robust_scale_params(df, exclude_columns)
         if norm_params is None

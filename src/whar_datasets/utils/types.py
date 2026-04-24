@@ -6,9 +6,13 @@ import pandas as pd
 Parse: TypeAlias = Callable[
     [str, str], Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]
 ]
+# Signature for dataset parser callbacks:
+# (data_dir, activity_id_column_name) -> (activity_df, session_df, sessions_by_id)
 
 
 class NormType(str, Enum):
+    """Supported normalization modes for post-processing."""
+
     STD_GLOBALLY = "std_globally"
     MIN_MAX_GLOBALLY = "min_max_globally"
     ROBUST_SCALE_GLOBALLY = "robust_scale_globally"
@@ -18,5 +22,7 @@ class NormType(str, Enum):
 
 
 class TransformType(Enum):
+    """Optional feature transforms applied to normalized windows."""
+
     DWT = "dwt"
     STFT = "stft"

@@ -36,6 +36,7 @@ def to_datetime64_ms(
     values: pd.Series,
     default_unit: TimeUnit = "ms",
 ) -> pd.Series:
+    """Convert mixed timestamp inputs to ``datetime64[ms]`` safely."""
     if pd.api.types.is_datetime64_any_dtype(values):
         return pd.to_datetime(values, errors="coerce").astype("datetime64[ms]")
 

@@ -9,6 +9,8 @@ from whar_datasets.splitting.split import Split
 
 
 class TFAdapter:
+    """TensorFlow ``tf.data`` bridge for WHAR samples."""
+
     def __init__(self, cfg: WHARConfig, loader: Loader, split: Split):
         self.cfg = cfg
         self.loader = loader
@@ -21,6 +23,7 @@ class TFAdapter:
 
     @staticmethod
     def _import_tensorflow() -> Any:
+        """Import TensorFlow lazily and raise an actionable install error."""
         try:
             import tensorflow as tf
         except ModuleNotFoundError as exc:
@@ -33,16 +36,19 @@ class TFAdapter:
         return tf
 
     def _infer_shapes(self) -> Any:
+        """Infer model input shape from the first sample."""
         _, _, sample = self.loader.get_item(0)
         # Create a list of shapes for each sensor in the sample.
         return self.tf.TensorShape(sample[0].shape)
 
     def _set_seed(self) -> None:
+        """Seed TensorFlow and NumPy/random for reproducible iteration."""
         self.tf.random.set_seed(self.cfg.seed)
         np.random.seed(self.cfg.seed)
         random.seed(self.cfg.seed)
 
     def _generator(self, indices: List[int]) -> Any:
+        """Yield ``(label, sample)`` pairs for TensorFlow dataset construction."""
         for idx in indices:
             activity_label, _, sample = self.loader.get_item(idx)
 
@@ -53,6 +59,7 @@ class TFAdapter:
             yield y, x
 
     def _create_dataset(self, indices: List[int]) -> Any:
+        """Create a typed ``tf.data.Dataset`` for the given window indices."""
         # Define the explicit signature.
         output_signature = (
             self.tf.TensorSpec(shape=(), dtype=self.tf.int64),  # Label
@@ -66,6 +73,7 @@ class TFAdapter:
         )
 
     def get_datasets(self, batch_size: int) -> Dict[str, Any]:
+        """Build train/validation/test TensorFlow datasets for one split."""
         train_ds = self._create_dataset(self.split.train_indices)
         val_ds = self._create_dataset(self.split.val_indices)
         test_ds = self._create_dataset(self.split.test_indices)

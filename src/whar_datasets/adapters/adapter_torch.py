@@ -12,6 +12,8 @@ from whar_datasets.splitting.split import Split
 
 
 class TorchAdapter(Dataset):
+    """PyTorch dataset/dataloader bridge for WHAR samples."""
+
     def __init__(self, cfg: WHARConfig, loader: Loader, split: Split):
         self.cfg = cfg
 
@@ -20,7 +22,8 @@ class TorchAdapter(Dataset):
 
         self._set_seed()
 
-    def _set_seed(self):
+    def _set_seed(self) -> None:
+        """Seed random number generators used for sampling and dataloaders."""
         torch.manual_seed(self.cfg.seed)
         np.random.seed(self.cfg.seed)
         random.seed(self.cfg.seed)
@@ -31,6 +34,7 @@ class TorchAdapter(Dataset):
         return len(self.loader)
 
     def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
+        """Return ``(label, sample)`` tensors for one window index."""
         activity_label, subject_label, sample = self.loader.get_item(index)
 
         y = torch.tensor(activity_label, dtype=torch.long)
@@ -39,6 +43,7 @@ class TorchAdapter(Dataset):
         return y, x
 
     def get_dataloaders(self, batch_size: int) -> Dict[str, DataLoader]:
+        """Build train/validation/test dataloaders for the current split."""
         train_set = Subset(self, self.split.train_indices)
         val_set = Subset(self, self.split.val_indices)
         test_set = Subset(self, self.split.test_indices)

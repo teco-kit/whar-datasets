@@ -8,6 +8,8 @@ from whar_datasets.splitting.splitter import Splitter
 
 
 class LOSOSplitter(Splitter):
+    """Leave-one-subject-out splitting strategy."""
+
     def __init__(self, cfg: WHARConfig, subject_ids: List[int] | None = None):
         super().__init__(cfg)
 
@@ -18,6 +20,7 @@ class LOSOSplitter(Splitter):
         session_df: pd.DataFrame,
         window_df: pd.DataFrame,
     ) -> List[Split]:
+        """Create one split per held-out subject."""
         subject_ids = self.subject_ids or session_df["subject_id"].unique().tolist()
 
         splits: List[Split] = []

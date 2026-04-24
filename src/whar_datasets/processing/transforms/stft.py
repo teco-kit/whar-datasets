@@ -9,6 +9,7 @@ def signal_to_stft(
     noverlap: int | None = None,
     window: str = "hann",
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Compute per-channel STFT magnitude/phase from ``(time, channels)`` input."""
     # (time_steps, sensor_channels)
     if signal.ndim != 2:
         raise ValueError("Expected signal shape (time_steps, sensor_channels).")
