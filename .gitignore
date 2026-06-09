@@ -18,9 +18,6 @@ notes
 outputs
 scripts
 .pytest_cache/
+.ruff_cache/
 
-experiments_01042026
-src/whar_datasets/analysis
-src/whar_datasets/benchmarking
-plots_tradeoff
-plot_model_tradeoffs.py
+notebooks/plotting
