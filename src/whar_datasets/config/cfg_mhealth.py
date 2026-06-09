@@ -241,7 +241,7 @@ cfg_mhealth = WHARConfig(
     download_url="https://archive.ics.uci.edu/static/public/319/mhealth+dataset.zip",
     sampling_freq=50,
     num_of_subjects=10,
-    num_of_activities=13,
+    num_of_activities=12,
     num_of_channels=23,
     datasets_dir="./datasets",
     # Parsing fields
