@@ -15,15 +15,32 @@ class Loader:
 
     def __init__(
         self,
+        activity_df: pd.DataFrame,
         session_df: pd.DataFrame,
         window_df: pd.DataFrame,
         samples_dir: Path,
         samples_dict: Dict[str, List[np.ndarray]] | None = None,
     ) -> None:
+        self.activity_df = activity_df
         self.session_df = session_df
         self.window_df = window_df
         self.samples_dir = samples_dir
         self.samples_dict = samples_dict
+
+        activity_lookup = self.activity_df.drop_duplicates("activity_id").set_index(
+            "activity_id"
+        )["activity_name"]
+        assert not activity_lookup.isna().any(), (
+            "Missing activity_name for one or more activity_ids."
+        )
+        self._activity_name_by_id = {
+            int(str(activity_id)): str(activity_name)
+            for activity_id, activity_name in activity_lookup.items()
+        }
+        self._activity_plot_label_by_id = {
+            activity_id: f"{activity_name} ({activity_id})"
+            for activity_id, activity_name in self._activity_name_by_id.items()
+        }
 
         # Canonical window index labels from window_df.
         self._window_indices_np = self.window_df.index.to_numpy()
@@ -207,6 +224,7 @@ class Loader:
         pivot_table = counts.pivot(
             index="subject_id", columns="activity_id", values="num_samples"
         ).fillna(0)
+        pivot_table = pivot_table.rename(columns=self._activity_plot_label_by_id)
 
         # plot
         pivot_table.plot(kind="bar", stacked=False, figsize=(12, 4))
@@ -214,7 +232,7 @@ class Loader:
         plt.title("number of samples per subject and activity")
         plt.xlabel("subject_id")
         plt.ylabel("number of samples")
-        plt.legend(title="activity_id")
+        plt.legend(title="activity")
         plt.tight_layout()
         plt.show()
 
