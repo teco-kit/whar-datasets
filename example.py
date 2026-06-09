@@ -29,6 +29,6 @@ post_pipeline = PostProcessingPipeline(
 samples = post_pipeline.run()
 
 # create dataloaders for the specific split
-loader = Loader(session_df, window_df, post_pipeline.samples_dir, samples)
+loader = Loader(activity_df, session_df, window_df, post_pipeline.samples_dir, samples)
 adapter = TorchAdapter(cfg, loader, split)
 dataloaders = adapter.get_dataloaders(batch_size=64)
