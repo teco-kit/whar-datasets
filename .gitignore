@@ -13,6 +13,7 @@ wheels/
 # Data
 .DS_Store
 
+*/datasets
 notes
 .env
 outputs
