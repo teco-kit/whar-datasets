@@ -1,5 +1,7 @@
 # WHAR Datasets
 
+## Overview
+
 This library offers comprehensive support for widely used WHAR (Wearable Human Activity Recognition) datasets, including:
 
 - automated downloading from original sources and data extraction
@@ -9,27 +11,39 @@ This library offers comprehensive support for widely used WHAR (Wearable Human A
 - built-in caching and multi-processing for improved efficiency
 - seamless integration with PyTorch and TensorFlow
 
-The library currently includes out-of-the-box support for 36 datasets (listed below). Additional WHAR datasets can be easily integrated by defining a custom configuration with an associated parser and registering it with the framework.
+The library currently includes out-of-the-box support for 37 datasets (listed below). Additional WHAR datasets can be easily integrated by defining a custom configuration with an associated parser and registering it with the framework.
 
-# Notice 
+## Notice
 
 This library does not host any datasets. To use a dataset, please visit its original website and make sure you understand and agree to the dataset’s terms and conditions.
 
-# How to Use 
+## Installation
 
-### Installation
+### With `uv`:
 
+```bash
+uv add "whar-datasets @ git+https://github.com/teco-kit/whar-datasets.git"
 ```
-pip install "git+https://github.com/teco-kit/whar-datasets.git"
+
+With optional TensorFlow support:
+
+```bash
+uv add "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"  
 ```
 
-Optional TensorFlow support:
+### With `pip`:
 
+```bash
+pip install "whar-datasets @ git+https://github.com/teco-kit/whar-datasets.git"
 ```
+
+With optional TensorFlow support:
+
+```bash
 pip install "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"
 ```
 
-### Example with PyTorch
+## Quickstart
 
 ```python
 from whar_datasets import (
@@ -59,12 +73,12 @@ post_pipeline = PostProcessingPipeline(cfg, pre_pipeline, window_df, split.train
 samples = post_pipeline.run()
 
 # create dataloaders for the specific split
-loader = Loader(session_df, window_df, post_pipeline.samples_dir, samples)
+loader = Loader(activity_df, session_df, window_df, post_pipeline.samples_dir, samples)
 adapter = TorchAdapter(cfg, loader, split)
 dataloaders = adapter.get_dataloaders(batch_size=64)
 ```
 
-# Supported Datasets
+## Supported Datasets
 
 ### Single-Sensor Datasets
 
@@ -83,6 +97,8 @@ dataloaders = adapter.get_dataloaders(batch_size=64)
 | ✅ | [KU-HAR](https://data.mendeley.com/datasets/45f952y38r/5) | 2021 | *KU-HAR: An open dataset for heterogeneous human activity recognition* | 187 |
 | ✅ | [Hang-Time](https://ahoelzemann.github.io/hangtime_har/) | 2023 | *Hang-time HAR: A benchmark dataset for basketball activity recognition using wrist-worn inertial sensors* | 52 |
 | ✅ | [CAPTURE-24](https://ora.ox.ac.uk/objects/uuid:99d7c092-d865-4a19-b096-cc16440cd001) | 2024 | *CAPTURE-24: A large dataset of wrist-worn activity tracker data collected in the wild for human activity recognition* | 45 |
+| ✅ | [HARSense](https://ieee-dataport.org/open-access/harsense-statistical-human-activity-recognition-dataset) | 2021 | *Harsense: statistical human activity recognition dataset* | 5 |
+| ✅ | [FallDet](https://www.kaggle.com/datasets/harnoor343/fall-detection-accelerometer-data) | - | - | - |
 
 
 ### Multi-Sensor Datasets
@@ -97,6 +113,7 @@ dataloaders = adapter.get_dataloaders(batch_size=64)
 | ✅ | [MHEALTH](https://archive.ics.uci.edu/dataset/319/mhealth+dataset) | 2014 | *mHealthDroid: A Novel Framework for Agile Development of Mobile Health Applications* | 887 |
 | ✅ | [DSADS](https://archive.ics.uci.edu/dataset/256/daily+and+sports+activities) | 2010 | *Comparative study on classifying human activities with miniature inertial and magnetic sensors* | 780 |
 | ✅ | [SAD](https://www.utwente.nl/en/eemcs/ps/research/dataset/) | 2014 | *Fusion of Smartphone Motion Sensors for Physical Activity Recognition* | 752 |
+| ✅ | [BMHAD](https://www.kaggle.com/datasets/dasmehdixtr/berkeley-multimodal-human-action-database) | 2013 | *Berkeley MHAD: A Comprehensive Multimodal Human Action Database* | 668 |
 | ✅ | [Daphnet](https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait) | 2009 | *Ambulatory monitoring of freezing of gait in Parkinson’s disease* | 652 |
 | ✅ | [SKODA](http://har-dataset.org/doku.php?id=wiki%3Adataset) | 2008 | *Wearable activity tracking in car manufacturing* | 504 |
 | ✅ | [RealWorld](https://www.uni-mannheim.de/dws/research/projects/activity-recognition/dataset/dataset-realworld/) | 2016 | *On-body Localization of Wearable Devices: An Investigation of Position-Aware Activity Recognition* | 482 |
@@ -111,7 +128,46 @@ dataloaders = adapter.get_dataloaders(batch_size=64)
 | ✅ | [UCA-EHAR](https://zenodo.org/records/5659336) | 2022 | *UCA-EHAR: A Dataset for Human Activity Recognition with Embedded AI on Smart Glasses* | 35 |
 | ✅ | [GOTOV](https://data.4tu.nl/articles/dataset/GOTOV_Human_Physical_Activity_and_Energy_Expenditure_Dataset_on_Older_Individuals/12716081) | 2022 | *A recurrent neural network architecture to model physical activity energy expenditure in older people* | 33 |
 
-# Citation
+## Configuration Reference
+
+The easiest way to start is to load a built-in configuration and adjust the fields you need:
+
+```python
+from whar_datasets import WHARDatasetID, get_dataset_cfg
+
+cfg = get_dataset_cfg(WHARDatasetID.WISDM, datasets_dir="./datasets/")
+cfg.parallelize = True
+cfg.window_time = 3.0
+cfg.window_overlap = 0.5
+...
+```
+
+`get_dataset_cfg(...)` returns a dataset-specific [`WHARConfig`](/Users/maxburzer/whar-datasets/src/whar_datasets/config/config.py#L12-L59) with sensible defaults. The most useful fields are:
+
+| Field | Meaning | Default |
+| --- | --- | --- |
+| `datasets_dir` | Root directory used to cache downloads, extracted files, metadata, windows, and samples. | `./datasets/` |
+| `in_memory` | Whether post-processing keeps samples in memory or loads them from disk when needed. | `True` |
+| `parallelize` | Enables parallel preprocessing steps. | `False` |
+| `cache_each_split` | Caches split-specific samples separately so repeated runs can reuse them. | `True` |
+| `selected_activities` | Optional activity filter applied before windowing. | `None` |
+| `selected_channels` | Optional channel filter applied before windowing. | `None` |
+| `window_time` | Sliding window length in seconds. | `3.0` |
+| `window_overlap` | Window overlap ratio. | `0.5` |
+| `resampling_freq` | Optional resampling rate in Hz before windowing. | `None` |
+| `val_percentage` | Fraction of training data reserved for validation. | `0.2` |
+| `num_subject_groups` | Number of groups used for leave-group-out splitting. | `10` |
+| `num_folds` | Number of folds used for K-fold splitting. | `10` |
+| `normalization` | Normalization strategy used in post-processing. | `STD_GLOBALLY` |
+| `transform` | Optional transform applied to windows, such as STFT or DWT. | `None` |
+| `batch_size` | Default batch size used by adapters and training helpers. | `64` |
+| `learning_rate` | Default learning rate for downstream training. | `1e-4` |
+| `num_epochs` | Default number of training epochs. | `100` |
+| `seed` | Random seed used for sampling and dataloader shuffling. | `0` |
+
+If you want to benchmark multiple built-in datasets, `BENCHMARK_DATASET_IDS` contains the curated subset used by the library.
+
+## Citation
 
 If you use the WHAR Datasets library in your research, please cite our paper:
 
@@ -125,52 +181,3 @@ If you use the WHAR Datasets library in your research, please cite our paper:
 }
 ```
 
-<!-- > Another version of the UCI-HAR Dataset --> 
-<!-- | ⬜        | [HAPT](https://archive.ics.uci.edu/dataset/341/smartphone+based+recognition+of+human+activities+and+postural+transitions)           | 2016 | *Transition-aware human activity recognition using smartphones.*                           | -->
-<!-- https://zenodo.org/records/3831958 -->
-<!-- https://zenodo.org/records/13987073 -->
-
-<!-- Core Benchmark Datasets
-https://github.com/haoranD/Awesome-Human-Activity-Recognition
-UCI-HAR (UCI Human Activity Recognition Dataset)
-
-WISDM (Wireless Sensor Data Mining)
-
-PAMAP2 (Physical Activity Monitoring Dataset)
-
-Large-Scale & Real-World Datasets
-ExtraSensory Dataset
-
-CAPTURE-24 Dataset
-
-SHL (Sussex-Huawei Locomotion Dataset)
-
-Specialized & Domain-Specific Datasets
-Opportunity Dataset (and Opportunity++)
-
-MHEALTH (Mobile Health Dataset)
-
-RealWorld HAR Dataset
-
-KU-HAR Dataset
-
-MotionSense Dataset
-
-UniMiB-SHAR Dataset
-
-Daphnet Freezing of Gait Dataset
-
-HAPT (Human Activities and Postural Transitions Dataset)
-
-HHAR (Heterogeneity Activity Recognition Dataset)
-
-AReM (Activity Recognition System Based on Multisensor Data Fusion)
-
-Emerging & Curated Benchmarks
-DAGHAR Benchmark
-
-HARTH (Human Activity Recognition Trondheim Dataset)
-
-WEAR (Wearable and Egocentric Activity Recognition Dataset)
-
-HAR70+ (referenced in trends) -->

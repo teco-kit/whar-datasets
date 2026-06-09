@@ -37,7 +37,7 @@ class WHARConfig(BaseModel):
     selected_activities: Optional[List[str]]
     selected_channels: Optional[List[str]]
     window_time: float = WINDOW_TIME_MEDIUM  # in seconds
-    window_overlap: float  # in [0,1]
+    window_overlap: float = 0.5  # in [0,1]
     resampling_freq: Optional[int] = None
 
     # postprocessing fields
