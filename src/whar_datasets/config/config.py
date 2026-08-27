@@ -45,8 +45,8 @@ class WHARConfig(BaseModel):
 
     # postprocessing fields
     val_percentage: float = Field(default=0.2, ge=0, lt=1)
-    num_subject_groups: Optional[int] = 10  # used for leave-group-out-splitting
     num_folds: Optional[int] = 10  # used for k-fold-splitting
+    shuffle_subject: bool = True  # seed-shuffle subjects before LKSO grouping
     normalization: Optional[NormType] = NormType.STD_GLOBALLY
     transform: Optional[TransformType] = None
     strict_train_val_separation: bool = True

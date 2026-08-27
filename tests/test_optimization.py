@@ -18,6 +18,7 @@ from whar_datasets.processing.utils.preparation import (
 )
 from whar_datasets.processing.utils.resampling import resample
 from whar_datasets.processing.utils.windowing import generate_windowing
+from whar_datasets.splitting.splitter_lkso import LKSOSplitter
 from whar_datasets.splitting.splitter_loso import LOSOSplitter
 from whar_datasets.utils.loading import (
     load_activity_df,
@@ -106,6 +107,43 @@ def test_strict_train_validation_split_purges_overlaps() -> None:
             val = window_df.loc[val_index]
             if train["session_id"] == val["session_id"]:
                 assert train["end_index"] <= val["start_index"] or val["end_index"] <= train["start_index"]
+
+
+def test_lkso_subject_shuffle_is_seeded_and_optional() -> None:
+    session_df = pd.DataFrame(
+        {
+            "session_id": list(range(12)),
+            "subject_id": list(range(12)),
+            "activity_id": [0] * 12,
+        }
+    )
+    window_df = pd.DataFrame(
+        {
+            "session_id": list(range(12)),
+            "window_id": [f"{subject}:0" for subject in range(12)],
+        }
+    )
+
+    def test_groups(seed: int, shuffle_subject: bool) -> list[set[int]]:
+        cfg = _config(
+            num_of_subjects=12,
+            num_folds=3,
+            seed=seed,
+            shuffle_subject=shuffle_subject,
+            strict_train_val_separation=False,
+        )
+        return [
+            set(split.test_indices)
+            for split in LKSOSplitter(cfg).get_splits(session_df, window_df)
+        ]
+
+    shuffled = test_groups(seed=3, shuffle_subject=True)
+    assert shuffled == test_groups(seed=3, shuffle_subject=True)
+    assert shuffled != test_groups(seed=7, shuffle_subject=True)
+
+    unshuffled = test_groups(seed=3, shuffle_subject=False)
+    assert unshuffled == test_groups(seed=7, shuffle_subject=False)
+    assert unshuffled == [{0, 3, 6, 9}, {1, 4, 7, 10}, {2, 5, 8, 11}]
 
 
 def test_strict_split_allocates_distributed_validation_per_session() -> None:

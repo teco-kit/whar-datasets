@@ -24,7 +24,6 @@ _LAZY_EXPORTS: dict[str, tuple[str, str]] = {
         "whar_datasets.splitting.splitter_kfold",
         "KFoldSplitter",
     ),
-    "LGSOSplitter": ("whar_datasets.splitting.splitter_lgso", "LGSOSplitter"),
     "LKSOSplitter": ("whar_datasets.splitting.splitter_lkso", "LKSOSplitter"),
     "LOSOSplitter": ("whar_datasets.splitting.splitter_loso", "LOSOSplitter"),
 }

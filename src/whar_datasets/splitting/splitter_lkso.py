@@ -8,13 +8,14 @@ from whar_datasets.splitting.splitter import Splitter
 
 
 class LKSOSplitter(Splitter):
-    """K-fold splitter that operates on subject groups.
+    """Seeded K-fold splitter that operates on subject groups.
 
     Subjects are partitioned into ``k`` folds. For each fold, all windows from
     the subjects in that fold are used as test data, and windows from all
     remaining subjects are used for train/validation.
 
-    The grouping is deterministic when the subject IDs stay the same.
+    Subjects are shuffled reproducibly by default. Set ``shuffle_subject=False``
+    for stable sorted round-robin grouping independent of ``cfg.seed``.
     """
 
     def __init__(self, cfg: WHARConfig, subject_ids: List[int] | None = None):
@@ -24,6 +25,7 @@ class LKSOSplitter(Splitter):
             raise ValueError("num_folds must be configured for LKSO.")
 
         self.n_folds = cfg.num_folds
+        self.shuffle_subject = cfg.shuffle_subject
         self.subject_ids = subject_ids
 
     def get_splits(
@@ -31,16 +33,17 @@ class LKSOSplitter(Splitter):
         session_df: pd.DataFrame,
         window_df: pd.DataFrame,
     ) -> List[Split]:
-        # 1. Identify unique subjects and sort them deterministically
+        # 1. Start from a canonical order, then optionally apply seeded shuffling.
         unique_subjects = self.subject_ids or session_df["subject_id"].unique().tolist()
         unique_subjects = sorted(unique_subjects)
+        if self.shuffle_subject:
+            self.rng.shuffle(unique_subjects)
 
         # 2. Determine effective number of folds (cannot exceed #subjects)
         n_subjects = len(unique_subjects)
         n_folds = min(self.n_folds, n_subjects)
 
-        # 3. Assign each subject to a fold in round-robin fashion
-        # Example: 8 subjects, k=5 -> assignments (1->0, 2->1, 3->2, 4->3, 5->4, 6->0, 7->1, 8->2)
+        # 3. Assign each subject to a balanced fold in round-robin fashion.
         subject_to_fold = {
             subj_id: idx % n_folds for idx, subj_id in enumerate(unique_subjects)
         }

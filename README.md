@@ -81,7 +81,9 @@ splits = splitter.get_splits(session_df, window_df)
 split = splits[0]
 
 # create and run post-processing pipeline for the specific split
-post_pipeline = PostProcessingPipeline(cfg, pre_pipeline, window_df, split.train_indices)
+post_pipeline = PostProcessingPipeline(
+    cfg, pre_pipeline, window_df, split.train_indices
+)
 samples = post_pipeline.run()
 
 # create dataloaders for the specific split
@@ -165,13 +167,13 @@ cfg.window_overlap = 0.5
 | `cache_each_split` | Caches split-specific samples separately so repeated runs can reuse them. | `True` |
 | `selected_activities` | Optional activity filter applied before windowing. | `None` |
 | `selected_channels` | Optional channel filter applied before windowing. | `None` |
-| `window_time` | Sliding window length in seconds. | `3.0` |
+| `window_time` | Sliding window length in seconds. | `2.0` |
 | `window_overlap` | Window overlap ratio. | `0.5` |
 | `resampling_freq` | Optional resampling rate in Hz before windowing. | `None` |
 | `max_session_gap_seconds` | Reject sessions containing a larger timestamp gap; use `None` to disable. | `60.0` |
 | `val_percentage` | Fraction of training data reserved for validation. | `0.2` |
-| `num_subject_groups` | Number of groups used for leave-group-out splitting. | `10` |
-| `num_folds` | Number of folds used for K-fold splitting. | `10` |
+| `num_folds` | Number of folds used for K-fold or LKSO splitting. | `10` |
+| `shuffle_subject` | Seed-shuffle subjects before assigning LKSO folds. | `True` |
 | `normalization` | Normalization strategy used in post-processing. | `STD_GLOBALLY` |
 | `transform` | Optional transform applied to windows, such as STFT or DWT. | `None` |
 | `strict_train_val_separation` | Allocate distributed validation blocks per eligible session and purge overlaps; sessions too short to split safely are assigned wholly to training or validation. | `False` |
