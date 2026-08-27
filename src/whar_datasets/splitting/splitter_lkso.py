@@ -20,7 +20,8 @@ class LKSOSplitter(Splitter):
     def __init__(self, cfg: WHARConfig, subject_ids: List[int] | None = None):
         super().__init__(cfg)
 
-        assert cfg.num_folds is not None
+        if cfg.num_folds is None:
+            raise ValueError("num_folds must be configured for LKSO.")
 
         self.n_folds = cfg.num_folds
         self.subject_ids = subject_ids
@@ -69,7 +70,9 @@ class LKSOSplitter(Splitter):
             ].index.tolist()
 
             # 6. Internal train/val split
-            train_indices, val_indices = self._get_train_val_indices(train_val_indices)
+            train_indices, val_indices = self._get_train_val_indices(
+                train_val_indices, window_df
+            )
 
             split = Split(
                 identifier=f"group_kfold_{fold_idx}",
@@ -79,9 +82,12 @@ class LKSOSplitter(Splitter):
             )
 
             # Safety check: ensure no overlaps between index sets
-            assert not self._check_indices_overlap(
+            if self._check_indices_overlap(
                 split.train_indices, split.val_indices, split.test_indices
-            ), f"Overlap detected in group_kfold_{fold_idx} indices!"
+            ):
+                raise RuntimeError(
+                    f"Overlap detected in group_kfold_{fold_idx} indices."
+                )
 
             splits.append(split)
 

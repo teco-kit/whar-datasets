@@ -347,6 +347,19 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
             raise
 
     def build_output(self, step_input: InputT) -> OutputT:
+        existing_files = [
+            path
+            for path in self.data_dir.rglob("*")
+            if path.is_file() and "hash" not in path.name.lower()
+        ]
+        if existing_files:
+            logger.info(
+                "Reusing %d existing raw/extracted files under %s",
+                len(existing_files),
+                self.data_dir,
+            )
+            return None
+
         download_urls = self._normalize_download_urls()
         used_filenames: Set[str] = set()
 
@@ -366,3 +379,9 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
 
     def load_output(self) -> OutputT:
         return None
+
+    def output_exists(self) -> bool:
+        return self.data_dir.exists() and any(
+            path.is_file() and "hash" not in path.name.lower()
+            for path in self.data_dir.rglob("*")
+        )

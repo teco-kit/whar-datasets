@@ -231,5 +231,5 @@ cfg_falldet = WHARConfig(
     selected_channels=FALLDET_SENSOR_CHANNELS,
     window_time=3,
     window_overlap=0.5,
-    parallelize=True,
+    execution_backend="process",
 )

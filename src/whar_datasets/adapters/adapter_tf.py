@@ -85,9 +85,7 @@ class TFAdapter:
             .prefetch(self.tf.data.AUTOTUNE)
         )
 
-        val_ds = val_ds.batch(len(self.split.val_indices)).prefetch(
-            self.tf.data.AUTOTUNE
-        )
-        test_ds = test_ds.batch(1).prefetch(self.tf.data.AUTOTUNE)
+        val_ds = val_ds.batch(batch_size).prefetch(self.tf.data.AUTOTUNE)
+        test_ds = test_ds.batch(batch_size).prefetch(self.tf.data.AUTOTUNE)
 
         return {"train": train_ds, "val": val_ds, "test": test_ds}

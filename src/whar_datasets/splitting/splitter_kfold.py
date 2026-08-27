@@ -14,7 +14,8 @@ class KFoldSplitter(Splitter):
     def __init__(self, cfg: WHARConfig):
         super().__init__(cfg)
 
-        assert cfg.num_folds is not None
+        if cfg.num_folds is None:
+            raise ValueError("num_folds must be configured for K-fold splitting.")
 
         self.n_folds = cfg.num_folds
 
@@ -34,7 +35,9 @@ class KFoldSplitter(Splitter):
                 idx for i, fold in enumerate(folds) if i != fold_idx for idx in fold
             ]
 
-            train_indices, val_indices = self._get_train_val_indices(train_val_indices)
+            train_indices, val_indices = self._get_train_val_indices(
+                train_val_indices, window_df
+            )
 
             split = Split(
                 identifier=f"fold_{fold_idx}",
@@ -43,9 +46,10 @@ class KFoldSplitter(Splitter):
                 test_indices=test_indices,
             )
 
-            assert not self._check_indices_overlap(
+            if self._check_indices_overlap(
                 split.train_indices, split.val_indices, split.test_indices
-            ), "Overlap detected in indices!"
+            ):
+                raise RuntimeError("Overlap detected in split indices.")
 
             splits.append(split)
 

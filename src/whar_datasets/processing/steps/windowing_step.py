@@ -53,6 +53,7 @@ class WindowingStep(AbstractStep[InputT, OutputT]):
             "window_time",
             "window_overlap",
             "resampling_freq",
+            "max_session_gap_seconds",
         }
 
     def load_input(self) -> InputT:
@@ -79,9 +80,8 @@ class WindowingStep(AbstractStep[InputT, OutputT]):
         )
 
         # generate windowing
-        process_sessions = (
-            process_sessions_para if self.cfg.parallelize else process_sessions_seq
-        )
+        use_processes = self.cfg.execution_backend == "process"
+        process_sessions = process_sessions_para if use_processes else process_sessions_seq
 
         window_df, windows = process_sessions(self.cfg, self.sessions_dir, session_df)
 
@@ -113,3 +113,11 @@ class WindowingStep(AbstractStep[InputT, OutputT]):
         logger.info(f"subject_ids from {df.min()} to {df.max()}")
 
         return activity_df, session_df, window_df, {}
+
+    def output_exists(self) -> bool:
+        metadata = (self.metadata_dir / "window_df.parquet").exists()
+        windows = all(
+            (self.windows_dir / name).exists()
+            for name in ("manifest.json", "data.npy", "window_ids.npy", "columns.json")
+        )
+        return metadata and windows

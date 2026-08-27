@@ -21,7 +21,8 @@ class ProcessingPipeline:
             force_recompute = False
 
         if isinstance(force_recompute, list):
-            assert len(self.steps) == len(force_recompute)
+            if len(self.steps) != len(force_recompute):
+                raise ValueError("force_recompute must have one flag per pipeline step.")
             for step, fr in zip(self.steps, force_recompute):
                 step.run(fr)
         elif isinstance(force_recompute, bool):

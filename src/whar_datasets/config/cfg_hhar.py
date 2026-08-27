@@ -293,6 +293,6 @@ cfg_hhar = WHARConfig(
     selected_channels=HHAR_SENSOR_CHANNELS,
     window_time=5,
     window_overlap=0.5,
-    parallelize=True,
+    execution_backend="process",
     # Training (split info)
 )

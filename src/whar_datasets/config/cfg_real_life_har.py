@@ -324,7 +324,7 @@ def parse_real_life_har(
         merged_session = _merge_session_modalities(
             pd.Series(
                 {
-                    "session_id": session_id,
+                    "session_id": session_id,  # type: ignore[dict-item]
                     "init_timestamp": float(row.init_timestamp),  # type: ignore
                     "end_timestamp": float(row.end_timestamp),  # type: ignore
                 }
@@ -381,7 +381,7 @@ cfg_real_life_har = WHARConfig(
     num_of_activities=4,
     num_of_channels=len(REAL_LIFE_HAR_SENSOR_CHANNELS),
     datasets_dir="./datasets",
-    parallelize=True,
+    execution_backend="process",
     # Parsing
     parse=parse_real_life_har,
     activity_id_col="activity_id",

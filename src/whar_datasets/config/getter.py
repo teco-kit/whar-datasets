@@ -1,43 +1,7 @@
+from collections.abc import Iterator, Mapping
 from enum import Enum
-from typing import Dict
+from importlib import import_module
 
-from whar_datasets.config.cfg_actrectut_gestures import cfg_actrectut_gestures
-from whar_datasets.config.cfg_actrectut_walking import cfg_actrectut_walking
-from whar_datasets.config.cfg_bmhad import cfg_bmhad
-from whar_datasets.config.cfg_capture24 import cfg_capture_24
-from whar_datasets.config.cfg_daphnet import cfg_daphnet
-from whar_datasets.config.cfg_dsads import cfg_dsads
-from whar_datasets.config.cfg_falldet import cfg_falldet
-from whar_datasets.config.cfg_gotov import cfg_gotov
-from whar_datasets.config.cfg_hang_time import cfg_hang_time
-from whar_datasets.config.cfg_hapt import cfg_hapt
-from whar_datasets.config.cfg_har70 import cfg_har70
-from whar_datasets.config.cfg_har_sense import cfg_har_sense
-from whar_datasets.config.cfg_harth import cfg_harth
-from whar_datasets.config.cfg_hhar import cfg_hhar
-from whar_datasets.config.cfg_hugadb import cfg_hugadb
-from whar_datasets.config.cfg_ku_har import cfg_ku_har
-from whar_datasets.config.cfg_mhealth import cfg_mhealth
-from whar_datasets.config.cfg_motion_sense import cfg_motion_sense
-from whar_datasets.config.cfg_opportunity import cfg_opportunity
-from whar_datasets.config.cfg_pamap2 import cfg_pamap2
-from whar_datasets.config.cfg_real_disp import cfg_real_disp
-from whar_datasets.config.cfg_real_life_har import cfg_real_life_har
-from whar_datasets.config.cfg_real_world import cfg_real_world
-from whar_datasets.config.cfg_sad import cfg_sad
-from whar_datasets.config.cfg_skoda import cfg_skoda
-from whar_datasets.config.cfg_uca_ehar import cfg_uca_ehar
-from whar_datasets.config.cfg_uci_har import cfg_uci_har
-from whar_datasets.config.cfg_uma_fall import cfg_uma_fall
-from whar_datasets.config.cfg_unimib_shar import cfg_unimib
-from whar_datasets.config.cfg_up_fall import cfg_up_fall
-from whar_datasets.config.cfg_usc_had import cfg_usc_had
-from whar_datasets.config.cfg_utd_mhad import cfg_utd_mhad
-from whar_datasets.config.cfg_w_har import cfg_w_har
-from whar_datasets.config.cfg_wear import cfg_wear
-from whar_datasets.config.cfg_wisdm import cfg_wisdm
-from whar_datasets.config.cfg_wisdm_19_phone import cfg_wisdm_19_phone
-from whar_datasets.config.cfg_wisdm_19_watch import cfg_wisdm_19_watch
 from whar_datasets.config.config import WHARConfig
 
 
@@ -83,62 +47,52 @@ class WHARDatasetID(Enum):
     ACTRECTUT_WALKING = "actrectut_walking"
 
 
-har_dataset_dict: Dict[WHARDatasetID, WHARConfig] = {
-    WHARDatasetID.UCI_HAR: (cfg_uci_har),
-    WHARDatasetID.WISDM: (cfg_wisdm),
-    WHARDatasetID.PAMAP2: (cfg_pamap2),
-    WHARDatasetID.MOTION_SENSE: (cfg_motion_sense),
-    WHARDatasetID.OPPORTUNITY: (cfg_opportunity),
-    WHARDatasetID.MHEALTH: (cfg_mhealth),
-    WHARDatasetID.DSADS: (cfg_dsads),
-    WHARDatasetID.KU_HAR: (cfg_ku_har),
-    WHARDatasetID.DAPHNET: (cfg_daphnet),
-    WHARDatasetID.HAR_SENSE: (cfg_har_sense),
-    WHARDatasetID.HAPT: (cfg_hapt),
-    WHARDatasetID.W_HAR: (cfg_w_har),
-    WHARDatasetID.USC_HAD: (cfg_usc_had),
-    WHARDatasetID.HUGADB: (cfg_hugadb),
-    WHARDatasetID.WISDM_19_PHONE: (cfg_wisdm_19_phone),
-    WHARDatasetID.WISDM_19_WATCH: (cfg_wisdm_19_watch),
-    WHARDatasetID.HANG_TIME: (cfg_hang_time),
-    WHARDatasetID.CAPTURE_24: (cfg_capture_24),
-    WHARDatasetID.REAL_WORLD: (cfg_real_world),
-    WHARDatasetID.REAL_LIFE_HAR: (cfg_real_life_har),
-    WHARDatasetID.SAD: (cfg_sad),
-    WHARDatasetID.UNIMIB_SHAR: (cfg_unimib),
-    WHARDatasetID.UMA_FALL: (cfg_uma_fall),
-    WHARDatasetID.REAL_DISP: (cfg_real_disp),
-    WHARDatasetID.HARTH: (cfg_harth),
-    WHARDatasetID.FALLDET: (cfg_falldet),
-    WHARDatasetID.HAR70: (cfg_har70),
-    WHARDatasetID.GOTOV: (cfg_gotov),
-    WHARDatasetID.HHAR: (cfg_hhar),
-    WHARDatasetID.UTD_MHAD: (cfg_utd_mhad),
-    WHARDatasetID.UP_FALL: (cfg_up_fall),
-    WHARDatasetID.BMHAD: (cfg_bmhad),
-    WHARDatasetID.UCA_EHAR: (cfg_uca_ehar),
-    WHARDatasetID.WEAR: (cfg_wear),
-    WHARDatasetID.SKODA: (cfg_skoda),
-    WHARDatasetID.ACTRECTUT_GESTURES: (cfg_actrectut_gestures),
-    WHARDatasetID.ACTRECTUT_WALKING: (cfg_actrectut_walking),
+_CONFIG_IMPORTS: dict[WHARDatasetID, tuple[str, str]] = {
+    dataset_id: (
+        f"whar_datasets.config.cfg_{dataset_id.value}",
+        f"cfg_{dataset_id.value}",
+    )
+    for dataset_id in WHARDatasetID
 }
+_CONFIG_IMPORTS[WHARDatasetID.CAPTURE_24] = (
+    "whar_datasets.config.cfg_capture24",
+    "cfg_capture_24",
+)
+_CONFIG_IMPORTS[WHARDatasetID.UNIMIB_SHAR] = (
+    "whar_datasets.config.cfg_unimib_shar",
+    "cfg_unimib",
+)
+
+
+def _load_config(dataset_id: WHARDatasetID) -> WHARConfig:
+    module_name, attribute_name = _CONFIG_IMPORTS[dataset_id]
+    return getattr(import_module(module_name), attribute_name)
+
+
+class _LazyConfigMapping(Mapping[WHARDatasetID, WHARConfig]):
+    def __getitem__(self, key: WHARDatasetID) -> WHARConfig:
+        return _load_config(key)
+
+    def __iter__(self) -> Iterator[WHARDatasetID]:
+        return iter(_CONFIG_IMPORTS)
+
+    def __len__(self) -> int:
+        return len(_CONFIG_IMPORTS)
+
+
+har_dataset_dict: Mapping[WHARDatasetID, WHARConfig] = _LazyConfigMapping()
 
 
 def get_dataset_cfg(
     dataset_id: WHARDatasetID, datasets_dir: str = "./datasets/"
 ) -> WHARConfig:
-    """Return a dataset configuration with an overridden cache directory."""
-    # load dataset-specific config and parser
-    cfg = har_dataset_dict[dataset_id]
-
-    # override datasets dir
+    """Return an independent dataset configuration with an overridden cache path."""
+    cfg = har_dataset_dict[dataset_id].model_copy(deep=True)
     cfg.datasets_dir = datasets_dir
-
     return cfg
 
 
 BENCHMARK_DATASET_IDS: list[WHARDatasetID] = [
-    # Single-Sensor Datasets
     WHARDatasetID.WISDM,
     WHARDatasetID.UCI_HAR,
     WHARDatasetID.UTD_MHAD,
@@ -150,7 +104,6 @@ BENCHMARK_DATASET_IDS: list[WHARDatasetID] = [
     WHARDatasetID.WISDM_19_PHONE,
     WHARDatasetID.WISDM_19_WATCH,
     WHARDatasetID.HANG_TIME,
-    # Multi-Sensor Datasets
     WHARDatasetID.PAMAP2,
     WHARDatasetID.OPPORTUNITY,
     WHARDatasetID.HHAR,

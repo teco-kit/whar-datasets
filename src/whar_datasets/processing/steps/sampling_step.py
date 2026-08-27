@@ -14,10 +14,14 @@ from whar_datasets.processing.utils.preparation import (
     prepare_windows_para,
     prepare_windows_seq,
 )
-from whar_datasets.utils.loading import load_samples, load_windows
+from whar_datasets.utils.loading import (
+    WindowStore,
+    load_samples,
+    open_window_store,
+)
 from whar_datasets.utils.logging import logger
 
-InputT: TypeAlias = Dict[str, pd.DataFrame]
+InputT: TypeAlias = Dict[str, pd.DataFrame] | WindowStore
 OutputT: TypeAlias = Dict[str, List[np.ndarray]]
 
 
@@ -50,18 +54,14 @@ class SamplingStep(AbstractStep[InputT, OutputT]):
 
         self.hash_name: str = "sampling_hash"
         self.relevant_cfg_keys: Set[str] = {
-            "given_fold",
-            "fold_groups",
-            "val_percentage",
             "normalization",
             "transform",
             "cache_each_split",
         }
-        self.relevant_values = [str(i) for i in self.indices]
+        self.relevant_values = [self.split_hash]
 
     def load_input(self) -> InputT:
-        windows = load_windows(self.windows_dir)
-        return windows
+        return open_window_store(self.windows_dir)
 
     def validate_input(self, step_input: InputT) -> bool:
         return True
@@ -73,12 +73,11 @@ class SamplingStep(AbstractStep[InputT, OutputT]):
 
         norm_params = get_norm_params(self.cfg, self.indices, self.window_df, windows)
 
-        prepare_windows = (
-            prepare_windows_para if self.cfg.parallelize else prepare_windows_seq
-        )
+        use_processes = self.cfg.execution_backend == "process"
+        prepare_windows = prepare_windows_para if use_processes else prepare_windows_seq
 
         samples = prepare_windows(
-            self.cfg, norm_params, self.window_df, self.windows_dir
+            self.cfg, norm_params, self.window_df, self.windows_dir, windows
         )
 
         return samples
@@ -98,3 +97,8 @@ class SamplingStep(AbstractStep[InputT, OutputT]):
         # Hash normalized train indices so identical splits map to one cache directory.
         payload = json.dumps(sorted(indices), separators=(",", ":"))
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    def output_exists(self) -> bool:
+        return (self.samples_dir / "manifest.json").exists() and (
+            self.samples_dir / "window_ids.npy"
+        ).exists()

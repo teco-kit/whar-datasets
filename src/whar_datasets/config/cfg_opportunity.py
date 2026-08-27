@@ -506,7 +506,7 @@ cfg_opportunity = WHARConfig(
     num_of_activities=5,  # 18,
     num_of_channels=133,
     datasets_dir="./datasets",
-    parallelize=True,
+    execution_backend="process",
     # Parsing
     parse=parse_opportunity,
     activity_id_col="Locomotion",  # "ML_Both_Arms"

@@ -5,21 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "dask>=2025.5.1",
     "kaggle>=1.6.17",
     "pandas>=2.2.3",
     "python-dotenv>=1.0.1",
     "pyarrow>=20.0.0",
     "pywavelets>=1.8.0",
     "scipy>=1.15.3",
-    "short-unique-id>=0.2.1",
-    "shortuuid>=1.0.13",
-    "torch>=2.7.1",
     "tqdm>=4.67.1",
     "playwright>=1.60.0",
     "pydantic>=2.13.4",
     "requests>=2.32.5",
-    "matplotlib>=3.10.9",
     "numpy>=2.3.5",
 ]
 
@@ -31,6 +26,15 @@ dev = [
     "jupyter>=1.1.1",
     "pandas-stubs>=2.2.3.250527",
     "types-tqdm>=4.67.0.20250516",
+    "pytest>=8.0.0",
+    "torch>=2.7.1",
+    "matplotlib>=3.10.9",
+]
+torch = [
+    "torch>=2.7.1",
+]
+plot = [
+    "matplotlib>=3.10.9",
 ]
 tf = [
     "tensorflow>=2.20.0",

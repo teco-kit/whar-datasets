@@ -67,7 +67,8 @@ def parse_mhealth(
     for file in files:
         # get subject id from filename
         match = re.search(r"\d+", file)
-        assert match
+        if match is None:
+            raise ValueError(f"Could not parse a subject identifier from '{file}'.")
         subject_id = int(match.group(0))
 
         # use body sensors and labels
@@ -241,7 +242,7 @@ cfg_mhealth = WHARConfig(
     download_url="https://archive.ics.uci.edu/static/public/319/mhealth+dataset.zip",
     sampling_freq=50,
     num_of_subjects=10,
-    num_of_activities=12,
+    num_of_activities=13,
     num_of_channels=23,
     datasets_dir="./datasets",
     # Parsing fields

@@ -31,6 +31,12 @@ With optional TensorFlow support:
 uv add "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"  
 ```
 
+With PyTorch support, as used in the quickstart:
+
+```bash
+uv add "whar-datasets[torch] @ git+https://github.com/teco-kit/whar-datasets.git"
+```
+
 ### With `pip`:
 
 ```bash
@@ -41,6 +47,12 @@ With optional TensorFlow support:
 
 ```bash
 pip install "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"
+```
+
+With PyTorch support:
+
+```bash
+pip install "whar-datasets[torch] @ git+https://github.com/teco-kit/whar-datasets.git"
 ```
 
 ## Quickstart
@@ -136,7 +148,7 @@ The easiest way to start is to load a built-in configuration and adjust the fiel
 from whar_datasets import WHARDatasetID, get_dataset_cfg
 
 cfg = get_dataset_cfg(WHARDatasetID.WISDM, datasets_dir="./datasets/")
-cfg.parallelize = True
+cfg.execution_backend = "process"
 cfg.window_time = 3.0
 cfg.window_overlap = 0.5
 ...
@@ -148,18 +160,22 @@ cfg.window_overlap = 0.5
 | --- | --- | --- |
 | `datasets_dir` | Root directory used to cache downloads, extracted files, metadata, windows, and samples. | `./datasets/` |
 | `in_memory` | Whether post-processing keeps samples in memory or loads them from disk when needed. | `True` |
-| `parallelize` | Enables parallel preprocessing steps. | `False` |
+| `num_workers` | Local worker processes; set `1` for single-core or `None` for automatic sizing. | `None` |
+| `execution_backend` | Processing backend: `"sequential"` or `"process"`. | `"sequential"` |
 | `cache_each_split` | Caches split-specific samples separately so repeated runs can reuse them. | `True` |
 | `selected_activities` | Optional activity filter applied before windowing. | `None` |
 | `selected_channels` | Optional channel filter applied before windowing. | `None` |
 | `window_time` | Sliding window length in seconds. | `3.0` |
 | `window_overlap` | Window overlap ratio. | `0.5` |
 | `resampling_freq` | Optional resampling rate in Hz before windowing. | `None` |
+| `max_session_gap_seconds` | Reject sessions containing a larger timestamp gap; use `None` to disable. | `60.0` |
 | `val_percentage` | Fraction of training data reserved for validation. | `0.2` |
 | `num_subject_groups` | Number of groups used for leave-group-out splitting. | `10` |
 | `num_folds` | Number of folds used for K-fold splitting. | `10` |
 | `normalization` | Normalization strategy used in post-processing. | `STD_GLOBALLY` |
 | `transform` | Optional transform applied to windows, such as STFT or DWT. | `None` |
+| `strict_train_val_separation` | Allocate distributed validation blocks per eligible session and purge overlaps; sessions too short to split safely are assigned wholly to training or validation. | `False` |
+| `dataloader_num_workers` | PyTorch loading workers; `0` keeps loading in the main process. | `0` |
 | `batch_size` | Default batch size used by adapters and training helpers. | `64` |
 | `learning_rate` | Default learning rate for downstream training. | `1e-4` |
 | `num_epochs` | Default number of training epochs. | `100` |
@@ -180,4 +196,3 @@ If you use the WHAR Datasets library in your research, please cite our paper:
   year={2025}
 }
 ```
-

@@ -228,7 +228,7 @@ cfg_actrectut_walking = WHARConfig(
     num_of_activities=6,
     num_of_channels=len(ACTRECTUT_WALKING_CHANNELS),
     datasets_dir="./datasets",
-    parallelize=True,
+    execution_backend="process",
     # Parsing
     parse=parse_actrectut_walking,
     # Preprocessing (selections + sliding window)

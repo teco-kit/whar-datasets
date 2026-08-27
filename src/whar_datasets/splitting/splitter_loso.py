@@ -38,7 +38,9 @@ class LOSOSplitter(Splitter):
                 ~window_df["session_id"].isin(test_sessions)
             ].index.tolist()
 
-            train_indices, val_indices = self._get_train_val_indices(train_val_indices)
+            train_indices, val_indices = self._get_train_val_indices(
+                train_val_indices, window_df
+            )
 
             split = Split(
                 identifier=f"subject_{s}",
@@ -47,9 +49,10 @@ class LOSOSplitter(Splitter):
                 test_indices=test_indices,
             )
 
-            assert not self._check_indices_overlap(
+            if self._check_indices_overlap(
                 split.train_indices, split.val_indices, split.test_indices
-            ), "Overlap detected in indices!"
+            ):
+                raise RuntimeError("Overlap detected in split indices.")
 
             splits.append(split)
 

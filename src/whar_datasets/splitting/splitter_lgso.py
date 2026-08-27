@@ -14,7 +14,8 @@ class LGSOSplitter(Splitter):
     def __init__(self, cfg: WHARConfig, subject_ids: List[int] | None = None):
         super().__init__(cfg)
 
-        assert cfg.num_subject_groups is not None
+        if cfg.num_subject_groups is None:
+            raise ValueError("num_subject_groups must be configured for LGSO.")
 
         self.num_subject_groups = cfg.num_subject_groups
         self.subject_ids = subject_ids
@@ -26,8 +27,8 @@ class LGSOSplitter(Splitter):
     ) -> List[Split]:
         """Split subjects into groups and hold out one group per split."""
         # 1. Identify unique subjects
-        unique_subjects = self.subject_ids or session_df["subject_id"].unique().tolist()
-        unique_subjects = np.array(unique_subjects)
+        subject_list = self.subject_ids or session_df["subject_id"].unique().tolist()
+        unique_subjects = np.asarray(subject_list)
         self.rng.shuffle(unique_subjects)
 
         # 2. Split subjects into N groups
@@ -51,7 +52,9 @@ class LGSOSplitter(Splitter):
             ].index.tolist()
 
             # 5. Handle internal train/val split logic
-            train_indices, val_indices = self._get_train_val_indices(train_val_indices)
+            train_indices, val_indices = self._get_train_val_indices(
+                train_val_indices, window_df
+            )
 
             split = Split(
                 identifier=f"group_{i}",
@@ -61,9 +64,10 @@ class LGSOSplitter(Splitter):
             )
 
             # Safety check
-            assert not self._check_indices_overlap(
+            if self._check_indices_overlap(
                 split.train_indices, split.val_indices, split.test_indices
-            ), f"Overlap detected in group {i} indices!"
+            ):
+                raise RuntimeError(f"Overlap detected in group {i} indices.")
 
             splits.append(split)
 

@@ -243,7 +243,7 @@ def parse_hang_time(
     subject_map = {token: idx for idx, token in enumerate(sorted(set(subject_tokens)))}
 
     sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
+    session_rows: List[Dict[str, object]] = []
     label_rows: List[str] = []
     global_session_id = 0
 
@@ -396,7 +396,7 @@ cfg_hang_time = WHARConfig(
     num_of_subjects=24,
     num_of_activities=6,
     num_of_channels=3,
-    parallelize=True,
+    execution_backend="process",
     parse=parse_hang_time,
     activity_id_col="locomotion",
     available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),

@@ -214,9 +214,9 @@ def parse_up_fall(
             session_rows.append(
                 {
                     "session_id": next_session_id,
-                    "subject_raw_id": int(subject_raw),  # type: ignore[union-attr]
-                    "activity_raw_id": int(activity_raw),  # type: ignore[union-attr]
-                    "trial_raw_id": int(trial_raw),  # type: ignore[union-attr]
+                    "subject_raw_id": int(str(subject_raw)),
+                    "activity_raw_id": int(str(activity_raw)),
+                    "trial_raw_id": int(str(trial_raw)),
                 }
             )
             next_session_id += 1
@@ -285,5 +285,5 @@ cfg_up_fall = WHARConfig(
     selected_channels=UP_FALL_SENSOR_CHANNELS,
     window_time=2,
     window_overlap=0.5,
-    parallelize=True,
+    execution_backend="process",
 )

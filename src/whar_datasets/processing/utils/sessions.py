@@ -1,149 +1,97 @@
+import os
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import dask.dataframe as dd
 import pandas as pd
-from dask.base import compute
-from dask.delayed import delayed
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
-from whar_datasets.processing.utils.dask_progress import SharedTqdmDaskCallback
-from whar_datasets.processing.utils.resampling import resample
+from whar_datasets.processing.utils.resampling import (
+    get_effective_sampling_freq,
+    resample,
+)
 from whar_datasets.processing.utils.selecting import select_channels
 from whar_datasets.processing.utils.windowing import generate_windowing
-from whar_datasets.utils.loading import load_session
+from whar_datasets.utils.loading import load_session, load_sessions
 from whar_datasets.utils.logging import logger
+
+SessionResult = Tuple[pd.DataFrame | None, Dict[str, pd.DataFrame] | None]
+
+
+def _effective_worker_count(cfg: WHARConfig, task_count: int) -> int:
+    requested = cfg.num_workers or (os.cpu_count() or 1)
+    return max(1, min(requested, task_count))
+
+
+def _process_session_data(
+    cfg: WHARConfig, session_id: int, session: pd.DataFrame
+) -> SessionResult:
+    session = select_channels(session, cfg.selected_channels or [])
+    frequency = get_effective_sampling_freq(cfg.sampling_freq, cfg.resampling_freq)
+    session = resample(session, frequency, cfg.max_session_gap_seconds)
+    return generate_windowing(
+        session_id,
+        session,
+        cfg.window_time,
+        cfg.window_overlap,
+        frequency,
+    )
+
+
+def _process_session_from_disk(args: tuple[WHARConfig, Path, int]) -> SessionResult:
+    cfg, sessions_dir, session_id = args
+    return _process_session_data(cfg, session_id, load_session(sessions_dir, session_id))
+
+
+def _combine_results(results: List[SessionResult]) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
+    valid = [(frame, data) for frame, data in results if frame is not None and data]
+    if not valid:
+        return pd.DataFrame(columns=["session_id", "window_id"]), {}
+    window_df = pd.concat([frame for frame, _ in valid], ignore_index=True)
+    windows = {key: value for _, data in valid for key, value in data.items()}
+    if window_df["window_id"].nunique() != len(window_df):
+        raise ValueError("Window identifiers are not unique.")
+    return window_df, windows
 
 
 def process_sessions_seq(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
 ) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
-    """Generate windows from sessions sequentially."""
-    # loop over sessions
-    loop = tqdm([int(x) for x in session_df["session_id"].unique()])
-    loop.set_description("Processing sessions")
-
-    pairs = [process_session(cfg, sessions_dir, session_id) for session_id in loop]
-    window_dfs, window_dicts = zip(*pairs)
-
-    # compute global window metadata and windows
-    window_df = pd.concat([w for w in window_dfs if w is not None])
-    window_df.reset_index(drop=True, inplace=True)
-    windows = {k: v for d in window_dicts if d is not None for k, v in d.items()}
-
-    # assert uniqueness of window ids
-    assert window_df["window_id"].nunique() == len(window_df)
-
-    return window_df, windows
+    """Generate windows after scanning the sessions cache only once."""
+    session_ids = [int(value) for value in session_df["session_id"].unique()]
+    sessions = load_sessions(sessions_dir, session_ids=session_ids)
+    results = [
+        _process_session_data(cfg, session_id, sessions[session_id])
+        for session_id in tqdm(session_ids, desc="Processing sessions")
+    ]
+    return _combine_results(results)
 
 
 def process_sessions_para(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
 ) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
-    """Generate windows from sessions in parallel using Dask."""
-    relevant_ids = set(session_df["session_id"])
+    """Process complete sessions concurrently using bounded local workers."""
+    session_ids = [int(value) for value in session_df["session_id"].unique()]
+    workers = _effective_worker_count(cfg, len(session_ids))
+    if workers == 1:
+        return process_sessions_seq(cfg, sessions_dir, session_df)
 
-    # Read sessions parquet with dask
-    ddf = dd.read_parquet(sessions_dir / "sessions.parquet", engine="pyarrow")
-
-    def process_partition(df: pd.DataFrame) -> pd.DataFrame:
-        if df.empty:
-            return pd.DataFrame()
-
-        if "session_id" not in df.columns:
-            return pd.DataFrame()
-
-        mask = df["session_id"].isin(relevant_ids)
-        if not mask.any():
-            return pd.DataFrame()
-
-        return df.loc[mask].copy()
-
-    logger.info("Processing sessions (parallelized)")
-
-    # Create delayed tasks
-    delayed_partitions = ddf.to_delayed()
-
-    @delayed
-    def process_delayed(partition):
-        return process_partition(partition)
-
-    tasks = [process_delayed(part) for part in delayed_partitions]
-
-    expected_sessions = int(session_df["session_id"].nunique())
-    with tqdm(
-        total=max(len(tasks) + expected_sessions, 1),
-        desc="Processing sessions (dask)",
-        leave=True,
-    ) as pbar:
-        # execute partition filtering in parallel
-        with SharedTqdmDaskCallback(pbar):
-            partition_subsets = list(compute(*tasks, scheduler="processes"))
-
-        non_empty_subsets = [df for df in partition_subsets if not df.empty]
-        if not non_empty_subsets:
-            return pd.DataFrame(columns=["window_id"]), {}
-
-        # Important: group globally (not per-partition), otherwise one session can be
-        # split across partitions and produce incomplete windows.
-        full_subset = pd.concat(non_empty_subsets, axis=0, ignore_index=True)
-
-        all_pairs: List[Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]] = []
-        grouped = full_subset.groupby("session_id", sort=False)
-        for session_id, group in grouped:
-            session_data = group.drop(columns=["session_id"]).reset_index(drop=True)
-            session_data = select_channels(session_data, cfg.selected_channels or [])
-            session_data = resample(session_data, cfg.sampling_freq)
-
-            window_df_local, windows_local = generate_windowing(
-                int(session_id),  # type: ignore[arg-type]
-                session_data,
-                cfg.window_time,
-                cfg.window_overlap,
-                cfg.sampling_freq,
+    logger.info("Processing sessions with %d worker processes", workers)
+    tasks = [(cfg, sessions_dir, session_id) for session_id in session_ids]
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        results = list(
+            tqdm(
+                executor.map(_process_session_from_disk, tasks),
+                total=len(tasks),
+                desc="Processing sessions",
             )
-            if window_df_local is not None and windows_local is not None:
-                all_pairs.append((window_df_local, windows_local))
-            pbar.update(1)
-
-        pbar.refresh()
-
-    if not all_pairs:
-        return pd.DataFrame(columns=["window_id"]), {}
-
-    window_dfs, window_dicts = zip(*all_pairs)
-
-    # compute global window metadata and windows
-    window_df = pd.concat([w for w in window_dfs if w is not None])
-    window_df.reset_index(drop=True, inplace=True)
-    windows = {k: v for d in window_dicts if d is not None for k, v in d.items()}
-
-    # assert uniqueness of window ids
-    assert window_df["window_id"].nunique() == len(window_df)
-
-    return window_df, windows
+        )
+    return _combine_results(results)
 
 
 def process_session(
     cfg: WHARConfig, sessions_dir: Path, session_id: int
-) -> Tuple[pd.DataFrame | None, Dict[str, pd.DataFrame] | None]:
-    """Generate window metadata/data for one cached session."""
-    # load and process session
-    session = load_session(sessions_dir, session_id)
-    session = select_channels(session, cfg.selected_channels or [])
-    session = resample(session, cfg.sampling_freq)
-
-    # generate windowing
-    window_df, windows = generate_windowing(
-        session_id,
-        session,
-        cfg.window_time,
-        cfg.window_overlap,
-        cfg.sampling_freq,
-    )
-
-    if window_df is None or windows is None:
-        return None, None
-
-    return window_df, windows
+) -> SessionResult:
+    """Generate windows from one cached session."""
+    return _process_session_data(cfg, session_id, load_session(sessions_dir, session_id))

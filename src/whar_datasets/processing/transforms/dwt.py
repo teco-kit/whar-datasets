@@ -2,7 +2,6 @@ from typing import List, Tuple
 
 import numpy as np
 import pywt
-from matplotlib import pyplot as plt
 
 
 def repeat_each_cell(arr: np.ndarray, target_len: int) -> np.ndarray:
@@ -109,6 +108,8 @@ def plot_dwt_grid(grid, channel_names=None, cmap="viridis"):
     Plot DWT grid (C, levels+1, max_len) as heatmaps.
     Each channel gets its own subplot.
     """
+    from matplotlib import pyplot as plt
+
     C, L, T = grid.shape
     fig, axes = plt.subplots(C, 1, figsize=(8, 1 * C), sharex=True)
 

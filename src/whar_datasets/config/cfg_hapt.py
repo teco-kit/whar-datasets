@@ -87,11 +87,11 @@ def parse_hapt(
     loop.set_description("Creating sessions")
 
     for row in loop:
-        exp_id = int(row.exp_id)
-        user_id = int(row.user_id)
-        session_id = int(row.session_id)
-        start_idx = int(row.start_idx)
-        end_idx = int(row.end_idx)
+        exp_id = int(str(row.exp_id))
+        user_id = int(str(row.user_id))
+        session_id = int(str(row.session_id))
+        start_idx = int(str(row.start_idx))
+        end_idx = int(str(row.end_idx))
 
         cache_key = (exp_id, user_id)
         if cache_key not in signals_cache:

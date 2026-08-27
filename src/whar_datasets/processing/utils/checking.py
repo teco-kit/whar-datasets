@@ -15,7 +15,7 @@ def check_windowing(cache_dir: Path, windows_dir: Path) -> bool:
         logger.warning(f"Windows directory '{windows_dir}' is empty.")
         return False
 
-    window_df_path = cache_dir / "window_df.csv"
+    window_df_path = cache_dir / "window_df.parquet"
 
     if not window_df_path.exists():
         logger.warning(f"Window index file not found at '{window_df_path}'.")

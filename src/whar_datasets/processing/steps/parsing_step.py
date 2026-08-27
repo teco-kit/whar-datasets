@@ -1,3 +1,4 @@
+import inspect
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -41,7 +42,15 @@ class ParsingStep(AbstractStep[InputT, OutputT]):
             "dataset_id",
             "activity_id_col",
             "available_activities",
+            "available_channels",
+            "num_of_subjects",
+            "num_of_activities",
+            "num_of_channels",
         }
+        try:
+            self.relevant_values = [inspect.getsource(cfg.parse)]
+        except (OSError, TypeError):
+            self.relevant_values = [cfg.parse.__module__, cfg.parse.__qualname__]
 
     def load_input(self) -> InputT:
         return None
@@ -94,6 +103,17 @@ class ParsingStep(AbstractStep[InputT, OutputT]):
         sessions = load_sessions(self.sessions_dir)
 
         return activity_df, session_df, sessions
+
+    def output_exists(self) -> bool:
+        metadata = all(
+            (self.metadata_dir / f"{stem}.parquet").exists()
+            for stem in ("activity_df", "session_df")
+        )
+        return (
+            metadata
+            and (self.sessions_dir / "sessions.parquet").exists()
+            and (self.sessions_dir / "manifest.json").exists()
+        )
 
 
 def _is_sidecar_entry(entry_name: str) -> bool:
@@ -148,7 +168,7 @@ def _ignore_sidecar_files() -> Iterator[None]:
     try:
         yield
     finally:
-        os.listdir = original_listdir
-        os.walk = original_walk
-        Path.glob = original_path_glob
-        Path.rglob = original_path_rglob
+        os.listdir = original_listdir  # type: ignore[method-assign]
+        os.walk = original_walk  # type: ignore[method-assign]
+        Path.glob = original_path_glob  # type: ignore[method-assign]
+        Path.rglob = original_path_rglob  # type: ignore[method-assign]

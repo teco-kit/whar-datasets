@@ -231,7 +231,7 @@ cfg_actrectut_gestures = WHARConfig(
     num_of_activities=12,
     num_of_channels=len(HAND_GESTURES_CHANNELS),
     datasets_dir="./datasets",
-    parallelize=True,
+    execution_backend="process",
     # Parsing
     parse=parse_actrectut_gestures,
     # Preprocessing (selections + sliding window)

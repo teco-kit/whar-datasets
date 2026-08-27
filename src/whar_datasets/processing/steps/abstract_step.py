@@ -1,10 +1,11 @@
 import hashlib
+import inspect
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Generic, List, Set, TypeVar
 
-from whar_datasets.config.config import WHARConfig
+from whar_datasets.config.config import CACHE_SCHEMA_VERSION, WHARConfig
 from whar_datasets.utils.logging import logger
 
 InputT = TypeVar("InputT")
@@ -66,7 +67,7 @@ class AbstractStep(ABC, Generic[InputT, OutputT]):
         """Return True when the cached hash still matches current inputs/config."""
         logger.info(f"Checking hash for {self.__class__.__name__}")
 
-        check = self._load_hash() == self._compute_hash()
+        check = self._load_hash() == self._compute_hash() and self.output_exists()
 
         if check:
             logger.info("Hash is up to date")
@@ -86,7 +87,18 @@ class AbstractStep(ABC, Generic[InputT, OutputT]):
         dep_hashes = [dep._load_hash() for dep in self.dependent_on]
 
         # Combine own hash + dependency hashes
-        combined_str = input_hash + "".join(dep_hashes) + "".join(self.relevant_values)
+        try:
+            implementation = inspect.getsource(self.__class__)
+        except (OSError, TypeError):
+            implementation = self.__class__.__qualname__
+        combined_str = (
+            str(CACHE_SCHEMA_VERSION)
+            + implementation
+            + self.input_fingerprint()
+            + input_hash
+            + "".join(dep_hashes)
+            + "".join(self.relevant_values)
+        )
         final_hash = hashlib.sha256(combined_str.encode("utf-8")).hexdigest()
 
         return final_hash
@@ -96,8 +108,10 @@ class AbstractStep(ABC, Generic[InputT, OutputT]):
         self.hash_dir.mkdir(parents=True, exist_ok=True)
 
         hash_path = self.hash_dir / f"{self.hash_name}.txt"
-        with open(hash_path, "w") as f:
+        temporary = hash_path.with_suffix(".tmp")
+        with open(temporary, "w") as f:
             f.write(hash)
+        temporary.replace(hash_path)
 
     def _load_hash(self) -> str:
         """Load the persisted hash or return an empty string when absent."""
@@ -108,6 +122,14 @@ class AbstractStep(ABC, Generic[InputT, OutputT]):
 
         with open(hash_path, "r") as f:
             return f.read().strip()
+
+    def output_exists(self) -> bool:
+        """Return whether this step's expected cache artifacts are present."""
+        return True
+
+    def input_fingerprint(self) -> str:
+        """Return a cheap fingerprint for mutable external inputs, when applicable."""
+        return ""
 
     @abstractmethod
     def load_input(self) -> InputT:

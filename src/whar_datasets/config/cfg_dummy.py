@@ -1,14 +1,15 @@
-import os
 from typing import Dict, Tuple
 
 import pandas as pd
-from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
 
 
-def parse_dummy():
-    pass
+def parse_dummy(
+    dir: str, activity_id_col: str
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+    del dir, activity_id_col
+    raise NotImplementedError("The dummy configuration has no dataset parser.")
 
 
 cfg_dummy = WHARConfig(

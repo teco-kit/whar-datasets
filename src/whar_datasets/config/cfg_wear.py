@@ -231,6 +231,6 @@ cfg_wear = WHARConfig(
     selected_channels=WEAR_SENSOR_CHANNELS,
     window_time=2,
     window_overlap=0.5,
-    parallelize=True,
+    execution_backend="process",
     # Training (split info)
 )

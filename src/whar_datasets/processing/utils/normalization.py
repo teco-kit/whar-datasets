@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from whar_datasets.config.config import NormType, WHARConfig
-from whar_datasets.utils.loading import load_window
+from whar_datasets.utils.loading import WindowStore
 from whar_datasets.utils.logging import logger
 
 NormParams: TypeAlias = Tuple[
@@ -28,6 +28,7 @@ def get_normalize(
     cfg: WHARConfig, norm_params: NormParams | None
 ) -> Callable[[pd.DataFrame], pd.DataFrame]:
     """Build a normalization callable from the configured normalization mode."""
+    normalize: Callable[[pd.DataFrame], pd.DataFrame]
     match cfg.normalization:
         case NormType.MIN_MAX_PER_SAMPLE:
             normalize = partial(min_max, norm_params=None)
@@ -42,7 +43,7 @@ def get_normalize(
         case NormType.ROBUST_SCALE_GLOBALLY:
             normalize = partial(robust_scale, norm_params=norm_params)
         case _:
-            normalize = partial(load_window)
+            normalize = lambda frame: frame  # noqa: E731
     return normalize
 
 
@@ -50,10 +51,13 @@ def get_norm_params(
     cfg: WHARConfig,
     indices: List[int],
     window_df: pd.DataFrame,
-    windows: Dict[str, pd.DataFrame],
+    windows: Dict[str, pd.DataFrame] | WindowStore,
 ) -> NormParams | None:
     """Compute global normalization statistics for the provided train indices."""
     logger.info("Getting normalization parameters")
+
+    if cfg.normalization is None:
+        return None
 
     # return None if per sample normalization
     if (
@@ -71,11 +75,11 @@ def get_norm_params(
             "per-sample normalization mode."
         )
 
-    # concat to single df
-    windows_df = pd.concat(
-        [windows[str(window_df.at[index, "window_id"])] for index in indices],
-        ignore_index=True,
-    )
+    window_ids = [str(window_df.at[index, "window_id"]) for index in indices]
+    if isinstance(windows, WindowStore):
+        return _get_array_norm_params(cfg, window_ids, windows)
+
+    windows_df = pd.concat([windows[window_id] for window_id in window_ids], ignore_index=True)
 
     # get normalization params
     match cfg.normalization:
@@ -87,6 +91,89 @@ def get_norm_params(
             return get_robust_scale_params(windows_df)
         case _:
             return None
+
+
+def _get_array_norm_params(
+    cfg: WHARConfig, window_ids: List[str], store: WindowStore
+) -> NormParams | None:
+    """Compute global statistics from bounded memory-mapped batches."""
+    positions = np.asarray([store.row_by_id[window_id] for window_id in window_ids])
+    if cfg.normalization == NormType.ROBUST_SCALE_GLOBALLY:
+        values = np.asarray(store.data[positions]).reshape(-1, store.data.shape[-1])
+        median = np.median(values, axis=0)
+        iqr = np.quantile(values, 0.75, axis=0) - np.quantile(values, 0.25, axis=0)
+        return dict(zip(store.columns, median)), dict(zip(store.columns, iqr))
+
+    count = 0
+    mean = np.zeros(store.data.shape[-1], dtype=np.float64)
+    m2 = np.zeros_like(mean)
+    minimum = np.full_like(mean, np.inf)
+    maximum = np.full_like(mean, -np.inf)
+    for start in range(0, len(positions), 1024):
+        batch = np.asarray(store.data[positions[start : start + 1024]], dtype=np.float64)
+        batch = batch.reshape(-1, batch.shape[-1])
+        minimum = np.minimum(minimum, np.nanmin(batch, axis=0))
+        maximum = np.maximum(maximum, np.nanmax(batch, axis=0))
+        batch_count = len(batch)
+        batch_mean = np.nanmean(batch, axis=0)
+        batch_m2 = np.nansum((batch - batch_mean) ** 2, axis=0)
+        delta = batch_mean - mean
+        total = count + batch_count
+        mean += delta * batch_count / total
+        m2 += batch_m2 + delta**2 * count * batch_count / total
+        count = total
+
+    if cfg.normalization == NormType.MIN_MAX_GLOBALLY:
+        return dict(zip(store.columns, minimum)), dict(zip(store.columns, maximum))
+    if cfg.normalization == NormType.STD_GLOBALLY:
+        std = np.sqrt(m2 / max(count - 1, 1))
+        return dict(zip(store.columns, mean)), dict(zip(store.columns, std))
+    return None
+
+
+def normalize_array(
+    cfg: WHARConfig,
+    values: np.ndarray,
+    columns: List[str],
+    norm_params: NormParams | None,
+) -> np.ndarray:
+    """Normalize a window directly as NumPy and return compact float32 data."""
+    array = np.asarray(values, dtype=np.float32)
+    mode = cfg.normalization
+    if mode is None:
+        return array
+
+    if mode in {
+        NormType.MIN_MAX_PER_SAMPLE,
+        NormType.STD_PER_SAMPLE,
+        NormType.ROBUST_SCALE_PER_SAMPLE,
+    }:
+        if mode == NormType.MIN_MAX_PER_SAMPLE:
+            center = np.nanmin(array, axis=0)
+            scale = np.nanmax(array, axis=0) - center
+        elif mode == NormType.STD_PER_SAMPLE:
+            center = np.nanmean(array, axis=0)
+            scale = np.nanstd(array, axis=0, ddof=1)
+        else:
+            center = np.nanmedian(array, axis=0)
+            scale = np.nanquantile(array, 0.75, axis=0) - np.nanquantile(
+                array, 0.25, axis=0
+            )
+    else:
+        if norm_params is None:
+            raise ValueError("Global normalization requires fitted parameters.")
+        center = np.asarray([norm_params[0][column] for column in columns], dtype=np.float32)
+        second = np.asarray([norm_params[1][column] for column in columns], dtype=np.float32)
+        if mode == NormType.MIN_MAX_GLOBALLY:
+            scale = second - center
+        else:
+            scale = second
+
+    scale = np.where(np.isfinite(scale) & (np.abs(scale) > 1e-12), scale, 1.0)
+    normalized = (array - center) / scale
+    return np.nan_to_num(normalized, nan=0.0, posinf=0.0, neginf=0.0).astype(
+        np.float32, copy=False
+    )
 
 
 def get_min_max_params(df: pd.DataFrame, exclude_columns: List[str] = []) -> NormParams:

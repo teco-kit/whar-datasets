@@ -179,6 +179,6 @@ cfg_bmhad = WHARConfig(
     selected_channels=BMHAD_SENSOR_CHANNELS,
     window_time=2,
     window_overlap=0.5,
-    parallelize=True,
+    execution_backend="process",
     # Training (split info)
 )

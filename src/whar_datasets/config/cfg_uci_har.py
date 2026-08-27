@@ -32,7 +32,8 @@ def get_df_from_files_uci_har(
     }  # (num_segs, seg_size)
 
     for value in dict.values():
-        assert value.shape[1] == eff_seg_size
+        if value.shape[1] != eff_seg_size:
+            raise ValueError("UCI-HAR segment width does not match the expected size.")
 
     cols = list(dict.keys())
 
@@ -51,7 +52,10 @@ def get_df_from_files_uci_har(
     # (num_segs, 1)
 
     # assert number of segs are the same
-    assert df.shape[0] / eff_seg_size == subjects_df.shape[0] == labels_df.shape[0]
+    if not (
+        df.shape[0] / eff_seg_size == subjects_df.shape[0] == labels_df.shape[0]
+    ):
+        raise ValueError("UCI-HAR signals, subjects, and labels are misaligned.")
     NUM_SEGS = labels_df.shape[0]
 
     subject_ids = []

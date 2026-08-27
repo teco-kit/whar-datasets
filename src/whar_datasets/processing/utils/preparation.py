@@ -1,19 +1,37 @@
+import os
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-from dask.base import compute
-from dask.delayed import delayed
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
-from whar_datasets.processing.utils.dask_progress import SharedTqdmDaskCallback
-from whar_datasets.processing.utils.normalization import NormParams, get_normalize
+from whar_datasets.processing.utils.normalization import NormParams, normalize_array
 from whar_datasets.processing.utils.transform import get_transform
-from whar_datasets.utils.loading import load_window
+from whar_datasets.utils.loading import WindowStore, open_window_store
 from whar_datasets.utils.logging import logger
+
+WindowSource = Dict[str, pd.DataFrame] | WindowStore
+
+
+def _prepare_one(
+    cfg: WHARConfig,
+    norm_params: NormParams | None,
+    source: WindowSource,
+    window_id: str,
+) -> Tuple[str, List[np.ndarray]]:
+    if isinstance(source, WindowStore):
+        values = source.get_array(window_id)
+        columns = source.columns
+    else:
+        frame = source[window_id]
+        values = frame.to_numpy(copy=False)
+        columns = [str(column) for column in frame.columns]
+    normalized = normalize_array(cfg, values, columns, norm_params)
+    transformed = get_transform(cfg)(normalized)
+    return window_id, [normalized, *transformed]
 
 
 def prepare_windows_seq(
@@ -21,27 +39,30 @@ def prepare_windows_seq(
     norm_params: NormParams | None,
     window_df: pd.DataFrame,
     windows_dir: Path,
+    windows: WindowSource | None = None,
 ) -> Dict[str, List[np.ndarray]]:
-    """Normalize/transform windows sequentially and return sample tensors."""
+    """Normalize and transform windows from one scan or memory map."""
     logger.info("Normalizing and transforming windows")
-
-    normalize = get_normalize(cfg, norm_params)
-    transform = get_transform(cfg)
-
-    def prepare(window_id: str) -> Tuple[str, List[np.ndarray]]:
-        window = load_window(windows_dir, window_id)
-        normalized = normalize(window).values
-        transformed = transform(normalized)
-        return window_id, [normalized, *transformed]
-
-    loop = tqdm(window_df["window_id"])
-    loop.set_description("Normalizing and transforming windows")
-
-    prepared: Dict[str, List[np.ndarray]] = {
-        window_id: values for window_id, values in map(prepare, loop)
+    source = windows or open_window_store(windows_dir)
+    ids = [str(value) for value in window_df["window_id"]]
+    return {
+        window_id: values
+        for window_id, values in (
+            _prepare_one(cfg, norm_params, source, window_id)
+            for window_id in tqdm(ids, desc="Preparing windows")
+        )
     }
 
-    return prepared
+
+def _prepare_chunk(
+    args: tuple[WHARConfig, NormParams | None, Path, List[str]]
+) -> Dict[str, List[np.ndarray]]:
+    cfg, norm_params, windows_dir, window_ids = args
+    source = open_window_store(windows_dir)
+    return {
+        window_id: _prepare_one(cfg, norm_params, source, window_id)[1]
+        for window_id in window_ids
+    }
 
 
 def prepare_windows_para(
@@ -49,67 +70,25 @@ def prepare_windows_para(
     norm_params: NormParams | None,
     window_df: pd.DataFrame,
     windows_dir: Path,
+    windows: WindowSource | None = None,
 ) -> Dict[str, List[np.ndarray]]:
-    """Normalize/transform windows in parallel using Dask partitions."""
-    logger.info("Normalizing and transforming windows (parallelized)")
+    """Normalize/transform bounded window chunks in actual worker processes."""
+    ids = [str(value) for value in window_df["window_id"]]
+    requested = cfg.num_workers or (os.cpu_count() or 1)
+    workers = max(1, min(requested, len(ids)))
+    if workers == 1:
+        return prepare_windows_seq(cfg, norm_params, window_df, windows_dir, windows)
 
-    normalize = get_normalize(cfg, norm_params)
-    transform = get_transform(cfg)
-
-    relevant_ids = set(window_df["window_id"])
-
-    # Read parquet with dask to handle partitions efficiently
-    ddf = dd.read_parquet(windows_dir / "windows.parquet", engine="pyarrow")
-
-    def process_partition(df: pd.DataFrame) -> pd.DataFrame:
-        if df.empty:
-            return pd.DataFrame()
-
-        if "window_id" not in df.columns:
-            return pd.DataFrame()
-
-        mask = df["window_id"].isin(relevant_ids)
-        if not mask.any():
-            return pd.DataFrame()
-
-        return df.loc[mask].copy()
-
-    # Create delayed tasks for each partition
-    delayed_partitions = ddf.to_delayed()
-
-    @delayed
-    def process_delayed(partition):
-        return process_partition(partition)
-
-    tasks = [process_delayed(part) for part in delayed_partitions]
-
-    expected_windows = len(relevant_ids)
-    with tqdm(
-        total=max(len(tasks) + expected_windows, 1),
-        desc="Preparing windows (dask)",
-        leave=True,
-    ) as pbar:
-        # execute partition filtering in parallel
-        with SharedTqdmDaskCallback(pbar):
-            partition_subsets = list(compute(*tasks, scheduler="processes"))
-
-        non_empty_subsets = [df for df in partition_subsets if not df.empty]
-        if not non_empty_subsets:
-            return {}
-
-        # Important: group globally (not per-partition), otherwise one window can be
-        # split across partitions and produce truncated arrays.
-        full_subset = pd.concat(non_empty_subsets, axis=0, ignore_index=True)
-
-        prepared: Dict[str, List[np.ndarray]] = {}
-        grouped = full_subset.groupby("window_id", sort=False)
-        for window_id, group in grouped:
-            window_data = group.drop(columns=["window_id"]).reset_index(drop=True)
-            normalized = normalize(window_data).values
-            transformed = transform(normalized)
-            prepared[str(window_id)] = [normalized, *transformed]
-            pbar.update(1)
-
-        pbar.refresh()
-
+    chunk_size = max(1, int(np.ceil(len(ids) / (workers * 4))))
+    chunks = [ids[start : start + chunk_size] for start in range(0, len(ids), chunk_size)]
+    tasks = [(cfg, norm_params, windows_dir, chunk) for chunk in chunks]
+    logger.info("Preparing windows with %d worker processes", workers)
+    prepared: Dict[str, List[np.ndarray]] = {}
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        for result in tqdm(
+            executor.map(_prepare_chunk, tasks),
+            total=len(tasks),
+            desc="Preparing window chunks",
+        ):
+            prepared.update(result)
     return prepared

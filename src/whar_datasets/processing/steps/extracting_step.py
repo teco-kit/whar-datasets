@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 from typing import List, Set, TypeAlias
 
@@ -54,3 +55,22 @@ class ExtractingStep(AbstractStep[InputT, OutputT]):
 
     def load_output(self) -> OutputT:
         return None
+
+    def output_exists(self) -> bool:
+        return self.data_dir.exists() and any(
+            path.is_file() and "hash" not in path.name.lower()
+            for path in self.data_dir.rglob("*")
+        )
+
+    def input_fingerprint(self) -> str:
+        digest = hashlib.sha256()
+        if not self.data_dir.exists():
+            return digest.hexdigest()
+        for path in sorted(self.data_dir.rglob("*")):
+            if not path.is_file() or "hash" in path.name.lower():
+                continue
+            stat = path.stat()
+            digest.update(str(path.relative_to(self.data_dir)).encode())
+            digest.update(str(stat.st_size).encode())
+            digest.update(str(stat.st_mtime_ns).encode())
+        return digest.hexdigest()

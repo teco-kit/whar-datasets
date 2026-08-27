@@ -205,7 +205,7 @@ cfg_skoda = WHARConfig(
     num_of_activities=10,
     num_of_channels=len(ALL_CHANNELS),
     datasets_dir="./datasets",
-    parallelize=True,
+    execution_backend="process",
     # Parsing
     parse=parse_skoda,
     # Preprocessing (selections + sliding window)

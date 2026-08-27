@@ -56,7 +56,8 @@ def parse_ku_har(
 
         # get activity dir
         activity_dir = os.path.join(dir, activity_dir)
-        assert os.path.isdir(activity_dir)
+        if not os.path.isdir(activity_dir):
+            raise FileNotFoundError(activity_dir)
 
         # go through activity dir
         for file in os.listdir(activity_dir):

@@ -1,7 +1,7 @@
 from typing import Dict, Tuple
 
+import numpy as np
 import pandas as pd
-import shortuuid
 
 
 def generate_windowing(
@@ -12,63 +12,44 @@ def generate_windowing(
     sampling_freq: float,
 ) -> Tuple[pd.DataFrame | None, Dict[str, pd.DataFrame] | None]:
     """Generate fixed-length sliding windows for one session."""
-    # create containers for windows and index
-    window_df_dict: Dict[str, list] = {
-        "session_id": [],
-        "window_id": [],
-    }
-    windows: Dict[str, pd.DataFrame] = {}
-
-    # specify window and stride as timedeltas
-    window_timedelta = pd.Timedelta(seconds=window_time)
-    stride_timedelta = pd.Timedelta(seconds=window_time * (1 - overlap))
-
-    # specifiy times in session
-    start_time = session_df["timestamp"].min()
-    end_time = session_df["timestamp"].max()
-    current_start_time = start_time
-
-    # generate windows from session
-    while current_start_time + window_timedelta <= end_time:
-        current_end_time = current_start_time + window_timedelta
-
-        # get mask corresponding to window
-        mask = (session_df["timestamp"] >= current_start_time) & (
-            session_df["timestamp"] < current_end_time
-        )
-
-        # get window based on mask and keep_cols and reset index
-        window_df = session_df[mask]
-        window_df = window_df.drop(columns=["timestamp"]).reset_index(drop=True)
-
-        # create unique window id
-        window_id = shortuuid.uuid(
-            name=f"{session_id}_{current_start_time.isoformat()}"
-        )
-
-        # add window to windows
-        windows[window_id] = window_df
-
-        # add window info to window index
-        window_df_dict["session_id"].append(session_id)
-        window_df_dict["window_id"].append(window_id)
-
-        # step to next window
-        current_start_time += stride_timedelta
-
-    if windows == {}:
+    if not 0 <= overlap < 1:
+        raise ValueError("overlap must be in [0, 1).")
+    window_size = int(round(window_time * sampling_freq))
+    stride = max(int(round(window_size * (1 - overlap))), 1)
+    if window_size <= 0:
+        raise ValueError("window_time and sampling_freq must define a non-empty window.")
+    if len(session_df) < window_size:
         return None, None
 
-    # compute window size from sampling freq and window time
-    window_size = int(window_time * sampling_freq)
+    starts = np.arange(0, len(session_df) - window_size + 1, stride, dtype=np.int64)
+    sensor_df = session_df.drop(columns=["timestamp"])
+    timestamps = session_df["timestamp"].reset_index(drop=True)
+    windows: Dict[str, pd.DataFrame] = {}
+    rows: list[dict[str, object]] = []
+    duration = pd.to_timedelta(window_size / sampling_freq, unit="s")
+    for ordinal, start in enumerate(starts.tolist()):
+        end = start + window_size
+        window_id = f"{session_id}:{ordinal}"
+        windows[window_id] = sensor_df.iloc[start:end].reset_index(drop=True)
+        start_time = timestamps.iloc[start]
+        rows.append(
+            {
+                "session_id": session_id,
+                "window_id": window_id,
+                "start_index": start,
+                "end_index": end,
+                "window_start": start_time,
+                "window_end": start_time + duration,
+            }
+        )
 
-    # trim to window size for batching
-    windows = {
-        window_id: window_df[:window_size] for window_id, window_df in windows.items()
-    }
-
-    # create window index
-    window_df = pd.DataFrame(window_df_dict)
-    window_df.astype({"window_id": "string", "session_id": "int"})
+    window_df = pd.DataFrame(rows).astype(
+        {
+            "session_id": "int64",
+            "window_id": "string",
+            "start_index": "int64",
+            "end_index": "int64",
+        }
+    )
 
     return window_df, windows

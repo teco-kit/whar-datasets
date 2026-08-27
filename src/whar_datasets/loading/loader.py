@@ -4,7 +4,6 @@ from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 
 from whar_datasets.loading.weighting import compute_class_weights
 from whar_datasets.utils.loading import load_sample
@@ -30,9 +29,8 @@ class Loader:
         activity_lookup = self.activity_df.drop_duplicates("activity_id").set_index(
             "activity_id"
         )["activity_name"]
-        assert not activity_lookup.isna().any(), (
-            "Missing activity_name for one or more activity_ids."
-        )
+        if activity_lookup.isna().any():
+            raise ValueError("Missing activity_name for one or more activity_ids.")
         self._activity_name_by_id = {
             int(str(activity_id)): str(activity_name)
             for activity_id, activity_name in activity_lookup.items()
@@ -56,12 +54,10 @@ class Loader:
 
         subject_series = session_meta["subject_id"].reindex(self._session_id_by_pos)
         activity_series = session_meta["activity_id"].reindex(self._session_id_by_pos)
-        assert not subject_series.isna().any(), (
-            "Missing subject_id for one or more session_ids."
-        )
-        assert not activity_series.isna().any(), (
-            "Missing activity_id for one or more session_ids."
-        )
+        if subject_series.isna().any():
+            raise ValueError("Missing subject_id for one or more session_ids.")
+        if activity_series.isna().any():
+            raise ValueError("Missing activity_id for one or more session_ids.")
 
         self._subject_by_pos = subject_series.to_numpy(dtype=np.int64)
         self._activity_by_pos = activity_series.to_numpy(dtype=np.int64)
@@ -104,16 +100,16 @@ class Loader:
     ) -> Tuple[List[int], List[int], List[List[np.ndarray]]]:
         """Sample a batch with replacement, optionally filtered by subject/activity."""
         inds = self.filter_indices(indices, subject_id, activity_id)
-        assert len(inds) > 0, "No samples found for the given filters."
+        if not inds:
+            raise ValueError("No samples found for the given filters.")
 
         rng = np.random.default_rng(seed)
         sampled_inds = rng.choice(np.asarray(inds), size=batch_size, replace=True)
         sampled_inds_list = sampled_inds.tolist()
 
         sampled_pos = self.window_df.index.get_indexer(pd.Index(sampled_inds))
-        assert np.all(sampled_pos >= 0), (
-            "One or more sampled indices are missing in window_df."
-        )
+        if not np.all(sampled_pos >= 0):
+            raise KeyError("One or more sampled indices are missing in window_df.")
 
         activity_labels = self._activity_by_pos[sampled_pos].astype(int).tolist()
         subject_labels = self._subject_by_pos[sampled_pos].astype(int).tolist()
@@ -145,7 +141,8 @@ class Loader:
         """Return sample data for a window index label."""
         pos = self._get_pos(index)
         window_id = self._window_id_by_pos[pos]
-        assert isinstance(window_id, str)
+        if not isinstance(window_id, str):
+            raise TypeError("window_id must be a string.")
         sample = self._sample_loader(window_id)
 
         return sample
@@ -156,13 +153,15 @@ class Loader:
 
     def _load_sample_from_dict(self, window_id: str) -> List[np.ndarray]:
         """Load sample by window_id from in-memory dictionary."""
-        assert self.samples_dict is not None
+        if self.samples_dict is None:
+            raise RuntimeError("The in-memory sample dictionary is unavailable.")
         return self.samples_dict[window_id]
 
     def _get_pos(self, index: int) -> int:
         """Map external window index label to its positional row offset."""
         pos = self.window_df.index.get_loc(index)
-        assert isinstance(pos, (int, np.integer)), "Expected a unique window index."
+        if not isinstance(pos, (int, np.integer)):
+            raise ValueError("Expected a unique window index.")
         return int(pos)
 
     def filter_indices(
@@ -193,9 +192,8 @@ class Loader:
 
         inds_np = np.asarray(indices)
         pos = self.window_df.index.get_indexer(pd.Index(inds_np))
-        assert np.all(pos >= 0), (
-            "One or more provided indices are missing in window_df."
-        )
+        if not np.all(pos >= 0):
+            raise KeyError("One or more provided indices are missing in window_df.")
 
         mask = np.ones(len(pos), dtype=bool)
         if subject_id is not None:
@@ -206,6 +204,8 @@ class Loader:
         return inds_np[mask].tolist()
 
     def plot_indices_statistics(self, indices: List[int] | None = None) -> None:
+        from matplotlib import pyplot as plt
+
         indices = indices or self._window_indices.copy()
 
         subset = self.window_df.loc[indices]

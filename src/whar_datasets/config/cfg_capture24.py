@@ -111,7 +111,9 @@ def _find_subject_files(dir: str, dictionary_file: str | None) -> List[str]:
 def _resolve_dictionary_columns(
     dictionary_df: pd.DataFrame, activity_id_col: str
 ) -> Tuple[str, str]:
-    col_norm: Dict[str, str] = {col: _normalize_token(col) for col in dictionary_df}
+    col_norm: Dict[str, str] = {
+        str(col): _normalize_token(col) for col in dictionary_df
+    }
     normalized_to_original = {norm: col for col, norm in col_norm.items()}
 
     annotation_candidates = [

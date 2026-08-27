@@ -119,7 +119,7 @@ def parse_real_disp(
             **{col: "float32" for col in SENSOR_COLUMNS},
         }
         try:
-            df = pd.read_csv(
+            df = pd.read_csv(  # type: ignore[call-overload]
                 log_path,
                 sep="\t",
                 header=None,

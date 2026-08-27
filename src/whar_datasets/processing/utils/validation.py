@@ -1,15 +1,13 @@
+import os
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List
 
-import dask.dataframe as dd
 import pandas as pd
-from dask.base import compute
-from dask.delayed import delayed
 from tqdm import tqdm
 
 from whar_datasets.config.config import WHARConfig
-from whar_datasets.processing.utils.dask_progress import SharedTqdmDaskCallback
-from whar_datasets.utils.loading import load_session
+from whar_datasets.utils.loading import load_session, load_sessions
 from whar_datasets.utils.logging import logger
 
 
@@ -19,194 +17,131 @@ def validate_common_format(
     activity_df: pd.DataFrame,
     session_df: pd.DataFrame,
 ) -> bool:
-    """Validate common-format metadata and session payload dtypes/shapes."""
+    """Validate LOSO metadata and all time-series session payloads."""
     logger.info("Validating common format")
+    required_session = {"session_id", "subject_id", "activity_id"}
+    required_activity = {"activity_id", "activity_name"}
+    if not required_session.issubset(session_df.columns):
+        logger.error("Session metadata lacks required columns: %s", required_session - set(session_df))
+        return False
+    if not required_activity.issubset(activity_df.columns):
+        logger.error("Activity metadata lacks required columns: %s", required_activity - set(activity_df))
+        return False
 
-    # Check session_df
-    if not pd.api.types.is_integer_dtype(session_df["session_id"]):
-        logger.error("'session_id' column is not integer type.")
+    for column in required_session:
+        if not pd.api.types.is_integer_dtype(session_df[column]):
+            logger.error("'%s' column is not integer type.", column)
+            return False
+    if (session_df[["session_id", "subject_id", "activity_id"]].min() != 0).any():
+        logger.error("Session, subject, and activity identifiers must start at zero.")
         return False
-    if not pd.api.types.is_integer_dtype(session_df["subject_id"]):
-        logger.error("'subject_id' column is not integer type.")
-        return False
-    if not pd.api.types.is_integer_dtype(session_df["activity_id"]):
-        logger.error("'activity_id' column is not integer type.")
-        return False
-    if session_df["session_id"].min() != 0:
-        logger.error("Minimum session_id is not 0.")
-        return False
-    if session_df["subject_id"].min() != 0:
-        logger.error("Minimum subject_id is not 0.")
-        return False
-    if session_df["activity_id"].min() != 0:
-        logger.error("Minimum activity_id is not 0.")
+    if session_df["session_id"].duplicated().any():
+        logger.error("Each session_id must have exactly one metadata row.")
         return False
     if session_df["subject_id"].nunique() != cfg.num_of_subjects:
-        logger.error(
-            f"In session_df, num of subject_ids {session_df['subject_id'].nunique()} does not match num of subjects {cfg.num_of_subjects}."
-        )
+        logger.error("Subject count does not match the dataset configuration.")
         return False
     if session_df["activity_id"].nunique() != cfg.num_of_activities:
-        logger.error(
-            f"In session_df, number of activity_ids {session_df['activity_id'].nunique()} does not match number of activities {cfg.num_of_activities} ."
-        )
+        logger.error("Activity count does not match the dataset configuration.")
         return False
-
-    # Check activity_df
     if not pd.api.types.is_integer_dtype(activity_df["activity_id"]):
-        logger.error("'activity_id' column is not integer type.")
+        logger.error("activity_id is not integer type.")
         return False
-    if not pd.api.types.is_string_dtype(activity_df["activity_name"]):
-        logger.error("'activity_name' column is not string type.")
-        return False
-    if activity_df["activity_id"].min() != 0:
-        logger.error("Minimum activity_id is not 0.")
+    if activity_df["activity_name"].isna().any():
+        logger.error("One or more activity names are missing.")
         return False
     if activity_df["activity_id"].nunique() != cfg.num_of_activities:
-        logger.error("Number of activity_ids does not match number of activities.")
+        logger.error("Activity metadata count does not match the configuration.")
         return False
 
-    validated = (
+    use_processes = cfg.execution_backend == "process"
+    valid = (
         validate_sessions_para(cfg, sessions_dir, session_df)
-        if cfg.parallelize
+        if use_processes
         else validate_sessions_seq(cfg, sessions_dir, session_df)
     )
+    if valid:
+        logger.info("Common format validated.")
+    return valid
 
-    if not validated:
+
+def _validate_session_frame(
+    cfg: WHARConfig, session_id: int, session: pd.DataFrame
+) -> bool:
+    if "timestamp" not in session:
+        logger.error("Session %s has no timestamp column.", session_id)
         return False
-
-    logger.info("Common format validated.")
+    if not pd.api.types.is_datetime64_any_dtype(session["timestamp"]):
+        logger.error("timestamp in session %s is not datetime64.", session_id)
+        return False
+    if not session["timestamp"].is_monotonic_increasing:
+        logger.error("Timestamps in session %s are not monotonic.", session_id)
+        return False
+    if cfg.max_session_gap_seconds is not None:
+        gaps = session["timestamp"].diff().dt.total_seconds()
+        if (gaps > cfg.max_session_gap_seconds).any():
+            logger.error(
+                "Session %s contains a %.3fs gap; split it into separate sessions.",
+                session_id,
+                float(gaps.max()),
+            )
+            return False
+    sensor_columns = session.columns.difference(["timestamp"])
+    if len(sensor_columns) != cfg.num_of_channels:
+        logger.error(
+            "Session %s has %d channels; expected %d.",
+            session_id,
+            len(sensor_columns),
+            cfg.num_of_channels,
+        )
+        return False
+    if any(not pd.api.types.is_float_dtype(session[column]) for column in sensor_columns):
+        logger.error("Session %s contains a non-floating sensor channel.", session_id)
+        return False
+    if session.isna().any().any():
+        logger.error("Session %s contains NaN values.", session_id)
+        return False
     return True
 
 
 def validate_sessions_seq(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
 ) -> bool:
-    """Validate all sessions sequentially."""
-    loop = tqdm(session_df["session_id"])
-    loop.set_description("Validating sessions")
+    session_ids = [int(value) for value in session_df["session_id"]]
+    sessions = load_sessions(sessions_dir, session_ids=session_ids)
+    if set(sessions) != set(session_ids):
+        logger.error("Session cache and metadata identifiers differ.")
+        return False
+    return all(
+        _validate_session_frame(cfg, session_id, sessions[session_id])
+        for session_id in tqdm(session_ids, desc="Validating sessions")
+    )
 
-    for session_id in loop:
-        if not validate_session(cfg, sessions_dir, session_id):
-            return False
 
-    return True
+def _validate_from_disk(args: tuple[WHARConfig, Path, int]) -> bool:
+    cfg, sessions_dir, session_id = args
+    return _validate_session_frame(cfg, session_id, load_session(sessions_dir, session_id))
 
 
 def validate_sessions_para(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
 ) -> bool:
-    """Validate all sessions in parallel using Dask partitions."""
-    relevant_ids = set(session_df["session_id"])
-
-    # Read sessions parquet with dask
-    ddf = dd.read_parquet(sessions_dir / "sessions.parquet", engine="pyarrow")
-
-    def validate_partition(df: pd.DataFrame) -> List[bool]:
-        results: List[bool] = []
-        if df.empty:
-            return results
-
-        if "session_id" not in df.columns:
-            return results
-
-        # Filter for relevant sessions
-        mask = df["session_id"].isin(relevant_ids)
-        if not mask.any():
-            return results
-
-        subset = df[mask]
-
-        for session_id, group in subset.groupby("session_id"):
-            # Drop session_id to match load_session behavior
-            session = group.drop(columns=["session_id"]).reset_index(drop=True)
-
-            # Validation logic
-            is_valid = True
-
-            if not pd.api.types.is_datetime64_dtype(session["timestamp"]):
-                logger.error(session["timestamp"].dtype)
-                logger.error(
-                    f"'timestamp' column in {session_id} is not datetime64 type."
-                )
-                is_valid = False
-
-            elif len(session.columns.difference(["timestamp"])) != cfg.num_of_channels:
-                logger.error(session.columns.difference(["timestamp"]))
-                logger.error(
-                    f"Number of columns {len(session.columns.difference(['timestamp']))} in {session_id} does not match number of channel {cfg.num_of_channels}."
-                )
-                is_valid = False
-
-            else:
-                for col in session.columns.difference(["timestamp"]):
-                    if not pd.api.types.is_float_dtype(session[col]):
-                        logger.error(
-                            f"Column '{col}' in {session_id} is not float type."
-                        )
-                        is_valid = False
-                        break
-
-                if is_valid and session.isna().any().any():
-                    logger.error(f"Session file {session_id} contains NaN values.")
-                    is_valid = False
-
-            results.append(is_valid)
-
-        return results
-
-    logger.info("Validating sessions (parallelized)")
-
-    # Create delayed tasks
-    delayed_partitions = ddf.to_delayed()
-
-    @delayed
-    def validate_delayed(partition):
-        return validate_partition(partition)
-
-    tasks = [validate_delayed(part) for part in delayed_partitions]
-
-    # execute tasks in parallel
-    with tqdm(
-        total=max(len(tasks), 1),
-        desc="Validating sessions (dask)",
-        leave=True,
-    ) as pbar:
-        with SharedTqdmDaskCallback(pbar):
-            results_list = list(compute(*tasks, scheduler="processes"))
-        pbar.refresh()
-
-    # Flatten results
-    all_results = []
-    for partition_results in results_list:
-        all_results.extend(partition_results)
-
-    return all(all_results)
+    session_ids = [int(value) for value in session_df["session_id"]]
+    requested = cfg.num_workers or (os.cpu_count() or 1)
+    workers = max(1, min(requested, len(session_ids)))
+    if workers == 1:
+        return validate_sessions_seq(cfg, sessions_dir, session_df)
+    tasks = [(cfg, sessions_dir, session_id) for session_id in session_ids]
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        results: List[bool] = list(
+            tqdm(
+                executor.map(_validate_from_disk, tasks),
+                total=len(tasks),
+                desc="Validating sessions",
+            )
+        )
+    return len(results) == len(session_ids) and all(results)
 
 
 def validate_session(cfg: WHARConfig, sessions_dir: Path, session_id: int) -> bool:
-    """Validate one cached session dataframe against config expectations."""
-    session = load_session(sessions_dir, session_id)
-
-    if not pd.api.types.is_datetime64_dtype(session["timestamp"]):
-        logger.error(session["timestamp"].dtype)
-        logger.error(f"'timestamp' column in {session_id} is not datetime64 type.")
-        return False
-
-    if len(session.columns.difference(["timestamp"])) != cfg.num_of_channels:
-        logger.error(session.columns.difference(["timestamp"]))
-        logger.error(
-            f"Number of columns {len(session.columns.difference(['timestamp']))} in {session_id} does not match number of channel {cfg.num_of_channels}."
-        )
-        return False
-
-    for col in session.columns.difference(["timestamp"]):
-        if not pd.api.types.is_float_dtype(session[col]):
-            logger.error(f"Column '{col}' in {session_id} is not float type.")
-            return False
-
-    if session.isna().any().any():
-        logger.error(f"Session file {session_id} contains NaN values.")
-        return False
-
-    return True
+    return _validate_session_frame(cfg, session_id, load_session(sessions_dir, session_id))
