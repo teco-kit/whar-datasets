@@ -169,7 +169,6 @@ cfg_bmhad = WHARConfig(
     num_of_subjects=12,
     num_of_activities=len(BMHAD_ACTIVITY_NAMES),
     num_of_channels=len(BMHAD_SENSOR_CHANNELS),
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_bmhad,
     # Preprocessing (selections + sliding window)
@@ -177,8 +176,5 @@ cfg_bmhad = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=BMHAD_SENSOR_CHANNELS,
     selected_channels=BMHAD_SENSOR_CHANNELS,
-    window_time=2,
-    window_overlap=0.5,
-    execution_backend="process",
     # Training (split info)
 )

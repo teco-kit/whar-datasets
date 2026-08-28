@@ -310,7 +310,6 @@ cfg_pamap2 = WHARConfig(
     num_of_subjects=9,
     num_of_activities=13,
     num_of_channels=52,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_pamap2,
     # Preprocessing (selections + sliding window)
@@ -318,7 +317,5 @@ cfg_pamap2 = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=1.28,
-    window_overlap=0.5,
     # Training (split info)
 )

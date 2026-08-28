@@ -24,6 +24,7 @@ def _canonical_activity_label(raw_label: str) -> str:
         "stand": "Standing",
         "standing": "Standing",
         "jumpundefined": "Jumping",
+        "undefined": "Unknown",
         "jump": "Jumping",
         "jumping": "Jumping",
         "liedown": "Lying",
@@ -273,6 +274,4 @@ cfg_w_har = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=1.28,
-    window_overlap=0.5,
 )

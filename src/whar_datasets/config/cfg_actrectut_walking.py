@@ -227,8 +227,6 @@ cfg_actrectut_walking = WHARConfig(
     num_of_subjects=2,
     num_of_activities=6,
     num_of_channels=len(ACTRECTUT_WALKING_CHANNELS),
-    datasets_dir="./datasets",
-    execution_backend="process",
     # Parsing
     parse=parse_actrectut_walking,
     # Preprocessing (selections + sliding window)
@@ -238,7 +236,5 @@ cfg_actrectut_walking = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ACTRECTUT_WALKING_CHANNELS,
     selected_channels=ACTRECTUT_WALKING_CHANNELS,
-    window_time=2,
-    window_overlap=0.5,
     # Training (split info)
 )

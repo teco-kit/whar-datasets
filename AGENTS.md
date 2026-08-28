@@ -242,6 +242,8 @@ uv run --with pytest python -m pytest tests/test_dataset_requirements.py -q
 
 Before running, confirm that the test's dataset root matches `cfg.datasets_dir`.
 Do not copy or redownload datasets solely to satisfy a hard-coded test path.
+When using a non-default cache root, set `WHAR_DATASETS_DIR` to that root; the
+tests use it for cached artifacts and raw parser checks.
 
 ## Full parser end-to-end tests
 

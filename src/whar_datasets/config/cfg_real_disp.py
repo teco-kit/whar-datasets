@@ -273,7 +273,6 @@ cfg_real_disp = WHARConfig(
     num_of_subjects=17,
     num_of_activities=34,
     num_of_channels=117,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_real_disp,
     activity_id_col="activity_id",
@@ -282,6 +281,4 @@ cfg_real_disp = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=SENSOR_COLUMNS,
     selected_channels=SENSOR_COLUMNS,
-    window_time=3,
-    window_overlap=0.5,
 )

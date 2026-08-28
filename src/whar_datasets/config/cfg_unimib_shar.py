@@ -158,12 +158,9 @@ cfg_unimib = WHARConfig(
     num_of_subjects=30,
     num_of_activities=17,
     num_of_channels=3,
-    datasets_dir="./datasets",
     parse=parse_unimib,
     available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=3.02,
-    window_overlap=0.5,
 )

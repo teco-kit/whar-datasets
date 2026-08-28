@@ -19,7 +19,11 @@ def parse_daphnet(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
     dir = os.path.join(dir, "dataset_fog_release/dataset/")
 
-    files = [f for f in os.listdir(dir) if f.endswith(".txt")]
+    files = sorted(
+        f
+        for f in os.listdir(dir)
+        if f.endswith(".txt") and not f.startswith("._")
+    )
 
     sub_dfs = []
 
@@ -174,7 +178,6 @@ cfg_daphnet = WHARConfig(
     num_of_subjects=10,
     num_of_activities=3,
     num_of_channels=9,
-    datasets_dir="./datasets",
     # Parsing fields
     parse=parse_daphnet,
     activity_id_col="activity_id",
@@ -183,7 +186,5 @@ cfg_daphnet = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=1.0,
-    window_overlap=0.5,
     # Training fields (flattened splits)
 )

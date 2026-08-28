@@ -21,7 +21,6 @@ cfg_dummy = WHARConfig(
     num_of_subjects=36,
     num_of_activities=6,
     num_of_channels=3,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_dummy,
     # Preprocessing (selections + sliding window)
@@ -29,7 +28,5 @@ cfg_dummy = WHARConfig(
     selected_activities=[],
     available_channels=[],
     selected_channels=[],
-    window_time=2,
-    window_overlap=0.5,
     # Training (split info)
 )

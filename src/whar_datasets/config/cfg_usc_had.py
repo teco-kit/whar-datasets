@@ -184,6 +184,4 @@ cfg_usc_had = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=1.28,
-    window_overlap=0.5,
 )

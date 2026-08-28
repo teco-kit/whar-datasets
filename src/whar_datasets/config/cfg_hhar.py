@@ -282,7 +282,6 @@ cfg_hhar = WHARConfig(
     num_of_subjects=9,
     num_of_activities=6,
     num_of_channels=6,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_hhar,
     activity_id_col="activity_id",
@@ -291,8 +290,5 @@ cfg_hhar = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=HHAR_SENSOR_CHANNELS,
     selected_channels=HHAR_SENSOR_CHANNELS,
-    window_time=5,
-    window_overlap=0.5,
-    execution_backend="process",
     # Training (split info)
 )

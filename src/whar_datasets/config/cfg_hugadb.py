@@ -203,7 +203,6 @@ cfg_hugadb = WHARConfig(
     num_of_subjects=18,
     num_of_activities=12,
     num_of_channels=38,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_hugadb,
     # Preprocessing (selections + sliding window)
@@ -211,6 +210,4 @@ cfg_hugadb = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=2,
-    window_overlap=0.5,
 )

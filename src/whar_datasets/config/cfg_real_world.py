@@ -376,7 +376,6 @@ cfg_real_world = WHARConfig(
     num_of_subjects=15,
     num_of_activities=8,
     num_of_channels=len(REAL_WORLD_SENSOR_CHANNELS),
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_real_world,
     # Preprocessing (selections + sliding window)
@@ -384,6 +383,4 @@ cfg_real_world = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=REAL_WORLD_SENSOR_CHANNELS,
     selected_channels=REAL_WORLD_SENSOR_CHANNELS,
-    window_time=2.56,
-    window_overlap=0.5,
 )

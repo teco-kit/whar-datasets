@@ -209,7 +209,6 @@ cfg_uca_ehar = WHARConfig(
     num_of_subjects=20,
     num_of_activities=12,
     num_of_channels=7,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_uca_ehar,
     activity_id_col="activity_id",
@@ -218,8 +217,5 @@ cfg_uca_ehar = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=UCA_EHAR_SENSOR_CHANNELS,
     selected_channels=UCA_EHAR_SENSOR_CHANNELS,
-    window_time=2,
-    window_overlap=0.5,
-    execution_backend="process",
     # Training (split info)
 )

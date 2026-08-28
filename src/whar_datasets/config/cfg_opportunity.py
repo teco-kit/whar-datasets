@@ -505,8 +505,6 @@ cfg_opportunity = WHARConfig(
     num_of_subjects=4,
     num_of_activities=5,  # 18,
     num_of_channels=133,
-    datasets_dir="./datasets",
-    execution_backend="process",
     # Parsing
     parse=parse_opportunity,
     activity_id_col="Locomotion",  # "ML_Both_Arms"
@@ -517,7 +515,5 @@ cfg_opportunity = WHARConfig(
     ),
     available_channels=SENSOR_COLS[1:],
     selected_channels=SENSOR_COLS[1:],
-    window_time=1,
-    window_overlap=0.5,
     # Training (split info)
 )

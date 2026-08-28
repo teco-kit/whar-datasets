@@ -148,7 +148,6 @@ cfg_utd_mhad = WHARConfig(
     num_of_subjects=8,
     num_of_activities=27,
     num_of_channels=6,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_utd_mhad,
     # Preprocessing (selections + sliding window)
@@ -156,7 +155,5 @@ cfg_utd_mhad = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=2,
-    window_overlap=0.5,
     # Training (split info)
 )

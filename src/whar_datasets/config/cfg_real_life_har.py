@@ -380,8 +380,6 @@ cfg_real_life_har = WHARConfig(
     num_of_subjects=17,
     num_of_activities=4,
     num_of_channels=len(REAL_LIFE_HAR_SENSOR_CHANNELS),
-    datasets_dir="./datasets",
-    execution_backend="process",
     # Parsing
     parse=parse_real_life_har,
     activity_id_col="activity_id",
@@ -390,6 +388,4 @@ cfg_real_life_har = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=REAL_LIFE_HAR_SENSOR_CHANNELS,
     selected_channels=REAL_LIFE_HAR_SENSOR_CHANNELS,
-    window_time=2.56,
-    window_overlap=0.5,
 )

@@ -253,7 +253,6 @@ cfg_ku_har = WHARConfig(
     num_of_subjects=89,
     num_of_activities=18,
     num_of_channels=6,
-    datasets_dir="./datasets",
     # Parsing fields
     parse=parse_ku_har,
     activity_id_col="activity_id",
@@ -262,8 +261,6 @@ cfg_ku_har = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=2.56,
-    window_overlap=0.5,
     # Training fields (flattened splits)
     normalization=NormType.ROBUST_SCALE_GLOBALLY,
 )

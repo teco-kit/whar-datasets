@@ -212,7 +212,6 @@ cfg_hapt = WHARConfig(
     num_of_subjects=30,
     num_of_activities=12,
     num_of_channels=6,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_hapt,
     # Preprocessing (selections + sliding window)
@@ -220,6 +219,4 @@ cfg_hapt = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=2.56,
-    window_overlap=0.5,
 )

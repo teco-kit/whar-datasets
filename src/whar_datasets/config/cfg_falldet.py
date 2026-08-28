@@ -46,11 +46,17 @@ def _resolve_falldet_root(data_dir: str) -> Path:
     for candidate in candidates:
         if not candidate.is_dir():
             continue
-        if any(candidate.glob("*/*.csv")):
+        if any(
+            path.is_file() and not path.name.startswith("._")
+            for path in candidate.glob("*/*.csv")
+        ):
             return candidate
 
     for candidate in base.rglob("*"):
-        if candidate.is_dir() and any(candidate.glob("*/*.csv")):
+        if candidate.is_dir() and any(
+            path.is_file() and not path.name.startswith("._")
+            for path in candidate.glob("*/*.csv")
+        ):
             return candidate
 
     raise FileNotFoundError(f"Could not locate FallDet CSV files under '{data_dir}'.")
@@ -154,7 +160,11 @@ def parse_falldet(
     root = _resolve_falldet_root(dir)
     scheme = _select_activity_scheme(activity_id_col)
 
-    session_files = sorted(root.glob("*/*.csv"))
+    session_files = sorted(
+        path
+        for path in root.glob("*/*.csv")
+        if path.is_file() and not path.name.startswith("._")
+    )
     if not session_files:
         raise FileNotFoundError(f"No FallDet CSV files found in '{root}'.")
 
@@ -222,14 +232,10 @@ cfg_falldet = WHARConfig(
     num_of_subjects=48,
     num_of_activities=6,
     num_of_channels=3,
-    datasets_dir="./datasets",
     parse=parse_falldet,
     activity_id_col="activity_id",
     available_activities=canonicalize_activity_name_list(FALLDET_FINE_ACTIVITY_NAMES),
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=FALLDET_SENSOR_CHANNELS,
     selected_channels=FALLDET_SENSOR_CHANNELS,
-    window_time=3,
-    window_overlap=0.5,
-    execution_backend="process",
 )

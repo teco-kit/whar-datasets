@@ -276,7 +276,6 @@ cfg_uma_fall = WHARConfig(
     num_of_subjects=19,
     num_of_activities=15,
     num_of_channels=39,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_uma_fall,
     # Preprocessing (selections + sliding window)
@@ -284,6 +283,4 @@ cfg_uma_fall = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=UMA_SENSOR_CHANNELS,
     selected_channels=UMA_SENSOR_CHANNELS,
-    window_time=3,
-    window_overlap=0.5,
 )

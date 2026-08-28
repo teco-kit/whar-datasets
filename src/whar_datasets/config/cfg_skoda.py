@@ -204,8 +204,6 @@ cfg_skoda = WHARConfig(
     num_of_subjects=1,
     num_of_activities=10,
     num_of_channels=len(ALL_CHANNELS),
-    datasets_dir="./datasets",
-    execution_backend="process",
     # Parsing
     parse=parse_skoda,
     # Preprocessing (selections + sliding window)
@@ -213,7 +211,5 @@ cfg_skoda = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SKODA_ACTIVITY_NAMES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=2,
-    window_overlap=0.5,
     # Training (split info)
 )

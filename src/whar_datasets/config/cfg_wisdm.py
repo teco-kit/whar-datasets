@@ -231,7 +231,6 @@ cfg_wisdm = WHARConfig(
     num_of_subjects=36,
     num_of_activities=6,
     num_of_channels=3,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_wisdm_12,
     # Preprocessing (selections + sliding window)
@@ -239,7 +238,5 @@ cfg_wisdm = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=5,
-    window_overlap=0.5,
     # Training (split info)
 )

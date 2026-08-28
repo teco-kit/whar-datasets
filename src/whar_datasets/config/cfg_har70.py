@@ -181,7 +181,6 @@ cfg_har70 = WHARConfig(
     num_of_subjects=18,
     num_of_activities=len(HAR70_ACTIVITY_NAMES),
     num_of_channels=len(HAR70_SENSOR_CHANNELS),
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_har70,
     activity_id_col="activity_id",
@@ -190,8 +189,5 @@ cfg_har70 = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=HAR70_SENSOR_CHANNELS,
     selected_channels=HAR70_SENSOR_CHANNELS,
-    window_time=3,
-    window_overlap=0.5,
-    execution_backend="process",
     # Training (split info)
 )

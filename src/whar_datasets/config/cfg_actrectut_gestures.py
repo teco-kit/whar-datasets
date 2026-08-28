@@ -230,8 +230,6 @@ cfg_actrectut_gestures = WHARConfig(
     num_of_subjects=2,
     num_of_activities=12,
     num_of_channels=len(HAND_GESTURES_CHANNELS),
-    datasets_dir="./datasets",
-    execution_backend="process",
     # Parsing
     parse=parse_actrectut_gestures,
     # Preprocessing (selections + sliding window)
@@ -239,7 +237,5 @@ cfg_actrectut_gestures = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=HAND_GESTURES_CHANNELS,
     selected_channels=HAND_GESTURES_CHANNELS,
-    window_time=2,
-    window_overlap=0.5,
     # Training (split info)
 )

@@ -7,12 +7,16 @@ import pandas as pd
 import pytest
 
 from whar_datasets.config.getter import WHARDatasetID, get_dataset_cfg, har_dataset_dict
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
+from whar_datasets.config.config import WINDOW_TIME_MEDIUM
+from whar_datasets.config.cfg_daphnet import parse_daphnet
 from whar_datasets.config.cfg_uci_har import get_df_from_files_uci_har
 from whar_datasets.config.cfg_wisdm_19_phone import (
     WISDM_19_MAX_GAP_NS,
     parse_wisdm_19_phone,
 )
 from whar_datasets.config.cfg_wisdm_19_watch import parse_wisdm_19_watch
+from whar_datasets.config.cfg_w_har import parse_w_har
 from whar_datasets.processing.utils.caching import cache_common_format
 from whar_datasets.processing.utils.selecting import select_activities
 from whar_datasets.processing.utils.sessions import process_session
@@ -157,6 +161,58 @@ def test_whar_dataset_enum_and_registry_are_in_sync() -> None:
     assert set(har_dataset_dict.keys()) == implemented_ids
 
 
+@pytest.mark.parametrize(("dataset_id", "cfg"), CFG_ITEMS)
+def test_activity_config_names_are_canonicalized_and_stable(
+    dataset_id: WHARDatasetID, cfg
+) -> None:
+    del dataset_id
+    available = list(cfg.available_activities)
+    selected = list(cfg.selected_activities or [])
+
+    assert canonicalize_activity_name_list(available) == available
+    assert canonicalize_activity_name_list(selected) == selected
+    assert len(available) == len(set(available))
+    assert len(selected) == len(set(selected))
+    assert set(selected).issubset(available)
+
+
+def test_activity_name_canonicalization_handles_config_label_variants() -> None:
+    raw_names = [
+        "falling forward using hands",
+        "sittingSofa",
+        "not_labeled",
+        "walking-downstairs",
+    ]
+
+    canonical = canonicalize_activity_name_list(raw_names)
+
+    assert canonical == [
+        "Falling Forward Using Hands",
+        "Sitting Sofa",
+        "Not Labeled",
+        "Walking Downstairs",
+    ]
+    assert canonicalize_activity_name_list(canonical) == canonical
+
+
+@pytest.mark.parametrize(("dataset_id", "cfg"), CFG_ITEMS)
+def test_all_dataset_configs_use_global_window_time(
+    dataset_id: WHARDatasetID, cfg
+) -> None:
+    del dataset_id
+    assert cfg.window_time == WINDOW_TIME_MEDIUM == 2.0
+
+
+@pytest.mark.parametrize(("dataset_id", "cfg"), CFG_ITEMS)
+def test_all_dataset_configs_use_global_processing_defaults(
+    dataset_id: WHARDatasetID, cfg
+) -> None:
+    del dataset_id
+    assert cfg.window_overlap == 0.5
+    assert cfg.execution_backend == "sequential"
+    assert cfg.datasets_dir == "./datasets/"
+
+
 def test_w_har_defaults_exclude_unknown_activity() -> None:
     cfg = har_dataset_dict[WHARDatasetID.W_HAR]
     assert "Unknown" in cfg.available_activities
@@ -168,9 +224,27 @@ def test_selected_activities_exclude_null_classes(
     dataset_id: WHARDatasetID, cfg
 ) -> None:
     del dataset_id
-    null_names = {"null", "unknown", "not labeled", "no activity"}
+    null_names = {
+        "null",
+        "unknown",
+        "undefined",
+        "none",
+        "other",
+        "notlabeled",
+        "notlabelled",
+        "unlabeled",
+        "unlabelled",
+        "noactivity",
+        "background",
+        "na",
+        "nan",
+    }
+
+    def normalize(label: str) -> str:
+        return "".join(char for char in label.lower() if char.isalnum())
+
     assert not any(
-        activity.lower().replace("_", " ") in null_names
+        normalize(activity) in null_names
         for activity in (cfg.selected_activities or [])
     )
 
@@ -229,6 +303,46 @@ def test_uci_har_deoverlap_keeps_one_nonoverlapping_half(tmp_path: Path) -> None
 
 def test_wisdm19_gap_threshold_uses_raw_nanoseconds() -> None:
     assert WISDM_19_MAX_GAP_NS == 1_000_000_000
+
+
+def test_daphnet_parser_ignores_macos_sidecar_files(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "dataset_fog_release" / "dataset"
+    raw_dir.mkdir(parents=True)
+    rows = "\n".join(
+        f"{index * 16} 1 2 3 4 5 6 7 8 9 {activity}"
+        for index, activity in enumerate([0, 0, 1, 1])
+    )
+    (raw_dir / "S01R01.txt").write_text(rows + "\n")
+    (raw_dir / "._S01R01.txt").write_bytes(b"Mac OS X sidecar metadata")
+
+    activity_df, session_df, sessions = parse_daphnet(str(tmp_path), "activity_id")
+
+    assert len(activity_df) == 2
+    assert len(session_df) == len(sessions) == 2
+
+
+def test_w_har_parser_maps_undefined_to_excluded_unknown_class(tmp_path: Path) -> None:
+    motion_header = "Time (s),User,Scenerio,Trial,Ax,Ay,Az,GyroX,GyroY,GyroZ"
+    motion_rows = [
+        "0.0,1,1,1,1,2,3,4,5,6,undefined",
+        "0.004,1,1,1,1,2,3,4,5,6,walk",
+    ]
+    stretch_header = "Time (s),User,Scenerio,Trial,Stretch Value"
+    stretch_rows = [
+        "0.0,1,1,1,10,undefined",
+        "0.01,1,1,1,11,walk",
+    ]
+    (tmp_path / "motion_data_22_users.csv").write_text(
+        "\n".join([motion_header, *motion_rows]) + "\n"
+    )
+    (tmp_path / "stretch_data_22_users.csv").write_text(
+        "\n".join([stretch_header, *stretch_rows]) + "\n"
+    )
+
+    activity_df, session_df, sessions = parse_w_har(str(tmp_path), "activity_id")
+
+    assert "Unknown" in set(activity_df["activity_name"])
+    assert len(session_df) == len(sessions) == 2
 
 
 @pytest.mark.parametrize(

@@ -249,7 +249,6 @@ cfg_motion_sense = WHARConfig(
     num_of_subjects=24,
     num_of_activities=6,
     num_of_channels=18,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_motion_sense,
     activity_id_col="activity_id",
@@ -258,7 +257,5 @@ cfg_motion_sense = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=2.56,
-    window_overlap=0.5,
     # Training (split info)
 )

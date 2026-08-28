@@ -27,7 +27,13 @@ def _config_for_dataset(dataset_id: str) -> WHARConfig:
 
 
 def _dataset_cache_paths(dataset_id: str) -> Tuple[Path, Path, Path, Path]:
-    dataset_dir = Path(_config_for_dataset(dataset_id).datasets_dir) / dataset_id
+    configured_root = os.environ.get("WHAR_DATASETS_DIR")
+    datasets_root = Path(
+        configured_root
+        if configured_root is not None
+        else _config_for_dataset(dataset_id).datasets_dir
+    )
+    dataset_dir = datasets_root / dataset_id
     metadata_dir = dataset_dir / "metadata"
     sessions_dir = dataset_dir / "sessions"
     windows_dir = dataset_dir / "windows"
@@ -192,7 +198,13 @@ def _assert_windowing_integrity(
     cfg: WHARConfig, dataset_id: str, session_df: pd.DataFrame
 ) -> None:
     _, sessions_dir, windows_dir, _ = _dataset_cache_paths(dataset_id)
-    metadata_dir = Path(_config_for_dataset(dataset_id).datasets_dir) / dataset_id / "metadata"
+    configured_root = os.environ.get("WHAR_DATASETS_DIR")
+    datasets_root = Path(
+        configured_root
+        if configured_root is not None
+        else _config_for_dataset(dataset_id).datasets_dir
+    )
+    metadata_dir = datasets_root / dataset_id / "metadata"
     window_df_path = metadata_dir / "window_df.parquet"
     windows_path = windows_dir / "manifest.json"
 

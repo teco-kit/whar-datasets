@@ -268,12 +268,9 @@ cfg_sad = WHARConfig(
     num_of_subjects=10,
     num_of_activities=7,
     num_of_channels=60,
-    datasets_dir="./datasets",
     parse=parse_sad,
     available_activities=canonicalize_activity_name_list(SAD_ACTIVITY_NAMES),
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=2.56,
-    window_overlap=0.5,
 )

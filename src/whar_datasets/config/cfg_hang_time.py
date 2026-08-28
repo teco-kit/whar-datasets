@@ -396,13 +396,10 @@ cfg_hang_time = WHARConfig(
     num_of_subjects=24,
     num_of_activities=6,
     num_of_channels=3,
-    execution_backend="process",
     parse=parse_hang_time,
     activity_id_col="locomotion",
     available_activities=canonicalize_activity_name_list(ALL_ACTIVITIES),
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=2.56,
-    window_overlap=0.5,
 )

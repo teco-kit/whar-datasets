@@ -307,6 +307,4 @@ cfg_wisdm_19_watch = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=5,
-    window_overlap=0.5,
 )

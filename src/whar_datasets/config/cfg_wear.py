@@ -220,7 +220,6 @@ cfg_wear = WHARConfig(
     num_of_subjects=24,
     num_of_activities=18,
     num_of_channels=12,
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_wear,
     activity_id_col="activity_id",
@@ -229,8 +228,5 @@ cfg_wear = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=WEAR_SENSOR_CHANNELS,
     selected_channels=WEAR_SENSOR_CHANNELS,
-    window_time=2,
-    window_overlap=0.5,
-    execution_backend="process",
     # Training (split info)
 )

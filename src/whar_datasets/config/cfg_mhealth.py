@@ -244,7 +244,6 @@ cfg_mhealth = WHARConfig(
     num_of_subjects=10,
     num_of_activities=13,
     num_of_channels=23,
-    datasets_dir="./datasets",
     # Parsing fields
     parse=parse_mhealth,
     activity_id_col="activity_id",
@@ -253,6 +252,4 @@ cfg_mhealth = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=2.56,
-    window_overlap=0.5,
 )

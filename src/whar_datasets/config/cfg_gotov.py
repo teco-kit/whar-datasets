@@ -82,6 +82,15 @@ GOTOV_ACTIVITY_NAMES_PREDICTED: List[str] = [
 ]
 
 GOTOV_GAP_MULTIPLIER: float = 3.0
+GOTOV_ENERGY_SENSOR_COLUMNS: List[str] = [
+    "time",
+    *GOTOV_GENEACTIV_CHANNELS,
+    *list(GOTOV_COSMED_SOURCE_TO_CHANNEL.keys()),
+]
+GOTOV_EQUIVITAL_SOURCE_COLUMNS: List[str] = [
+    "time",
+    *list(GOTOV_EQUIVITAL_SOURCE_TO_CHANNEL.keys()),
+]
 
 
 def _resolve_energy_dir(data_dir: Path) -> Path:
@@ -166,19 +175,20 @@ def parse_gotov(
     loop = tqdm(subject_files, desc="Parsing GOTOV")
     for file_path in loop:
         loop.set_postfix(file=file_path.name, refresh=False)
-        df = pd.read_csv(file_path, engine="python")
         required_cols = [
-            "time",
-            *GOTOV_GENEACTIV_CHANNELS,
-            *list(GOTOV_COSMED_SOURCE_TO_CHANNEL.keys()),
+            *GOTOV_ENERGY_SENSOR_COLUMNS,
             label_col,
         ]
-        missing_cols = [col for col in required_cols if col not in df.columns]
-        if missing_cols:
+        try:
+            # These files are large.  Restricting columns and using pandas' C
+            # parser avoids reading the many intermediate/calibration columns
+            # that are not part of the common sensor representation.
+            df = pd.read_csv(file_path, usecols=required_cols)
+        except ValueError as exc:
             raise ValueError(
-                f"Missing expected GOTOV columns in '{file_path.name}': {missing_cols}"
-            )
-        df = df[required_cols]
+                f"Missing expected GOTOV columns in '{file_path.name}'. "
+                f"Required columns: {required_cols}"
+            ) from exc
         if df.empty:
             continue
 
@@ -213,15 +223,16 @@ def parse_gotov(
             skipped_subject_tokens.append(file_path.stem)
             continue
 
-        eq_df = pd.read_csv(equivital_path, engine="python")
-        required_eq_cols = ["time", *list(GOTOV_EQUIVITAL_SOURCE_TO_CHANNEL.keys())]
-        missing_eq_cols = [col for col in required_eq_cols if col not in eq_df.columns]
-        if missing_eq_cols:
+        required_eq_cols = GOTOV_EQUIVITAL_SOURCE_COLUMNS
+        try:
+            eq_df = pd.read_csv(equivital_path, usecols=required_eq_cols)
+        except ValueError as exc:
             raise ValueError(
-                f"Missing expected Equivital columns in '{equivital_path.name}': {missing_eq_cols}"
-            )
+                f"Missing expected Equivital columns in '{equivital_path.name}'. "
+                f"Required columns: {required_eq_cols}"
+            ) from exc
 
-        eq_df = eq_df[required_eq_cols].rename(
+        eq_df = eq_df.rename(
             columns={
                 "time": "timestamp",
                 **GOTOV_EQUIVITAL_SOURCE_TO_CHANNEL,
@@ -389,7 +400,6 @@ cfg_gotov = WHARConfig(
     num_of_subjects=30,
     num_of_activities=16,
     num_of_channels=len(GOTOV_SENSOR_CHANNELS),
-    datasets_dir="./datasets",
     # Parsing
     parse=parse_gotov,
     activity_id_col="original_activity_labels",
@@ -398,7 +408,5 @@ cfg_gotov = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=GOTOV_SENSOR_CHANNELS,
     selected_channels=GOTOV_SENSOR_CHANNELS,
-    window_time=2,
-    window_overlap=0.5,
     # Training (split info)
 )

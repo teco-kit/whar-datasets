@@ -421,6 +421,4 @@ cfg_capture_24 = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=CAPTURE24_SENSOR_CHANNELS,
     selected_channels=CAPTURE24_SENSOR_CHANNELS,
-    window_time=2.56,
-    window_overlap=0.5,
 )

@@ -90,19 +90,37 @@ def parse_dsads(
 
     sub_dfs = []
 
-    for activity_dir_name in sorted(os.listdir(dir)):
+    activity_dir_names = sorted(
+        name
+        for name in os.listdir(dir)
+        if not name.startswith("._")
+        and os.path.isdir(os.path.join(dir, name))
+    )
+
+    for activity_dir_name in activity_dir_names:
         # get activity from dirname
         activity_id = int(activity_dir_name[1:])
 
         activity_dir = os.path.join(dir, activity_dir_name)
 
-        for subject_dir_name in sorted(os.listdir(activity_dir)):
+        subject_dir_names = sorted(
+            name
+            for name in os.listdir(activity_dir)
+            if not name.startswith("._")
+            and os.path.isdir(os.path.join(activity_dir, name))
+        )
+
+        for subject_dir_name in subject_dir_names:
             # get subject id from dirname
             subject_id = int(subject_dir_name[1:])
 
             subject_dir = os.path.join(activity_dir, subject_dir_name)
 
-            for file in sorted(f for f in os.listdir(subject_dir) if f.endswith(".txt")):
+            for file in sorted(
+                f
+                for f in os.listdir(subject_dir)
+                if f.endswith(".txt") and not f.startswith("._")
+            ):
                 # Each file is a distinct DSADS repetition. Keep its boundary
                 # until session IDs have been created.
                 sub_df = pd.read_csv(
@@ -296,7 +314,6 @@ cfg_dsads = WHARConfig(
     num_of_subjects=8,
     num_of_activities=19,
     num_of_channels=45,
-    datasets_dir="./datasets",
     # Parsing fields
     parse=parse_dsads,
     activity_id_col="activity_id",
@@ -305,6 +322,4 @@ cfg_dsads = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=ALL_CHANNELS,
     selected_channels=ALL_CHANNELS,
-    window_time=5.0,
-    window_overlap=0.5,
 )
