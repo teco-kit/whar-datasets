@@ -6,6 +6,7 @@ from typing import Dict, Iterator, List, Set, Tuple, TypeAlias
 
 import pandas as pd
 
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.steps.abstract_step import AbstractStep
 from whar_datasets.processing.utils.caching import cache_common_format
@@ -18,6 +19,79 @@ OutputT: TypeAlias = Tuple[
     pd.DataFrame,
     Dict[int, pd.DataFrame],
 ]
+
+
+def _align_activity_ids_to_config(
+    cfg: WHARConfig,
+    activity_df: pd.DataFrame,
+    session_df: pd.DataFrame,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Align parser IDs by activity names, never by parser/file order.
+
+    Parsers are allowed to discover activities in dataset-specific order, but
+    the common format must use the deterministic IDs declared by the config.
+    Mapping by names also keeps session metadata synchronized with the activity
+    metadata table.
+    """
+    required_activity_columns = {"activity_id", "activity_name"}
+    required_session_columns = {"activity_id"}
+    if not required_activity_columns.issubset(activity_df.columns):
+        raise ValueError(
+            "Parser activity metadata must contain 'activity_id' and "
+            "'activity_name'."
+        )
+    if not required_session_columns.issubset(session_df.columns):
+        raise ValueError("Parser session metadata must contain 'activity_id'.")
+
+    config_names = canonicalize_activity_name_list(cfg.available_activities)
+    config_name_to_id = {name: idx for idx, name in enumerate(config_names)}
+    if len(config_name_to_id) != len(config_names):
+        raise ValueError("Configured activity names are not unique after normalization.")
+
+    parsed = activity_df.copy()
+    parsed_names = canonicalize_activity_name_list(parsed["activity_name"].tolist())
+    unknown_names = sorted(set(parsed_names).difference(config_name_to_id))
+    if unknown_names:
+        raise ValueError(
+            "Parser emitted activities not covered by cfg.available_activities: "
+            + ", ".join(unknown_names)
+        )
+
+    parsed_id_to_config_id: dict[int, int] = {}
+    for raw_id, config_name in zip(parsed["activity_id"], parsed_names):
+        raw_id_int = int(raw_id)
+        config_id = config_name_to_id[config_name]
+        previous = parsed_id_to_config_id.setdefault(raw_id_int, config_id)
+        if previous != config_id:
+            raise ValueError(
+                f"Parser activity_id {raw_id_int} maps to multiple activity names."
+            )
+
+    parsed["activity_id"] = [config_name_to_id[name] for name in parsed_names]
+    parsed["activity_name"] = [config_names[idx] for idx in parsed["activity_id"]]
+    if parsed["activity_id"].duplicated().any():
+        raise ValueError("Parser activity metadata contains duplicate activity IDs.")
+    parsed = parsed.sort_values("activity_id").reset_index(drop=True)
+
+    sessions = session_df.copy()
+    session_ids = pd.to_numeric(sessions["activity_id"], errors="coerce")
+    if session_ids.isna().any():
+        raise ValueError("Parser session metadata contains non-numeric activity IDs.")
+    unmapped_session_ids = sorted(
+        set(session_ids.astype(int)).difference(parsed_id_to_config_id)
+    )
+    if unmapped_session_ids:
+        raise ValueError(
+            "Parser session metadata references activity IDs absent from activity "
+            "metadata: "
+            + ", ".join(str(value) for value in unmapped_session_ids)
+        )
+    sessions["activity_id"] = session_ids.astype(int).map(parsed_id_to_config_id)
+    if sessions["activity_id"].isna().any():
+        raise ValueError("Could not map all parser session activity IDs to config IDs.")
+    sessions["activity_id"] = sessions["activity_id"].astype("int32")
+
+    return parsed, sessions
 
 
 class ParsingStep(AbstractStep[InputT, OutputT]):
@@ -73,16 +147,9 @@ class ParsingStep(AbstractStep[InputT, OutputT]):
                 str(self.data_dir), self.cfg.activity_id_col
             )
 
-        # Dataset-specific label adaptation: align parsed labels to the configured
-        # labels of the current dataset via activity_id when cardinalities match.
-        if (
-            "activity_id" in activity_df.columns
-            and "activity_name" in activity_df.columns
-            and len(self.cfg.available_activities) == len(activity_df)
-        ):
-            by_id = activity_df.sort_values("activity_id").reset_index(drop=True)
-            by_id["activity_name"] = self.cfg.available_activities
-            activity_df = by_id.astype({"activity_name": "string"})
+        activity_df, session_df = _align_activity_ids_to_config(
+            self.cfg, activity_df, session_df
+        )
 
         return activity_df, session_df, sessions
 

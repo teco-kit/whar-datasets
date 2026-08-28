@@ -13,6 +13,28 @@ import pyarrow.parquet as pq
 from whar_datasets.config.config import CACHE_SCHEMA_VERSION
 
 
+def _ignore_missing_rmtree_error(
+    function: Callable[[str], object],
+    path: str,
+    exc_info: tuple[type[BaseException], BaseException, object],
+) -> None:
+    """Ignore a file that disappeared during recursive cache cleanup."""
+    del function, path
+    error = exc_info[1]
+    if isinstance(error, FileNotFoundError):
+        return
+    raise error
+
+
+def _remove_directory(path: Path) -> None:
+    """Remove a cache directory while tolerating concurrent missing files."""
+    try:
+        shutil.rmtree(path, onerror=_ignore_missing_rmtree_error)
+    except FileNotFoundError:
+        # The directory itself may have disappeared between exists() and rmtree().
+        return
+
+
 def _replace_directory(target: Path, build: Callable[[Path], None]) -> None:
     """Build a cache beside its target and atomically swap it into place."""
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -24,12 +46,12 @@ def _replace_directory(target: Path, build: Callable[[Path], None]) -> None:
             target.rename(backup)
         temporary.rename(target)
         if backup.exists():
-            shutil.rmtree(backup)
+            _remove_directory(backup)
     except BaseException:
         if not target.exists() and backup.exists():
             backup.rename(target)
         if temporary.exists():
-            shutil.rmtree(temporary)
+            _remove_directory(temporary)
         raise
 
 

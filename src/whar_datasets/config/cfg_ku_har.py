@@ -44,11 +44,14 @@ def parse_ku_har(
     # Only keep activity directories with names like "0.Stand".
     # This skips cache/hash artifacts such as "download_hash.txt" and
     # "extracting_hash.txt" that may be present in the same directory.
-    activity_dirs = [
+    activity_dirs = sorted(
+        [
         entry
         for entry in os.listdir(dir)
         if os.path.isdir(os.path.join(dir, entry)) and re.match(r"^\d+\.", entry)
-    ]
+        ],
+        key=lambda entry: int(entry.split(".", 1)[0]),
+    )
 
     for activity_dir in activity_dirs:
         # get activity from dirname
@@ -60,7 +63,9 @@ def parse_ku_har(
             raise FileNotFoundError(activity_dir)
 
         # go through activity dir
-        for file in os.listdir(activity_dir):
+        for file in sorted(os.listdir(activity_dir)):
+            if not os.path.isfile(os.path.join(activity_dir, file)):
+                continue
             # get subject id from dirname
             subject_id = int(file.split("_")[0])
 
@@ -80,24 +85,49 @@ def parse_ku_har(
                 header=None,
             )
 
-            # remove rows where timestamp is 0
-            session_df = session_df[session_df["timestamp_acc"] != 0]
-            session_df = session_df[session_df["timestamp_gyro"] != 0]
+            # Interpolate gyro to accelerometer timestamps. Do not let
+            # np.interp extrapolate endpoint values beyond the gyro range.
+            session_df = session_df.replace([np.inf, -np.inf], np.nan)
+            acc_timestamp = pd.to_numeric(
+                session_df["timestamp_acc"], errors="coerce"
+            ).to_numpy()
+            gyro_timestamp = pd.to_numeric(
+                session_df["timestamp_gyro"], errors="coerce"
+            ).to_numpy()
+            acc_valid = np.isfinite(acc_timestamp) & (acc_timestamp != 0)
+            gyro_valid = np.isfinite(gyro_timestamp) & (gyro_timestamp != 0)
+            if not acc_valid.any() or not gyro_valid.any():
+                session_dfs.append(session_df.iloc[0:0].copy())
+                session_metadata_dict["subject_id"].append(subject_id)
+                session_metadata_dict["activity_id"].append(activity_id)
+                continue
 
-            # Interpolate gyro to acc timestamps
+            raw_session_df = session_df
+            session_df = session_df.loc[acc_valid].copy()
+            acc_timestamp = acc_timestamp[acc_valid]
+            gyro_order = np.argsort(gyro_timestamp[gyro_valid], kind="stable")
+            gyro_timestamp = gyro_timestamp[gyro_valid][gyro_order]
+            # Interpolate gyro to acc timestamps.
             for axis in ["x", "y", "z"]:
-                # if any is 0, skip
-                if (
-                    len(session_df["timestamp_acc"]) == 0
-                    or len(session_df["timestamp_gyro"]) == 0
-                    or len(session_df[f"gyro_{axis}"]) == 0
-                ):
+                gyro_values = pd.to_numeric(
+                    raw_session_df[f"gyro_{axis}"], errors="coerce"
+                ).to_numpy()[gyro_valid][gyro_order]
+                valid_values = np.isfinite(gyro_values)
+                if not valid_values.any():
+                    session_df[f"gyro_{axis}"] = np.nan
                     continue
-
+                axis_timestamps = gyro_timestamp[valid_values]
+                axis_values = gyro_values[valid_values]
+                axis_timestamps, unique_indices = np.unique(
+                    axis_timestamps, return_index=True
+                )
+                axis_values = axis_values[unique_indices]
                 session_df[f"gyro_{axis}"] = np.interp(
-                    session_df["timestamp_acc"],
-                    session_df["timestamp_gyro"],
-                    session_df[f"gyro_{axis}"],
+                    acc_timestamp,
+                    axis_timestamps,
+                    axis_values,
+                    left=np.nan,
+                    right=np.nan,
                 )
 
             # Optionally convert timestamps to datetime after interpolation

@@ -34,33 +34,37 @@ def parse_usc_had(
     cols = ["Ax", "Ay", "Az", "GyroX", "GyroY", "GyroZ"]
 
     for root, dirs, files in os.walk(root_path):
-        for file in files:
+        dirs.sort()
+        for file in sorted(files):
             if file.endswith(".mat"):
                 file_path = os.path.join(root, file)
 
-                try:
-                    mat = scipy.io.loadmat(file_path)
+                mat = scipy.io.loadmat(file_path)
+                if "sensor_readings" not in mat or "subject" not in mat:
+                    raise ValueError(
+                        f"USC-HAD file '{file_path}' lacks required sensor/subject metadata."
+                    )
+                if "activity_number" in mat:
+                    activity_key = "activity_number"
+                elif "activity_numbr" in mat:
+                    # One source file uses this documented spelling variant.
+                    activity_key = "activity_numbr"
+                else:
+                    raise ValueError(
+                        f"USC-HAD file '{file_path}' lacks activity_number metadata."
+                    )
 
-                    df = pd.DataFrame(mat["sensor_readings"], columns=cols)
+                df = pd.DataFrame(mat["sensor_readings"], columns=cols)
+                df["subject_id"] = mat["subject"].item()
+                df["activity_id"] = mat[activity_key].item()
 
-                    df["subject_id"] = mat["subject"].item()
-                    try:
-                        df["activity_id"] = mat["activity_number"].item()
-                    except KeyError:
-                        df["activity_id"] = mat["activity_numbr"].item()
+                sampling_rate = 100  # Hz
+                time_sec = np.arange(len(df)) * (1.0 / sampling_rate)
+                df["timestamp"] = pd.to_timedelta(time_sec, unit="s")
+                all_dfs.append(df)
 
-                    sampling_rate = 100  # Hz
-
-                    time_sec = np.arange(len(df)) * (1.0 / sampling_rate)
-
-                    # timestamps existier vorher noch nicht?
-                    df["timestamp"] = pd.to_timedelta(time_sec, unit="s")
-
-                    all_dfs.append(df)
-
-                except Exception as e:
-                    # bei subject 13 ist "activity_numbr statt number"
-                    print(f"Error in {file}: {e}")
+    if not all_dfs:
+        raise ValueError(f"No USC-HAD .mat recordings found under '{root_path}'.")
 
     big_df = pd.concat(all_dfs, ignore_index=True)
     df = big_df

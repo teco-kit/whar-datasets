@@ -8,6 +8,18 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
+UCI_HAR_SIGNAL_NAMES: List[str] = [
+    "total_acc_x",
+    "total_acc_y",
+    "total_acc_z",
+    "body_acc_x",
+    "body_acc_y",
+    "body_acc_z",
+    "body_gyro_x",
+    "body_gyro_y",
+    "body_gyro_z",
+]
+
 
 def get_df_from_files_uci_har(
     files: List[str],
@@ -20,7 +32,10 @@ def get_df_from_files_uci_har(
     SEG_SIZE = 128
     DISPLACEMENT = 64
 
-    # effective segment size
+    # The source windows are 128 samples with a 64-sample displacement. Keep
+    # the first 64 samples so adjacent source windows become non-overlapping
+    # chunks: [0:64], [64:128], ... . This intentional de-overlap must not be
+    # changed to 128 samples without also changing the downstream semantics.
     eff_seg_size = SEG_SIZE - DISPLACEMENT
 
     # create dict to store df for each channel, use file name without "train" as key
@@ -94,8 +109,19 @@ def parse_uci_har(
     labels_map_path = os.path.join(dir, "activity_labels.txt")
 
     # get all files in train and test dirs
-    train_files = os.listdir(train_path)
-    test_files = os.listdir(test_path)
+    train_files = [f"{name}_train.txt" for name in UCI_HAR_SIGNAL_NAMES]
+    test_files = [f"{name}_test.txt" for name in UCI_HAR_SIGNAL_NAMES]
+    missing_files = [
+        os.path.join(path, file)
+        for path, files in ((train_path, train_files), (test_path, test_files))
+        for file in files
+        if not os.path.isfile(os.path.join(path, file))
+    ]
+    if missing_files:
+        raise FileNotFoundError(
+            "UCI-HAR is missing expected inertial signal files: "
+            + ", ".join(missing_files)
+        )
 
     # get train and test dfs
     train_df = get_df_from_files_uci_har(
@@ -114,6 +140,11 @@ def parse_uci_har(
         slice_end=-9,
     )  # (seg_size * num_segs, num_activities + 3)
 
+    # Preserve the official train/test provenance through session creation so
+    # a matching subject/activity at the concatenation boundary cannot merge.
+    train_df["source_partition"] = "train"
+    test_df["source_partition"] = "test"
+
     # concat for varying splits and set index
     df = pd.concat([train_df, test_df])
     df = df.reset_index(drop=True)
@@ -122,14 +153,24 @@ def parse_uci_har(
     # add col with activity names
     ldf = pd.read_csv(labels_map_path, sep="\\s+", header=None, names=["id", "label"])
     df["activity_name"] = df["activity_id"].map(dict(zip(ldf.id, ldf.label)))
-
-    # convert activity_id to categorical starting from 0
-    df["activity_id"] = pd.factorize(df["activity_id"])[0]
+    name_to_id = {
+        name: idx
+        for idx, name in enumerate(canonicalize_activity_name_list(ALL_ACTIVITIES))
+    }
+    canonical_names = canonicalize_activity_name_list(df["activity_name"].tolist())
+    unknown_names = sorted(set(canonical_names).difference(name_to_id))
+    if unknown_names:
+        raise ValueError(
+            "UCI-HAR labels are not covered by the configured activity list: "
+            + ", ".join(unknown_names)
+        )
+    df["activity_name"] = canonical_names
+    df["activity_id"] = df["activity_name"].map(name_to_id).astype("int32")
 
     # identify where activity or subject changes
     changes = (df["activity_id"] != df["activity_id"].shift(1)) | (
         df["subject_id"] != df["subject_id"].shift(1)
-    )
+    ) | (df["source_partition"] != df["source_partition"].shift(1))
 
     # assign a unique session to each continuous segment
     df["session_id"] = changes.cumsum()
@@ -140,8 +181,6 @@ def parse_uci_har(
         df.groupby("session_id", group_keys=False).cumcount() * sampling_interval
     )
 
-    # factorize
-    df["activity_id"] = df["activity_id"].factorize()[0]
     df["subject_id"] = df["subject_id"].factorize()[0]
     df["session_id"] = df["session_id"].factorize()[0]
 
@@ -180,6 +219,7 @@ def parse_uci_har(
                 "subject_id",
                 "activity_id",
                 "activity_name",
+                "source_partition",
             ]
         ).reset_index(drop=True)
 

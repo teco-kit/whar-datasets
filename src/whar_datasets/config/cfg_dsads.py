@@ -90,48 +90,45 @@ def parse_dsads(
 
     sub_dfs = []
 
-    for activity_dir in os.listdir(dir):
+    for activity_dir_name in sorted(os.listdir(dir)):
         # get activity from dirname
-        activity_id = int(activity_dir[1:])
+        activity_id = int(activity_dir_name[1:])
 
-        activity_dir = os.path.join(dir, activity_dir)
+        activity_dir = os.path.join(dir, activity_dir_name)
 
-        for subject_dir in os.listdir(activity_dir):
+        for subject_dir_name in sorted(os.listdir(activity_dir)):
             # get subject id from dirname
-            subject_id = int(subject_dir[1:])
+            subject_id = int(subject_dir_name[1:])
 
-            subject_dir = os.path.join(activity_dir, subject_dir)
+            subject_dir = os.path.join(activity_dir, subject_dir_name)
 
-            sub_df = pd.concat(
-                [
-                    pd.read_csv(
-                        os.path.join(subject_dir, file),
-                        header=None,
-                        names=SENSOR_COLS,
-                    )
-                    for file in [
-                        f for f in os.listdir(subject_dir) if f.endswith(".txt")
-                    ]
-                ]
-            )
+            for file in sorted(f for f in os.listdir(subject_dir) if f.endswith(".txt")):
+                # Each file is a distinct DSADS repetition. Keep its boundary
+                # until session IDs have been created.
+                sub_df = pd.read_csv(
+                    os.path.join(subject_dir, file),
+                    header=None,
+                    names=SENSOR_COLS,
+                )
 
-            # fill nans in sensor cols with linear interpolation
-            sub_df.loc[:, SENSOR_COLS] = sub_df[SENSOR_COLS].interpolate(
-                method="linear"
-            )
+                # Fill dropouts within one repetition only; never interpolate
+                # across the boundary to the next repetition.
+                sub_df.loc[:, SENSOR_COLS] = sub_df[SENSOR_COLS].interpolate(
+                    method="linear"
+                )
 
-            sub_df["subject_id"] = subject_id
-            sub_df["activity_id"] = activity_id
-
-            sub_dfs.append(sub_df)
+                sub_df["subject_id"] = subject_id
+                sub_df["activity_id"] = activity_id
+                sub_df["source_file"] = file
+                sub_dfs.append(sub_df)
 
     # concat all sub_dfs
-    df = pd.concat(sub_dfs)
+    df = pd.concat(sub_dfs, ignore_index=True)
 
     # identify where activity or subject changes or chnage in nan entries
     changes = (df["activity_id"] != df["activity_id"].shift(1)) | (
         df["subject_id"] != df["subject_id"].shift(1)
-    )
+    ) | (df["source_file"] != df["source_file"].shift(1))
 
     # assign a unique session to each continuous segment
     df["session_id"] = changes.cumsum()
@@ -186,6 +183,7 @@ def parse_dsads(
                 "subject_id",
                 "activity_id",
                 "activity_name",
+                "source_file",
             ]
         ).reset_index(drop=True)
 

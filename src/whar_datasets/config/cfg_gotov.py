@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -325,10 +326,12 @@ def parse_gotov(
 
     if skipped_subject_tokens:
         unique_skipped = sorted(set(skipped_subject_tokens))
-        # print(
-        #     "Skipping GOTOV subjects with missing/invalid Equivital data: "
-        #     + ", ".join(unique_skipped)
-        # )
+        warnings.warn(
+            "Skipping GOTOV participants with missing/invalid Equivital data: "
+            + ", ".join(unique_skipped),
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     if label_col == "predicted_activity_label":
         activity_names = GOTOV_ACTIVITY_NAMES_PREDICTED

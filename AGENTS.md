@@ -10,6 +10,17 @@
 - Subject identifiers are required for Leave-One-Subject-Out Cross-Validation.
 - If several sensors were recorded simultaneously, align them by timestamp and
   stack them as channels of one multichannel time series.
+- Treat timestamp units as dataset-specific source metadata. Determine whether
+  raw values are seconds, milliseconds, microseconds, or nanoseconds before
+  converting or comparing them; never compare a gap threshold in one unit to
+  timestamps expressed in another.
+- For simultaneous modalities, validate alignment with a bounded nearest-time
+  or explicitly documented resampling operation. Report the tolerance, match
+  rate, unmatched samples, duplicate timestamps, and whether alignment is
+  constrained by subject, activity, source recording, or other provenance keys.
+- Preserve source row/file order when timestamps reset, overlap, or are known
+  to be unreliable. Use timestamp order only after verifying that it agrees
+  with source chronology.
 - Include only time-series sensor modalities, such as accelerometers,
   gyroscopes, magnetometers, motion capture, or physiological signals. Exclude
   audio, images, and video.
@@ -65,6 +76,11 @@ files, raw filenames, and directory structure. Record:
 - timestamp units and whether timestamps reset between files; and
 - known missing, corrupt, or intentionally excluded recordings.
 
+For every timestamped source, inspect timestamp magnitude and successive-step
+quantiles against the documented sampling rate. Test at least one known
+seconds/milliseconds/microseconds/nanoseconds value and confirm that timestamp
+resets and large gaps are handled before interpolation or session construction.
+
 Enumerate the actual raw files and compare them with documented combinations.
 Report missing and unexpected files explicitly. A missing source recording is
 not automatically a parser bug, but it must not disappear silently.
@@ -100,6 +116,8 @@ subject, multiple activities, and unusual filename patterns. Verify:
 - repetitions remain distinct sessions;
 - label changes inside a recording start new sessions;
 - timestamps and sensor columns are not accidentally exchanged;
+- timestamp units, resets, duplicate timestamps, and large gaps are handled in
+  the source unit before conversion to datetime;
 - one-based raw IDs are converted consistently when zero-based IDs are used;
 - factorization does not make label IDs depend accidentally on filesystem
   iteration order; and
@@ -126,13 +144,18 @@ verify all of the following:
   channels in the configured order;
 - timestamps are datetime typed, strictly increasing, and contain no gap larger
   than the configured session-gap threshold;
+- when modalities are aligned, the output retains the intended reference
+  samples, does not rely on exact timestamp equality unless documented, and
+  contains no out-of-tolerance or cross-recording matches;
 - sensor values are floating point and contain no NaN or infinity after the
   parser's documented missing-data policy; and
 - no non-time-series modality leaked into the channel matrix.
 
 Do not silently interpolate long recording gaps. Split the session first.
 Interpolation of short sensor dropouts must be documented and tested at the
-beginning, middle, and end of a recording.
+beginning, middle, and end of a recording. Verify that interpolation does not
+extrapolate beyond the available source range and that duplicate/conflicting
+timestamps have an explicit policy.
 
 ## 5. Measure session and sampling behavior
 
@@ -141,8 +164,11 @@ Generate and report, overall and by activity:
 - number of sessions;
 - sample-count and duration quantiles;
 - minimum, median, and maximum timestamp step;
+- timestamp-step quantiles in raw units and after conversion;
 - timestamp-derived sampling-rate distribution;
 - count of non-increasing timestamps and large gaps;
+- for each multimodal join, matched/unmatched counts and alignment-offset
+  quantiles;
 - count of sessions shorter than one configured window; and
 - counts of sessions producing 0, 1, 2, 3, and more windows.
 
@@ -198,7 +224,7 @@ loaded samples with their cached rows and verify labels against `session_df`.
 Run:
 
 ```bash
-uv run --with pytest python -m pytest scripts/tests/test_dataset_consistency.py -q
+uv run --with pytest python -m pytest tests/test_dataset_consistency.py -q
 ```
 
 These tests should cover configuration semantics, parser signatures, registry
@@ -211,7 +237,7 @@ recur without access to the full raw dataset.
 Run the cached common-format and windowing checks in:
 
 ```bash
-uv run --with pytest python -m pytest scripts/tests/test_dataset_requirements.py -q
+uv run --with pytest python -m pytest tests/test_dataset_requirements.py -q
 ```
 
 Before running, confirm that the test's dataset root matches `cfg.datasets_dir`.
@@ -223,7 +249,7 @@ When the raw cache is already present, enable parser checks with:
 
 ```bash
 WHAR_RUN_PARSE_E2E=1 uv run --with pytest python -m pytest \
-  scripts/tests/test_dataset_requirements.py -q
+  tests/test_dataset_requirements.py -q
 ```
 
 The test must skip unavailable raw datasets rather than downloading them.
@@ -238,6 +264,8 @@ Add focused tests for the parser's actual risk areas, such as:
 - row-level activity transitions;
 - timestamp unit conversion and timestamp resets;
 - large-gap session splitting;
+- bounded nearest-timestamp alignment, tolerance, and cross-label/source
+  protection;
 - missing-value and sensor-dropout handling;
 - simultaneous multi-sensor alignment and channel order;
 - documented missing recordings;

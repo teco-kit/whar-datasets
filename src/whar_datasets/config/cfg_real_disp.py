@@ -10,15 +10,16 @@ from whar_datasets.config.activity_name_utils import canonicalize_activity_name_
 from whar_datasets.config.config import WHARConfig
 
 SENSOR_POSITIONS: List[str] = [
-    "rla",
-    "rua",
-    "back",
-    "lua",
-    "lla",
+    # REALDISP raw columns are S1..S9 in this documented order.
+    "lc",
+    "lt",
     "rc",
     "rt",
-    "lt",
-    "lc",
+    "back",
+    "lla",
+    "lua",
+    "rla",
+    "rua",
 ]
 
 SENSOR_MODALITIES: List[str] = ["acc", "gyro", "mag", "quat"]

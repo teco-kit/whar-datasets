@@ -17,17 +17,24 @@ ACTIVITY_MAP = {
 }
 
 
-def get_sub_dfs(dir: str, names: List[str] | None) -> List[pd.DataFrame]:
-    sub_dfs: List[pd.DataFrame] = []
+def get_sub_dfs(
+    dir: str, names: List[str] | None
+) -> Dict[Tuple[str, str], pd.DataFrame]:
+    # The directory suffix is a repetition/recording identifier. It must be
+    # part of the key: the same subject performs several recordings of some
+    # activities (for example dws_1, dws_2, and dws_11).
+    sub_dfs: Dict[Tuple[str, str], pd.DataFrame] = {}
 
-    for sub_dir in os.listdir(dir):
+    for sub_dir_name in sorted(os.listdir(dir)):
+        if not os.path.isdir(os.path.join(dir, sub_dir_name)):
+            continue
         # get activity from filename
-        activity_id = sub_dir.split("_")[0]
+        activity_id = sub_dir_name.split("_")[0]
 
-        sub_dir = os.path.join(dir, sub_dir)
+        sub_dir = os.path.join(dir, sub_dir_name)
 
         # go through all csv files
-        for file in [f for f in os.listdir(sub_dir) if f.endswith(".csv")]:
+        for file in sorted(f for f in os.listdir(sub_dir) if f.endswith(".csv")):
             file_path = os.path.join(sub_dir, file)
 
             # get subject id from filename between _ and . but multiple
@@ -44,8 +51,14 @@ def get_sub_dfs(dir: str, names: List[str] | None) -> List[pd.DataFrame]:
             sub_df["subject_id"] = subject_id
             sub_df["activity_id"] = activity_id
 
-            # append to list
-            sub_dfs.append(sub_df)
+            key = (sub_dir_name, subject_id)
+            if key in sub_dfs:
+                raise ValueError(
+                    f"Duplicate MotionSense recording for directory={sub_dir_name}, "
+                    f"subject={subject_id}."
+                )
+            sub_df["source_recording_id"] = sub_dir_name
+            sub_dfs[key] = sub_df
 
     return sub_dfs
 
@@ -63,11 +76,37 @@ def parse_motion_sense(
     accel_dfs = get_sub_dfs(accel_dir, names=["accel_x", "accel_y", "accel_z"])
     gyro_dfs = get_sub_dfs(gyro_dir, names=["gyro_x", "gyro_y", "gyro_z"])
 
-    # concatenate dfs
-    sub_dfs = [
-        pd.concat([m_df, a_df, g_df], axis=1)
-        for m_df, a_df, g_df in zip(motion_dfs, accel_dfs, gyro_dfs)
-    ]
+    keys = set(motion_dfs).intersection(accel_dfs, gyro_dfs)
+    all_keys = set(motion_dfs).union(accel_dfs, gyro_dfs)
+    if keys != all_keys:
+        missing = sorted(all_keys.difference(keys))
+        raise ValueError(
+            "MotionSense sensor files do not have matching activity/subject keys: "
+            + ", ".join(f"{recording}/{subject}" for recording, subject in missing[:10])
+        )
+
+    sub_dfs: List[pd.DataFrame] = []
+    for key in sorted(keys):
+        m_df, a_df, g_df = motion_dfs[key], accel_dfs[key], gyro_dfs[key]
+        # MotionSense stores no physical timestamp; the shared row index is
+        # the only available time base. Align the simultaneous streams by
+        # that index and retain their common prefix explicitly. The source
+        # contains occasional trailing samples in only one stream.
+        sample_count = min(len(m_df), len(a_df), len(g_df))
+        if sample_count == 0:
+            raise ValueError(
+                f"MotionSense recording {key[0]}/{key[1]} is empty."
+            )
+        sub_dfs.append(
+            pd.concat(
+                [
+                    m_df.iloc[:sample_count].reset_index(drop=True),
+                    a_df.iloc[:sample_count].reset_index(drop=True),
+                    g_df.iloc[:sample_count].reset_index(drop=True),
+                ],
+                axis=1,
+            )
+        )
 
     # remove duplicate cols
     sub_dfs = [df.loc[:, ~df.columns.duplicated()] for df in sub_dfs]
@@ -79,6 +118,7 @@ def parse_motion_sense(
     changes = (
         (df["activity_id"] != df["activity_id"].shift(1))
         | (df["subject_id"] != df["subject_id"].shift(1))
+        | (df["source_recording_id"] != df["source_recording_id"].shift(1))
         | (df.isnull().any(axis=1) != df.isnull().any(axis=1).shift(1))
     )
 
@@ -141,6 +181,7 @@ def parse_motion_sense(
                 "subject_id",
                 "activity_id",
                 "activity_name",
+                "source_recording_id",
             ]
         ).reset_index(drop=True)
 

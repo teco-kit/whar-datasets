@@ -81,7 +81,9 @@ class WindowingStep(AbstractStep[InputT, OutputT]):
 
         # generate windowing
         use_processes = self.cfg.execution_backend == "process"
-        process_sessions = process_sessions_para if use_processes else process_sessions_seq
+        process_sessions = (
+            process_sessions_para if use_processes else process_sessions_seq
+        )
 
         window_df, windows = process_sessions(self.cfg, self.sessions_dir, session_df)
 
@@ -111,6 +113,10 @@ class WindowingStep(AbstractStep[InputT, OutputT]):
 
         df = session_df["subject_id"]
         logger.info(f"subject_ids from {df.min()} to {df.max()}")
+
+        # print number of sessions and windows
+        logger.info(f"Number of sessions: {len(session_df)}")
+        logger.info(f"Number of windows: {len(window_df)}")
 
         return activity_df, session_df, window_df, {}
 

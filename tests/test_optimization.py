@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Dict, Tuple
 
@@ -8,6 +9,7 @@ import pytest
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.getter import WHARDatasetID, get_dataset_cfg
 from whar_datasets.processing.utils.caching import (
+    _remove_directory,
     cache_common_format,
     cache_samples,
     cache_windows,
@@ -363,3 +365,25 @@ def test_common_cache_writes_one_readable_session_row_group(tmp_path: Path) -> N
     loaded = pd.read_parquet(tmp_path / "sessions" / "sessions.parquet")
     assert loaded["session_id"].nunique() == 2
     assert loaded["x"].dtype == np.float32
+
+
+def test_cache_cleanup_ignores_disappearing_hidden_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    directory = tmp_path / "backup"
+    directory.mkdir()
+    hidden_file = directory / "._data.npy"
+
+    def simulate_macos_metadata_race(
+        path: str, *, onerror=None
+    ) -> None:
+        del path
+        assert onerror is not None
+        error = FileNotFoundError(2, "No such file or directory", str(hidden_file))
+        onerror(os.unlink, str(hidden_file), (FileNotFoundError, error, None))
+
+    monkeypatch.setattr(
+        "whar_datasets.processing.utils.caching.shutil.rmtree",
+        simulate_macos_metadata_race,
+    )
+    _remove_directory(directory)

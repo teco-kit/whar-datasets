@@ -17,8 +17,8 @@ wheels/
 notes
 .env
 outputs
-scripts
 .pytest_cache/
 .ruff_cache/
 
 notebooks/plotting
+experiments/*

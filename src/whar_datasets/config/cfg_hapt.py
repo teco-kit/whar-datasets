@@ -105,8 +105,15 @@ def parse_hapt(
             acc_df = load_signal_df(acc_path, ["acc_x", "acc_y", "acc_z"])
             gyro_df = load_signal_df(gyro_path, ["gyro_x", "gyro_y", "gyro_z"])
 
-            # Both files describe the same timeline.
-            n = min(len(acc_df), len(gyro_df))
+            # Both files describe the same timeline. Truncating to the shorter
+            # file silently discards samples and shifts label intervals.
+            if len(acc_df) != len(gyro_df):
+                raise ValueError(
+                    f"HAPT accelerometer/gyroscope length mismatch for "
+                    f"experiment {exp_id}, user {user_id}: "
+                    f"acc={len(acc_df)}, gyro={len(gyro_df)}."
+                )
+            n = len(acc_df)
             merged_df = pd.concat(
                 [
                     acc_df.iloc[:n].reset_index(drop=True),

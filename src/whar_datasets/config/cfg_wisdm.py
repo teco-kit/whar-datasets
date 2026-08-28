@@ -7,6 +7,8 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
+WISDM_MAX_GAP_SECONDS = 1.0
+
 
 def parse_wisdm_12(
     dir: str, activity_id_col: str
@@ -63,7 +65,29 @@ def parse_wisdm_12(
         ],
     )
 
-    # parse timestamps as full-precision integer ns to avoid precision loss
+    # Keep source row order: it is the only available recording chronology.
+    # Sorting by activity would merge separate repetitions of the same label.
+    df["subject_raw"] = df["subject_id"].astype(str).str.strip()
+    df["activity_raw"] = df["activity_name"].astype(str).str.strip().str.lower()
+    activity_map = {
+        name.lower(): (activity_id, name)
+        for activity_id, name in enumerate(ALL_ACTIVITIES)
+    }
+    unknown_activities = sorted(set(df["activity_raw"]).difference(activity_map))
+    if unknown_activities:
+        raise ValueError(
+            "Found WISDM activity labels not covered by the configured mapping: "
+            + ", ".join(unknown_activities)
+        )
+
+    df["activity_id"] = df["activity_raw"].map(
+        lambda name: activity_map[name][0]
+    ).astype("int32")
+    df["activity_name"] = df["activity_raw"].map(
+        lambda name: activity_map[name][1]
+    )
+
+    # Parse timestamps as full-precision integer ns to avoid precision loss.
     df["timestamp"] = pd.to_numeric(df["timestamp"], errors="coerce")
     df = df[df["timestamp"].notna()]
     df["timestamp"] = df["timestamp"].astype("int64")
@@ -75,43 +99,50 @@ def parse_wisdm_12(
     # change timestamp to datetime in ns
     df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ns")
 
-    # add activity_id
-    df["activity_id"] = pd.factorize(df["activity_name"])[0]
-    id_to_activity = (
-        df[["activity_id", "activity_name"]]
-        .drop_duplicates(subset=["activity_id"], keep="first")
-        .set_index("activity_id")["activity_name"]
-        .to_dict()
-    )
-
-    # Deduplicate exact timestamp collisions and normalize to a stable 20Hz cadence.
-    # WISDM raw timestamps are noisy and may include resets; stable synthetic timing
-    # preserves sequence order while enforcing continuous sessions.
+    df["timestamp_raw"] = df["timestamp"]
     value_cols = ["accel_x", "accel_y", "accel_z"]
     df[value_cols] = df[value_cols].apply(pd.to_numeric, errors="coerce")
-    df = df.dropna(subset=value_cols)
-    df = df.groupby(["subject_id", "activity_id", "timestamp"], as_index=False)[
-        value_cols
-    ].mean()
-    df["activity_name"] = df["activity_id"].map(id_to_activity)
+    df = df.dropna(subset=["subject_raw", "activity_raw", *value_cols]).copy()
+    df = df.drop_duplicates(
+        subset=["subject_raw", "activity_id", "timestamp_raw"], keep="first"
+    ).reset_index(drop=True)
 
-    df = df.sort_values(by=["subject_id", "activity_id", "timestamp"]).reset_index(
-        drop=True
+    raw_subjects = df["subject_raw"].unique().tolist()
+    numeric_subjects = pd.to_numeric(pd.Series(raw_subjects), errors="coerce")
+    if numeric_subjects.isna().any() or (numeric_subjects % 1 != 0).any():
+        raise ValueError(
+            "WISDM subject identifiers must be integer-like; found "
+            + ", ".join(map(str, raw_subjects))
+        )
+    subject_order = [
+        raw_subject
+        for _, raw_subject in sorted(
+            zip(numeric_subjects.astype("int64"), raw_subjects),
+            key=lambda item: item[0],
+        )
+    ]
+    subject_map = {
+        raw_subject: subject_id for subject_id, raw_subject in enumerate(subject_order)
+    }
+    df["subject_id"] = df["subject_raw"].map(subject_map).astype("int32")
+
+    raw_time = pd.to_datetime(df["timestamp_raw"], unit="ns")
+    time_diff = raw_time.diff().dt.total_seconds()
+    session_start = (
+        df["subject_id"].ne(df["subject_id"].shift(1))
+        | df["activity_id"].ne(df["activity_id"].shift(1))
+        | time_diff.isna()
+        | time_diff.le(0.0)
+        | time_diff.gt(WISDM_MAX_GAP_SECONDS)
     )
+    df["session_id"] = session_start.astype("int64").cumsum() - 1
+
+    # Normalize each source-contiguous session to a stable 20 Hz timeline.
     step_ms = int(1e3 / 20)
     df["timestamp"] = (
-        df.groupby(["subject_id", "activity_id"]).cumcount().astype("int64") * step_ms
+        df.groupby("session_id").cumcount().astype("int64") * step_ms
     )
     df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-    changes = (df["activity_id"] != df["activity_id"].shift(1)) | (
-        df["subject_id"] != df["subject_id"].shift(1)
-    )
-    df["session_id"] = changes.cumsum() - 1
-
-    # factorize
-    df["activity_id"] = df["activity_id"].factorize()[0]
-    df["subject_id"] = df["subject_id"].factorize()[0]
-    df["session_id"] = df["session_id"].factorize()[0]
 
     # create activity index
     activity_metadata = (
@@ -145,6 +176,9 @@ def parse_wisdm_12(
                 "subject_id",
                 "activity_id",
                 "activity_name",
+                "subject_raw",
+                "activity_raw",
+                "timestamp_raw",
             ]
         ).reset_index(drop=True)
 

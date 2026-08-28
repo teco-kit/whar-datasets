@@ -167,6 +167,14 @@ def _split_session_by_gap(session_df: pd.DataFrame) -> List[pd.DataFrame]:
     return chunks
 
 
+def _coerce_integral_id(value: object, field_name: str) -> int:
+    """Convert integer-like CSV metadata such as ``1.0`` safely."""
+    numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
+    if pd.isna(numeric) or float(numeric) != int(float(numeric)):
+        raise ValueError(f"UP-Fall {field_name} must be an integer, got {value!r}.")
+    return int(float(numeric))
+
+
 def _build_session_frame(rows: pd.DataFrame) -> pd.DataFrame:
     sensor_values = rows.iloc[:, 1:43].copy()
     sensor_values.columns = UP_FALL_SENSOR_CHANNELS
@@ -214,9 +222,9 @@ def parse_up_fall(
             session_rows.append(
                 {
                     "session_id": next_session_id,
-                    "subject_raw_id": int(str(subject_raw)),
-                    "activity_raw_id": int(str(activity_raw)),
-                    "trial_raw_id": int(str(trial_raw)),
+                    "subject_raw_id": _coerce_integral_id(subject_raw, "subject"),
+                    "activity_raw_id": _coerce_integral_id(activity_raw, "activity"),
+                    "trial_raw_id": _coerce_integral_id(trial_raw, "trial"),
                 }
             )
             next_session_id += 1

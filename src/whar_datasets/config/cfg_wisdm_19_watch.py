@@ -28,6 +28,9 @@ LETTER_TO_INT = {
     "S": 17,
 }
 
+# Raw WISDM19 timestamps are nanoseconds since epoch.
+WISDM_19_MAX_GAP_NS = 1_000_000_000
+
 ID_TO_ACTIVITY = {
     0: "walking",
     1: "jogging",
@@ -96,21 +99,52 @@ def parse_wisdm_19_watch(
         for col in ["timestamp", "gyro_watch_x", "gyro_watch_y", "gyro_watch_z"]:
             gyro_df[col] = pd.to_numeric(gyro_df[col], errors="coerce")
 
+        accel_df["source_order"] = range(len(accel_df))
         accel_df = accel_df.dropna().sort_values("timestamp")
         gyro_df = gyro_df.dropna().sort_values("timestamp")
 
         accel_df = accel_df.groupby(
-            ["subject_id", "activity_id", "timestamp"], as_index=False
-        ).mean()
-        gyro_df = gyro_df.groupby(
-            ["subject_id", "activity_id", "timestamp"], as_index=False
-        ).mean()
-
-        merged = accel_df.merge(
-            gyro_df[["timestamp", "gyro_watch_x", "gyro_watch_y", "gyro_watch_z"]],
-            on="timestamp",
-            how="inner",
+            ["subject_id", "activity_id", "timestamp"], as_index=False, sort=False
+        ).agg(
+            accel_watch_x=("accel_watch_x", "mean"),
+            accel_watch_y=("accel_watch_y", "mean"),
+            accel_watch_z=("accel_watch_z", "mean"),
+            source_order=("source_order", "min"),
         )
+        gyro_df = gyro_df.groupby(
+            ["subject_id", "activity_id", "timestamp"], as_index=False, sort=False
+        ).agg(
+            gyro_watch_x=("gyro_watch_x", "mean"),
+            gyro_watch_y=("gyro_watch_y", "mean"),
+            gyro_watch_z=("gyro_watch_z", "mean"),
+        )
+
+        # The two sensors use independent clocks and do not share an exact
+        # timestamp for every sample. Align the simultaneous streams by the
+        # nearest timestamp within 100 ms, while keeping subject/activity as
+        # hard grouping keys so values never cross label boundaries.
+        gyro_for_merge = gyro_df[
+            [
+                "subject_id",
+                "activity_id",
+                "timestamp",
+                "gyro_watch_x",
+                "gyro_watch_y",
+                "gyro_watch_z",
+            ]
+        ].rename(columns={"timestamp": "gyro_timestamp"})
+        merged = pd.merge_asof(
+            accel_df.sort_values("timestamp"),
+            gyro_for_merge.sort_values("gyro_timestamp"),
+            left_on="timestamp",
+            right_on="gyro_timestamp",
+            by=["subject_id", "activity_id"],
+            direction="nearest",
+            tolerance=100_000_000,
+        )
+        merged = merged.dropna(
+            subset=["gyro_watch_x", "gyro_watch_y", "gyro_watch_z"]
+        ).sort_values("source_order").drop(columns=["gyro_timestamp"])
         if not merged.empty:
             all_subjects_list.append(merged)
 
@@ -118,9 +152,18 @@ def parse_wisdm_19_watch(
         raise ValueError("No WISDM 2019 watch data found for parsing.")
 
     complete_df = pd.concat(all_subjects_list, ignore_index=True)
-    complete_df["subject_id"] = complete_df["subject_id"] - 1600
+    complete_df["subject_raw_id"] = complete_df["subject_id"] - 1600
+    raw_activity_labels = complete_df["activity_id"].astype(str).str.strip()
+    unknown_activity_labels = sorted(
+        set(raw_activity_labels.dropna()).difference(LETTER_TO_INT)
+    )
+    if unknown_activity_labels:
+        raise ValueError(
+            "WISDM 2019 watch contains unsupported activity labels: "
+            + ", ".join(unknown_activity_labels)
+        )
     complete_df["activity_id"] = (
-        complete_df["activity_id"].astype(str).str.strip().map(LETTER_TO_INT)
+        raw_activity_labels.map(LETTER_TO_INT)
     )
 
     complete_df = complete_df.dropna(
@@ -128,21 +171,36 @@ def parse_wisdm_19_watch(
     ).copy()
     complete_df["timestamp"] = pd.to_numeric(complete_df["timestamp"], errors="coerce")
     complete_df = complete_df.dropna(subset=["timestamp"])
-    complete_df["subject_id"] = complete_df["subject_id"].astype("int32")
+    complete_df["subject_raw_id"] = complete_df["subject_raw_id"].astype("int32")
     complete_df["activity_id"] = complete_df["activity_id"].astype("int32")
+    complete_df["subject_id"] = complete_df["subject_raw_id"]
     complete_df = complete_df.sort_values(
-        by=["subject_id", "activity_id", "timestamp"]
+        by=["subject_raw_id", "source_order"]
     ).reset_index(drop=True)
+    subject_id_map = {
+        raw_id: subject_id
+        for subject_id, raw_id in enumerate(
+            sorted(complete_df["subject_raw_id"].unique())
+        )
+    }
+    complete_df["subject_id"] = complete_df["subject_raw_id"].map(
+        subject_id_map
+    ).astype("int32")
+    complete_df["timestamp_raw"] = complete_df["timestamp"]
+    time_diff = complete_df.groupby("subject_id")["timestamp_raw"].diff()
+    session_start = (
+        complete_df["subject_id"].ne(complete_df["subject_id"].shift(1))
+        | complete_df["activity_id"].ne(complete_df["activity_id"].shift(1))
+        | time_diff.isna()
+        | time_diff.le(0)
+        | time_diff.gt(WISDM_19_MAX_GAP_NS)
+    )
+    complete_df["session_id"] = session_start.astype("int64").cumsum() - 1
     step_ms = int(1e3 / 20)
     complete_df["timestamp"] = (
-        complete_df.groupby(["subject_id", "activity_id"]).cumcount().astype("int64")
-        * step_ms
+        complete_df.groupby("session_id").cumcount().astype("int64") * step_ms
     )
     complete_df["timestamp"] = pd.to_datetime(complete_df["timestamp"], unit="ms")
-    changes = (complete_df["activity_id"] != complete_df["activity_id"].shift(1)) | (
-        complete_df["subject_id"] != complete_df["subject_id"].shift(1)
-    )
-    complete_df["session_id"] = changes.cumsum() - 1
 
     metadata_cols = ["session_id", "subject_id", "activity_id"]
 
@@ -164,7 +222,14 @@ def parse_wisdm_19_watch(
 
         # drop metadata cols
         session_df = session_df.drop(
-            columns=["session_id", "subject_id", "activity_id"]
+            columns=[
+                "session_id",
+                "subject_id",
+                "activity_id",
+                "subject_raw_id",
+                "timestamp_raw",
+                "source_order",
+            ]
         ).reset_index(drop=True)
 
         session_df["timestamp"] = pd.to_datetime(session_df["timestamp"])
