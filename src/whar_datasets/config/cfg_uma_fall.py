@@ -122,7 +122,6 @@ def _load_phone_accelerometer_session(
         comment="%",
         header=None,
         names=columns,
-        engine="python",
     )
 
     phone_acc = df[(df["sensor_type"] == 0) & (df["sensor_id"] == 0)].copy()

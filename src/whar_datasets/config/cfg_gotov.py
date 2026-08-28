@@ -183,7 +183,10 @@ def parse_gotov(
             # These files are large.  Restricting columns and using pandas' C
             # parser avoids reading the many intermediate/calibration columns
             # that are not part of the common sensor representation.
-            df = pd.read_csv(file_path, usecols=required_cols)
+            # GOTOV contains columns with long mixed-type regions.  Disabling
+            # chunked type inference avoids a pandas C-parser failure when a
+            # selected label column is mostly empty and becomes textual later.
+            df = pd.read_csv(file_path, usecols=required_cols, low_memory=False)
         except ValueError as exc:
             raise ValueError(
                 f"Missing expected GOTOV columns in '{file_path.name}'. "
@@ -225,7 +228,9 @@ def parse_gotov(
 
         required_eq_cols = GOTOV_EQUIVITAL_SOURCE_COLUMNS
         try:
-            eq_df = pd.read_csv(equivital_path, usecols=required_eq_cols)
+            eq_df = pd.read_csv(
+                equivital_path, usecols=required_eq_cols, low_memory=False
+            )
         except ValueError as exc:
             raise ValueError(
                 f"Missing expected Equivital columns in '{equivital_path.name}'. "

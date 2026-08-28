@@ -1,7 +1,5 @@
-# %%
 from whar_datasets import BENCHMARK_DATASET_IDS, PreProcessingPipeline, get_dataset_cfg
 
-# %%
 for id in BENCHMARK_DATASET_IDS:
     print(f"Preprocessing dataset: {id.value}")
     cfg = get_dataset_cfg(id, datasets_dir="/Volumes/Samsung SSD/datasets")
