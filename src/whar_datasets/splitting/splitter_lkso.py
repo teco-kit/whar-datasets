@@ -48,6 +48,7 @@ class LKSOSplitter(Splitter):
             subj_id: idx % n_folds for idx, subj_id in enumerate(unique_subjects)
         }
 
+        self._reset_split_diagnostics()
         splits: List[Split] = []
 
         for fold_idx in range(n_folds):
@@ -74,7 +75,7 @@ class LKSOSplitter(Splitter):
 
             # 6. Internal train/val split
             train_indices, val_indices = self._get_train_val_indices(
-                train_val_indices, window_df
+                train_val_indices, window_df, emit_diagnostics=False
             )
 
             split = Split(
@@ -94,4 +95,5 @@ class LKSOSplitter(Splitter):
 
             splits.append(split)
 
+        self._log_split_diagnostics()
         return splits

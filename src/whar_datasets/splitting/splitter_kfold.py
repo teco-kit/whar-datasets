@@ -28,6 +28,7 @@ class KFoldSplitter(Splitter):
 
         folds = np.array_split(indices, self.n_folds)
 
+        self._reset_split_diagnostics()
         splits: List[Split] = []
         for fold_idx in range(self.n_folds):
             test_indices = folds[fold_idx].tolist()
@@ -36,7 +37,7 @@ class KFoldSplitter(Splitter):
             ]
 
             train_indices, val_indices = self._get_train_val_indices(
-                train_val_indices, window_df
+                train_val_indices, window_df, emit_diagnostics=False
             )
 
             split = Split(
@@ -53,4 +54,5 @@ class KFoldSplitter(Splitter):
 
             splits.append(split)
 
+        self._log_split_diagnostics()
         return splits

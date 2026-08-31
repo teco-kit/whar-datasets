@@ -16,6 +16,8 @@ class Splitter(ABC):
         self.val_percentage = cfg.val_percentage
         self.strict_train_val_separation = cfg.strict_train_val_separation
         self.rng = np.random.RandomState(cfg.seed)
+        self.dataset_id = cfg.dataset_id
+        self._reset_split_diagnostics()
 
     @abstractmethod
     def get_splits(
@@ -25,11 +27,18 @@ class Splitter(ABC):
         pass
 
     def _get_train_val_indices(
-        self, indices: List[int], window_df: pd.DataFrame
+        self,
+        indices: List[int],
+        window_df: pd.DataFrame,
+        *,
+        emit_diagnostics: bool = True,
     ) -> Tuple[List[int], List[int]]:
         """Split candidate indices into train/validation subsets."""
         if self.strict_train_val_separation:
-            return self._get_purged_train_val_indices(indices, window_df)
+            result = self._get_purged_train_val_indices(indices, window_df)
+            if emit_diagnostics:
+                self._log_split_diagnostics()
+            return result
 
         n_train = len(indices)
         n_val = int(n_train * self.val_percentage)
@@ -82,6 +91,35 @@ class Splitter(ABC):
 
         return sorted(training), sorted(validation)
 
+    def _reset_split_diagnostics(self) -> None:
+        """Clear diagnostics collected while generating one set of splits."""
+        self._unsplittable_session_count = 0
+        self._unsplittable_by_window_count: dict[int, list[int]] = {}
+
+    def _log_split_diagnostics(self) -> None:
+        """Emit one compact summary of indivisible-session assignments."""
+        if self._unsplittable_session_count == 0:
+            return
+
+        summaries = []
+        for window_count in sorted(self._unsplittable_by_window_count):
+            total, validation, training = self._unsplittable_by_window_count[
+                window_count
+            ]
+            summaries.append(
+                f"{window_count}-window sessions: {total} total, "
+                f"{validation} validation, {training} training"
+            )
+
+        logger.warning(
+            "Strict separation assigned %d unsplittable sessions as whole units: "
+            "%s (dataset=%s).",
+            self._unsplittable_session_count,
+            "; ".join(summaries),
+            self.dataset_id,
+        )
+        self._reset_split_diagnostics()
+
     def _split_session_strict(
         self, group: pd.DataFrame
     ) -> Tuple[set[int], set[int]] | None:
@@ -94,6 +132,9 @@ class Splitter(ABC):
         if count < 2:
             return None
 
+        group_indices = np.asarray(group.index, dtype=np.int64)
+        starts = group["start_index"].to_numpy(dtype=np.int64)
+        ends = group["end_index"].to_numpy(dtype=np.int64)
         preferred_blocks = min(3, validation_count)
         minimum_blocks = 2 if validation_count > 1 else 1
         for block_count in range(preferred_blocks, minimum_blocks - 1, -1):
@@ -102,16 +143,28 @@ class Splitter(ABC):
             for positions in self._distributed_block_candidates(
                 count, validation_count, block_count
             ):
-                session_validation = {
-                    int(group.index[position]) for position in positions
-                }
-                candidates = {
-                    int(index) for index in group.index
-                } - session_validation
-                session_training = self._purge_overlaps(
-                    candidates, session_validation, group
-                )
-                if session_training:
+                validation_positions = np.asarray(positions, dtype=np.int64)
+                validation_mask = np.zeros(count, dtype=bool)
+                validation_mask[validation_positions] = True
+
+                # All candidates belong to this one session. Vectorizing the
+                # interval test avoids repeated DataFrame indexing for every
+                # candidate layout and is important for datasets with many
+                # short sessions.
+                validation_starts = starts[validation_positions]
+                validation_ends = ends[validation_positions]
+                overlaps = (
+                    (starts[:, np.newaxis] < validation_ends[np.newaxis, :])
+                    & (ends[:, np.newaxis] > validation_starts[np.newaxis, :])
+                ).any(axis=1)
+                training_positions = np.flatnonzero(~validation_mask & ~overlaps)
+                if len(training_positions) > 0:
+                    session_validation = {
+                        int(group_indices[position]) for position in positions
+                    }
+                    session_training = {
+                        int(group_indices[position]) for position in training_positions
+                    }
                     return session_validation, session_training
 
         return None
@@ -169,7 +222,7 @@ class Splitter(ABC):
 
         validation: set[int] = set()
         training: set[int] = set()
-        summaries: list[str] = []
+        self._unsplittable_session_count += len(sessions)
         for window_count in sorted(by_window_count):
             group = by_window_count[window_count]
             order = self.rng.permutation(len(group)).tolist()
@@ -182,17 +235,12 @@ class Splitter(ABC):
                 target.update(int(index) for index in session_df.index)
 
             training_session_count = len(group) - validation_session_count
-            summaries.append(
-                f"{window_count}-window sessions: {len(group)} total, "
-                f"{validation_session_count} validation, "
-                f"{training_session_count} training"
+            summary = self._unsplittable_by_window_count.setdefault(
+                window_count, [0, 0, 0]
             )
-
-        logger.warning(
-            "Strict separation assigned %d unsplittable sessions as whole units: %s.",
-            len(sessions),
-            "; ".join(summaries),
-        )
+            summary[0] += len(group)
+            summary[1] += validation_session_count
+            summary[2] += training_session_count
         return validation, training
 
     def _purge_overlaps(
@@ -206,11 +254,17 @@ class Splitter(ABC):
             return training
 
         keep = training.copy()
+        # ``training`` is produced from one grouped session by
+        # ``_split_session_strict``. Restricting this lookup to the candidate
+        # rows avoids repeatedly materializing the complete window table for
+        # every session in large datasets.
+        train_group = window_df.loc[list(training)]
         for session_id, val_group in window_df.loc[list(validation)].groupby(
             "session_id"
         ):
-            train_group = window_df.loc[list(keep)]
-            train_group = train_group[train_group["session_id"] == session_id]
+            session_train_group = train_group[
+                train_group["session_id"] == session_id
+            ]
             merged_intervals: list[tuple[int, int]] = []
             intervals = val_group[["start_index", "end_index"]].sort_values(
                 "start_index"
@@ -226,13 +280,13 @@ class Splitter(ABC):
                 else:
                     merged_intervals.append((start_int, end_int))
 
-            overlaps_any = pd.Series(False, index=train_group.index)
+            overlaps_any = pd.Series(False, index=session_train_group.index)
             for start, end in merged_intervals:
-                overlaps_any |= (train_group["start_index"] < end) & (
-                    train_group["end_index"] > start
+                overlaps_any |= (session_train_group["start_index"] < end) & (
+                    session_train_group["end_index"] > start
                 )
             keep.difference_update(
-                int(index) for index in train_group.index[overlaps_any]
+                int(index) for index in session_train_group.index[overlaps_any]
             )
         return keep
 

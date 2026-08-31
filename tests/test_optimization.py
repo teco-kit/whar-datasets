@@ -257,6 +257,39 @@ def test_strict_split_allocates_and_summarizes_unsplittable_sessions(
     assert "2-window sessions: 10 total, 2 validation, 8 training" in summary
 
 
+def test_loso_emits_one_unsplittable_summary_for_all_subjects(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    cfg = _config(
+        num_of_subjects=3,
+        strict_train_val_separation=True,
+        val_percentage=0.5,
+    )
+    session_df = pd.DataFrame(
+        {
+            "session_id": [0, 1, 2],
+            "subject_id": [0, 1, 2],
+            "activity_id": [0, 0, 0],
+        }
+    )
+    window_df = pd.DataFrame(
+        {
+            "session_id": [0, 1, 2],
+            "window_id": ["0:0", "1:0", "2:0"],
+            "start_index": [0, 0, 0],
+            "end_index": [20, 20, 20],
+        }
+    )
+
+    caplog.set_level("WARNING", logger="whar-datasets")
+    splits = LOSOSplitter(cfg).get_splits(session_df, window_df)
+
+    warnings = [record for record in caplog.records if record.levelname == "WARNING"]
+    assert len(warnings) == 1
+    assert "assigned 6 unsplittable sessions as whole units" in warnings[0].message
+    assert len(splits) == 3
+
+
 def test_legacy_train_validation_split_keeps_every_candidate() -> None:
     cfg = _config(strict_train_val_separation=False, val_percentage=0.2)
     splitter = LOSOSplitter(cfg)

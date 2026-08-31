@@ -23,6 +23,7 @@ class LOSOSplitter(Splitter):
         """Create one split per held-out subject."""
         subject_ids = self.subject_ids or session_df["subject_id"].unique().tolist()
 
+        self._reset_split_diagnostics()
         splits: List[Split] = []
 
         for s in subject_ids:
@@ -39,7 +40,7 @@ class LOSOSplitter(Splitter):
             ].index.tolist()
 
             train_indices, val_indices = self._get_train_val_indices(
-                train_val_indices, window_df
+                train_val_indices, window_df, emit_diagnostics=False
             )
 
             split = Split(
@@ -56,4 +57,5 @@ class LOSOSplitter(Splitter):
 
             splits.append(split)
 
+        self._log_split_diagnostics()
         return splits
