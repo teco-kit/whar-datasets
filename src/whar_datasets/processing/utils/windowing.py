@@ -1,5 +1,3 @@
-from typing import Dict, Tuple
-
 import numpy as np
 import pandas as pd
 
@@ -10,21 +8,23 @@ def generate_windowing(
     window_time: float,
     overlap: float,
     sampling_freq: float,
-) -> Tuple[pd.DataFrame | None, Dict[str, pd.DataFrame] | None]:
+) -> tuple[pd.DataFrame | None, dict[str, pd.DataFrame] | None]:
     """Generate fixed-length sliding windows for one session."""
     if not 0 <= overlap < 1:
         raise ValueError("overlap must be in [0, 1).")
-    window_size = int(round(window_time * sampling_freq))
-    stride = max(int(round(window_size * (1 - overlap))), 1)
+    window_size = round(window_time * sampling_freq)
+    stride = max(round(window_size * (1 - overlap)), 1)
     if window_size <= 0:
-        raise ValueError("window_time and sampling_freq must define a non-empty window.")
+        raise ValueError(
+            "window_time and sampling_freq must define a non-empty window."
+        )
     if len(session_df) < window_size:
         return None, None
 
     starts = np.arange(0, len(session_df) - window_size + 1, stride, dtype=np.int64)
     sensor_df = session_df.drop(columns=["timestamp"])
     timestamps = session_df["timestamp"].reset_index(drop=True)
-    windows: Dict[str, pd.DataFrame] = {}
+    windows: dict[str, pd.DataFrame] = {}
     rows: list[dict[str, object]] = []
     duration = pd.to_timedelta(window_size / sampling_freq, unit="s")
     for ordinal, start in enumerate(starts.tolist()):

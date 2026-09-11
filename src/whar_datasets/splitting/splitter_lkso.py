@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
@@ -18,7 +16,7 @@ class LKSOSplitter(Splitter):
     for stable sorted round-robin grouping independent of ``cfg.seed``.
     """
 
-    def __init__(self, cfg: WHARConfig, subject_ids: List[int] | None = None):
+    def __init__(self, cfg: WHARConfig, subject_ids: list[int] | None = None):
         super().__init__(cfg)
 
         if cfg.num_folds is None:
@@ -32,7 +30,7 @@ class LKSOSplitter(Splitter):
         self,
         session_df: pd.DataFrame,
         window_df: pd.DataFrame,
-    ) -> List[Split]:
+    ) -> list[Split]:
         # 1. Start from a canonical order, then optionally apply seeded shuffling.
         unique_subjects = self.subject_ids or session_df["subject_id"].unique().tolist()
         unique_subjects = sorted(unique_subjects)
@@ -49,7 +47,7 @@ class LKSOSplitter(Splitter):
         }
 
         self._reset_split_diagnostics()
-        splits: List[Split] = []
+        splits: list[Split] = []
 
         for fold_idx in range(n_folds):
             # subjects assigned to this fold

@@ -1,5 +1,4 @@
 import os
-from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -85,7 +84,7 @@ ACTIVITY_MAP = {
 
 def parse_dsads(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     dir = os.path.join(dir, "data/")
 
     sub_dfs = []
@@ -93,8 +92,7 @@ def parse_dsads(
     activity_dir_names = sorted(
         name
         for name in os.listdir(dir)
-        if not name.startswith("._")
-        and os.path.isdir(os.path.join(dir, name))
+        if not name.startswith("._") and os.path.isdir(os.path.join(dir, name))
     )
 
     for activity_dir_name in activity_dir_names:
@@ -144,9 +142,11 @@ def parse_dsads(
     df = pd.concat(sub_dfs, ignore_index=True)
 
     # identify where activity or subject changes or chnage in nan entries
-    changes = (df["activity_id"] != df["activity_id"].shift(1)) | (
-        df["subject_id"] != df["subject_id"].shift(1)
-    ) | (df["source_file"] != df["source_file"].shift(1))
+    changes = (
+        (df["activity_id"] != df["activity_id"].shift(1))
+        | (df["subject_id"] != df["subject_id"].shift(1))
+        | (df["source_file"] != df["source_file"].shift(1))
+    )
 
     # assign a unique session to each continuous segment
     df["session_id"] = changes.cumsum()
@@ -181,7 +181,7 @@ def parse_dsads(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     # loop over sessions
     loop = tqdm(session_metadata["session_id"].unique())

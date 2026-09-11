@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -8,7 +7,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-HHAR_ACTIVITY_NAMES: List[str] = [
+HHAR_ACTIVITY_NAMES: list[str] = [
     "bike",
     "sit",
     "stand",
@@ -17,7 +16,7 @@ HHAR_ACTIVITY_NAMES: List[str] = [
     "stairsdown",
 ]
 
-HHAR_SENSOR_CHANNELS: List[str] = [
+HHAR_SENSOR_CHANNELS: list[str] = [
     "accel_x",
     "accel_y",
     "accel_z",
@@ -187,7 +186,7 @@ def _split_sessions(df: pd.DataFrame) -> pd.Series:
 
 def parse_hhar(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
     root = _resolve_hhar_root(dir)
 
@@ -223,8 +222,8 @@ def parse_hhar(
     )
     subject_id_map = {name: idx for idx, name in enumerate(subject_raw_unique)}
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
     next_session_id = 0
 
     loop = tqdm(df.groupby(local_session_ids, sort=False), desc="Creating sessions")

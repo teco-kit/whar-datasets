@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -10,6 +9,6 @@ class Split:
     """
 
     identifier: str
-    train_indices: List[int]
-    val_indices: List[int]
-    test_indices: List[int]
+    train_indices: list[int]
+    val_indices: list[int]
+    test_indices: list[int]

@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Tuple
 
 import pandas as pd
 
@@ -76,8 +75,8 @@ class PreProcessingPipeline(ProcessingPipeline):
         )
 
     def run(
-        self, force_recompute: bool | List[bool] | None = None
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        self, force_recompute: bool | list[bool] | None = None
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         super().run(force_recompute)
 
         activity_df, session_df, window_df, _ = self.windowing_step.load_output()

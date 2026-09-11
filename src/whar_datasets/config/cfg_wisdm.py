@@ -1,5 +1,4 @@
 import os
-from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -12,7 +11,7 @@ WISDM_MAX_GAP_SECONDS = 1.0
 
 def parse_wisdm_12(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     dir = os.path.join(dir, "WISDM_ar_v1.1/")
@@ -80,12 +79,10 @@ def parse_wisdm_12(
             + ", ".join(unknown_activities)
         )
 
-    df["activity_id"] = df["activity_raw"].map(
-        lambda name: activity_map[name][0]
-    ).astype("int32")
-    df["activity_name"] = df["activity_raw"].map(
-        lambda name: activity_map[name][1]
+    df["activity_id"] = (
+        df["activity_raw"].map(lambda name: activity_map[name][0]).astype("int32")
     )
+    df["activity_name"] = df["activity_raw"].map(lambda name: activity_map[name][1])
 
     # Parse timestamps as full-precision integer ns to avoid precision loss.
     df["timestamp"] = pd.to_numeric(df["timestamp"], errors="coerce")
@@ -139,9 +136,7 @@ def parse_wisdm_12(
 
     # Normalize each source-contiguous session to a stable 20 Hz timeline.
     step_ms = int(1e3 / 20)
-    df["timestamp"] = (
-        df.groupby("session_id").cumcount().astype("int64") * step_ms
-    )
+    df["timestamp"] = df.groupby("session_id").cumcount().astype("int64") * step_ms
     df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
 
     # create activity index
@@ -159,7 +154,7 @@ def parse_wisdm_12(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     # loop over sessions
     loop = tqdm(session_metadata["session_id"].unique())

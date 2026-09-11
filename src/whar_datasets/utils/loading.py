@@ -1,7 +1,7 @@
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -16,13 +16,9 @@ def _require_current_manifest(cache_dir: Path, artifact: str) -> dict[str, Any]:
             f"Schema-v{CACHE_SCHEMA_VERSION} {artifact} cache not found under "
             f"'{cache_dir}'. Rerun preprocessing."
         )
-    manifest: dict[str, Any] = json.loads(
-        manifest_path.read_text(encoding="utf-8")
-    )
+    manifest: dict[str, Any] = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("schema_version") != CACHE_SCHEMA_VERSION:
-        raise ValueError(
-            f"Unsupported {artifact} cache schema; rerun preprocessing."
-        )
+        raise ValueError(f"Unsupported {artifact} cache schema; rerun preprocessing.")
     return manifest
 
 
@@ -56,7 +52,9 @@ class WindowStore:
         _require_current_manifest(windows_dir, "window")
         self.data = np.load(windows_dir / "data.npy", mmap_mode="c", allow_pickle=False)
         self.ids = np.load(windows_dir / "window_ids.npy", allow_pickle=False)
-        self.columns = json.loads((windows_dir / "columns.json").read_text(encoding="utf-8"))
+        self.columns = json.loads(
+            (windows_dir / "columns.json").read_text(encoding="utf-8")
+        )
         self.row_by_id = {str(window_id): row for row, window_id in enumerate(self.ids)}
 
     def get_array(self, window_id: str, copy: bool = False) -> np.ndarray:
@@ -83,7 +81,7 @@ class ArraySampleStore:
             for feature in manifest["features"]
         ]
 
-    def get(self, window_id: str, copy: bool = False) -> List[np.ndarray]:
+    def get(self, window_id: str, copy: bool = False) -> list[np.ndarray]:
         row = self.row_by_id[str(window_id)]
         if copy:
             return [np.array(feature[row], copy=True) for feature in self.features]
@@ -94,11 +92,10 @@ def open_sample_store(samples_dir: Path) -> ArraySampleStore:
     return ArraySampleStore(samples_dir)
 
 
-def load_samples(samples_dir: Path) -> Dict[str, List[np.ndarray]]:
+def load_samples(samples_dir: Path) -> dict[str, list[np.ndarray]]:
     store = open_sample_store(samples_dir)
     return {
-        str(window_id): store.get(str(window_id), copy=True)
-        for window_id in store.ids
+        str(window_id): store.get(str(window_id), copy=True) for window_id in store.ids
     }
 
 
@@ -108,23 +105,23 @@ def _cached_sample_store(path: str, cache_stamp: int) -> ArraySampleStore:
     return open_sample_store(Path(path))
 
 
-def load_sample(samples_dir: Path, window_id: str) -> List[np.ndarray]:
+def load_sample(samples_dir: Path, window_id: str) -> list[np.ndarray]:
     manifest = samples_dir / "manifest.json"
     stamp = manifest.stat().st_mtime_ns if manifest.exists() else 0
     return _cached_sample_store(str(samples_dir.resolve()), stamp).get(window_id)
 
 
 def load_windows(
-    windows_dir: Path, window_ids: List[str] | None = None
-) -> Dict[str, pd.DataFrame]:
+    windows_dir: Path, window_ids: list[str] | None = None
+) -> dict[str, pd.DataFrame]:
     store = open_window_store(windows_dir)
     ids = window_ids or [str(value) for value in store.ids]
     return {window_id: store.get_frame(window_id) for window_id in ids}
 
 
 def load_sessions(
-    sessions_dir: Path, session_ids: List[int] | None = None
-) -> Dict[int, pd.DataFrame]:
+    sessions_dir: Path, session_ids: list[int] | None = None
+) -> dict[int, pd.DataFrame]:
     _require_current_manifest(sessions_dir, "session")
     filters = [("session_id", "in", session_ids)] if session_ids else None
     frame = pd.read_parquet(

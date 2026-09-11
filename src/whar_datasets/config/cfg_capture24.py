@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import pandas as pd
 
@@ -66,7 +66,7 @@ def _canonicalize_activity(label: str) -> str:
 
 
 def _find_label_dictionary_file(dir: str) -> str | None:
-    candidates: List[str] = []
+    candidates: list[str] = []
     for root, _dirs, files in os.walk(dir):
         for file_name in files:
             lowered = file_name.lower()
@@ -83,9 +83,9 @@ def _find_label_dictionary_file(dir: str) -> str | None:
     return sorted(candidates)[0]
 
 
-def _find_subject_files(dir: str, dictionary_file: str | None) -> List[str]:
+def _find_subject_files(dir: str, dictionary_file: str | None) -> list[str]:
     pattern = re.compile(r"^p\d{3}\.csv(\.gz)?$", re.IGNORECASE)
-    preferred_by_subject: Dict[str, str] = {}
+    preferred_by_subject: dict[str, str] = {}
 
     for root, _dirs, files in os.walk(dir):
         for file_name in files:
@@ -110,8 +110,8 @@ def _find_subject_files(dir: str, dictionary_file: str | None) -> List[str]:
 
 def _resolve_dictionary_columns(
     dictionary_df: pd.DataFrame, activity_id_col: str
-) -> Tuple[str, str]:
-    col_norm: Dict[str, str] = {
+) -> tuple[str, str]:
+    col_norm: dict[str, str] = {
         str(col): _normalize_token(col) for col in dictionary_df
     }
     normalized_to_original = {norm: col for col, norm in col_norm.items()}
@@ -160,8 +160,8 @@ def _build_annotation_map(
     dictionary_df: pd.DataFrame,
     annotation_col: str,
     scheme_col: str,
-) -> Dict[str, str]:
-    mapping: Dict[str, str] = {}
+) -> dict[str, str]:
+    mapping: dict[str, str] = {}
     for _idx, row in dictionary_df[[annotation_col, scheme_col]].dropna().iterrows():
         raw_annotation = str(row[annotation_col])
         raw_target = str(row[scheme_col])
@@ -170,7 +170,7 @@ def _build_annotation_map(
 
 
 def _resolve_timestamp_col(df: pd.DataFrame) -> str:
-    col_norm: Dict[str, str] = {col: _normalize_token(col) for col in df.columns}
+    col_norm: dict[str, str] = {col: _normalize_token(col) for col in df.columns}
     normalized_to_original = {norm: col for col, norm in col_norm.items()}
 
     for token in ("time", "timestamp", "datetime", "date_time", "epoch", "unix_time"):
@@ -185,7 +185,7 @@ def _resolve_timestamp_col(df: pd.DataFrame) -> str:
 
 
 def _resolve_annotation_col(df: pd.DataFrame) -> str:
-    col_norm: Dict[str, str] = {col: _normalize_token(col) for col in df.columns}
+    col_norm: dict[str, str] = {col: _normalize_token(col) for col in df.columns}
     normalized_to_original = {norm: col for col, norm in col_norm.items()}
 
     for token in ("annotation", "label", "activity", "activity_name"):
@@ -199,8 +199,8 @@ def _resolve_annotation_col(df: pd.DataFrame) -> str:
     raise ValueError("Could not identify annotation column in CAPTURE-24 subject CSV.")
 
 
-def _resolve_accel_cols(df: pd.DataFrame) -> List[str]:
-    col_norm: Dict[str, str] = {col: _normalize_token(col) for col in df.columns}
+def _resolve_accel_cols(df: pd.DataFrame) -> list[str]:
+    col_norm: dict[str, str] = {col: _normalize_token(col) for col in df.columns}
     normalized_to_original = {norm: col for col, norm in col_norm.items()}
 
     explicit_triplets = [
@@ -221,7 +221,7 @@ def _resolve_accel_cols(df: pd.DataFrame) -> List[str]:
                 normalized_to_original[z_col],
             ]
 
-    numeric_candidates: List[str] = []
+    numeric_candidates: list[str] = []
     for col in df.columns:
         numeric = pd.to_numeric(df[col], errors="coerce")
         if numeric.notna().mean() >= 0.8:
@@ -262,9 +262,9 @@ def _extract_subject_token(path: str) -> str:
 
 def parse_capture24(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     dictionary_file = _find_label_dictionary_file(dir)
-    annotation_map: Dict[str, str] = {}
+    annotation_map: dict[str, str] = {}
     if dictionary_file is not None:
         dictionary_df = pd.read_csv(dictionary_file)
         annotation_col, scheme_col = _resolve_dictionary_columns(
@@ -286,8 +286,8 @@ def parse_capture24(
         token: idx for idx, token in enumerate(sorted(set(subject_tokens)))
     }
 
-    session_rows: List[Dict[str, int]] = []
-    sessions: Dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
+    sessions: dict[int, pd.DataFrame] = {}
     session_id = 0
 
     for file_path in sorted(subject_files):

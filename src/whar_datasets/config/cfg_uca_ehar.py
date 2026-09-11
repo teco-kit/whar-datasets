@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -12,7 +11,7 @@ UCA_EHAR_FILENAME_PATTERN = re.compile(
     r"^(?P<activity>[A-Z]+)_T(?P<subject>\d+)(?:_(?P<part>\d+))?\.csv$"
 )
 
-UCA_EHAR_ACTIVITY_NAMES: List[str] = [
+UCA_EHAR_ACTIVITY_NAMES: list[str] = [
     "WALKING",
     "WALKING_UPSTAIRS",
     "WALKING_DOWNSTAIRS",
@@ -27,7 +26,7 @@ UCA_EHAR_ACTIVITY_NAMES: List[str] = [
     "LIE_TO_SIT",
 ]
 
-UCA_EHAR_SENSOR_CHANNELS: List[str] = ["Ax", "Ay", "Az", "Gx", "Gy", "Gz", "P"]
+UCA_EHAR_SENSOR_CHANNELS: list[str] = ["Ax", "Ay", "Az", "Gx", "Gy", "Gz", "P"]
 
 UCA_EHAR_GAP_MULTIPLIER = 5.0
 UCA_EHAR_MIN_GAP_MS = 120.0
@@ -63,11 +62,11 @@ def _resolve_uca_ehar_root(data_dir: str) -> Path:
 
 def parse_uca_ehar(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     root = _resolve_uca_ehar_root(dir)
-    raw_frames: List[pd.DataFrame] = []
+    raw_frames: list[pd.DataFrame] = []
 
     for csv_path in sorted(root.glob("*.csv")):
         match = UCA_EHAR_FILENAME_PATTERN.match(csv_path.name)
@@ -146,8 +145,8 @@ def parse_uca_ehar(
     session_breaks.iloc[0] = True
     local_session_ids = session_breaks.astype("int64").cumsum() - 1
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
     next_session_id = 0
 
     loop = tqdm(df.groupby(local_session_ids, sort=False), desc="Creating sessions")

@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 import scipy.io
@@ -9,7 +8,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-ACTRECTUT_WALKING_ACTIVITY_NAMES: List[str] = [
+ACTRECTUT_WALKING_ACTIVITY_NAMES: list[str] = [
     "null",
     "sitting",
     "standing",
@@ -18,14 +17,14 @@ ACTRECTUT_WALKING_ACTIVITY_NAMES: List[str] = [
     "walk_up",
 ]
 
-SELECTED_ACTIVITIES: List[str] = [
+SELECTED_ACTIVITIES: list[str] = [
     a for a in ACTRECTUT_WALKING_ACTIVITY_NAMES if a != "null"
 ]
 
 # The walking representation exposes 24 synchronized channels.
 # The local `subject*_walk/data.mat` has 24 channels (4 sensor units with
 # 3-ax accelerometer + 3-ax gyroscope each).
-ACTRECTUT_WALKING_CHANNELS: List[str] = [
+ACTRECTUT_WALKING_CHANNELS: list[str] = [
     channel_name
     for sensor_idx in range(1, 5)
     for channel_name in (
@@ -43,7 +42,7 @@ ACTRECTUT_WALKING_GAP_THRESHOLD_SECONDS = 5.0
 SUBJECT_DIR_PATTERN = re.compile(r"^subject(?P<subject>\d+)_walk$", re.IGNORECASE)
 
 
-def _resolve_walking_subject_dirs(data_dir: str) -> List[Path]:
+def _resolve_walking_subject_dirs(data_dir: str) -> list[Path]:
     root = Path(data_dir)
     if not root.exists():
         raise FileNotFoundError(
@@ -51,7 +50,7 @@ def _resolve_walking_subject_dirs(data_dir: str) -> List[Path]:
         )
 
     candidate_roots = [root, root / "Data"]
-    subject_dirs: List[Path] = []
+    subject_dirs: list[Path] = []
 
     for candidate in candidate_roots:
         if not candidate.is_dir():
@@ -72,7 +71,7 @@ def _resolve_walking_subject_dirs(data_dir: str) -> List[Path]:
     return unique_subject_dirs
 
 
-def _load_walking_mat(mat_path: Path) -> Tuple[pd.DataFrame, pd.Series]:
+def _load_walking_mat(mat_path: Path) -> tuple[pd.DataFrame, pd.Series]:
     if not mat_path.is_file():
         raise FileNotFoundError(f"Missing required file: '{mat_path}'.")
 
@@ -112,14 +111,14 @@ def _load_walking_mat(mat_path: Path) -> Tuple[pd.DataFrame, pd.Series]:
 
 def parse_actrectut_walking(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     subject_dirs = _resolve_walking_subject_dirs(dir)
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
-    subject_raw_ids: List[int] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
+    subject_raw_ids: list[int] = []
     next_session_id = 0
 
     loop = tqdm(subject_dirs, desc="Parsing ActRecTut Walking")

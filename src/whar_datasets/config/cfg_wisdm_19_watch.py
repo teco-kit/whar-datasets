@@ -1,5 +1,4 @@
 import os
-from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -55,7 +54,7 @@ ID_TO_ACTIVITY = {
 
 def parse_wisdm_19_watch(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     all_subjects_list: list[pd.DataFrame] = []
@@ -142,9 +141,11 @@ def parse_wisdm_19_watch(
             direction="nearest",
             tolerance=100_000_000,
         )
-        merged = merged.dropna(
-            subset=["gyro_watch_x", "gyro_watch_y", "gyro_watch_z"]
-        ).sort_values("source_order").drop(columns=["gyro_timestamp"])
+        merged = (
+            merged.dropna(subset=["gyro_watch_x", "gyro_watch_y", "gyro_watch_z"])
+            .sort_values("source_order")
+            .drop(columns=["gyro_timestamp"])
+        )
         if not merged.empty:
             all_subjects_list.append(merged)
 
@@ -162,9 +163,7 @@ def parse_wisdm_19_watch(
             "WISDM 2019 watch contains unsupported activity labels: "
             + ", ".join(unknown_activity_labels)
         )
-    complete_df["activity_id"] = (
-        raw_activity_labels.map(LETTER_TO_INT)
-    )
+    complete_df["activity_id"] = raw_activity_labels.map(LETTER_TO_INT)
 
     complete_df = complete_df.dropna(
         subset=["subject_id", "activity_id", "timestamp"]
@@ -183,9 +182,9 @@ def parse_wisdm_19_watch(
             sorted(complete_df["subject_raw_id"].unique())
         )
     }
-    complete_df["subject_id"] = complete_df["subject_raw_id"].map(
-        subject_id_map
-    ).astype("int32")
+    complete_df["subject_id"] = (
+        complete_df["subject_raw_id"].map(subject_id_map).astype("int32")
+    )
     complete_df["timestamp_raw"] = complete_df["timestamp"]
     time_diff = complete_df.groupby("subject_id")["timestamp_raw"].diff()
     session_start = (
@@ -208,7 +207,7 @@ def parse_wisdm_19_watch(
         complete_df.groupby("session_id")[metadata_cols].first().reset_index(drop=True)
     )
 
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     loop = tqdm(session_metadata["session_id"].unique())
     loop.set_description("Creating sessions")

@@ -1,6 +1,6 @@
 import hashlib
 from pathlib import Path
-from typing import List, Set, TypeAlias
+from typing import Set, TypeAlias
 
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.steps.abstract_step import AbstractStep
@@ -21,7 +21,7 @@ class ExtractingStep(AbstractStep[InputT, OutputT]):
         self,
         cfg: WHARConfig,
         data_dir: Path,
-        dependent_on: List[AbstractStep],
+        dependent_on: list[AbstractStep],
     ):
         super().__init__(cfg, data_dir, dependent_on)
 

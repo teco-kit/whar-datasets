@@ -1,5 +1,6 @@
+from collections.abc import Callable, Hashable
 from functools import partial
-from typing import Callable, Dict, Hashable, List, Tuple, TypeAlias
+from typing import TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -8,9 +9,9 @@ from whar_datasets.config.config import NormType, WHARConfig
 from whar_datasets.utils.loading import WindowStore
 from whar_datasets.utils.logging import logger
 
-NormParams: TypeAlias = Tuple[
-    Dict[Hashable, float], Dict[Hashable, float]
-]  # Tuple[Dict[str, float], Dict[str, float]]
+NormParams: TypeAlias = tuple[
+    dict[Hashable, float], dict[Hashable, float]
+]  # tuple[dict[str, float], dict[str, float]]
 
 
 def _safe_denominator(values: pd.Series, eps: float = 1e-12) -> pd.Series:
@@ -43,15 +44,15 @@ def get_normalize(
         case NormType.ROBUST_SCALE_GLOBALLY:
             normalize = partial(robust_scale, norm_params=norm_params)
         case _:
-            normalize = lambda frame: frame  # noqa: E731
+            normalize = lambda frame: frame
     return normalize
 
 
 def get_norm_params(
     cfg: WHARConfig,
-    indices: List[int],
+    indices: list[int],
     window_df: pd.DataFrame,
-    windows: Dict[str, pd.DataFrame] | WindowStore,
+    windows: dict[str, pd.DataFrame] | WindowStore,
 ) -> NormParams | None:
     """Compute global normalization statistics for the provided train indices."""
     logger.info("Getting normalization parameters")
@@ -79,7 +80,9 @@ def get_norm_params(
     if isinstance(windows, WindowStore):
         return _get_array_norm_params(cfg, window_ids, windows)
 
-    windows_df = pd.concat([windows[window_id] for window_id in window_ids], ignore_index=True)
+    windows_df = pd.concat(
+        [windows[window_id] for window_id in window_ids], ignore_index=True
+    )
 
     # get normalization params
     match cfg.normalization:
@@ -94,7 +97,7 @@ def get_norm_params(
 
 
 def _get_array_norm_params(
-    cfg: WHARConfig, window_ids: List[str], store: WindowStore
+    cfg: WHARConfig, window_ids: list[str], store: WindowStore
 ) -> NormParams | None:
     """Compute global statistics from bounded memory-mapped batches."""
     positions = np.asarray([store.row_by_id[window_id] for window_id in window_ids])
@@ -110,7 +113,9 @@ def _get_array_norm_params(
     minimum = np.full_like(mean, np.inf)
     maximum = np.full_like(mean, -np.inf)
     for start in range(0, len(positions), 1024):
-        batch = np.asarray(store.data[positions[start : start + 1024]], dtype=np.float64)
+        batch = np.asarray(
+            store.data[positions[start : start + 1024]], dtype=np.float64
+        )
         batch = batch.reshape(-1, batch.shape[-1])
         minimum = np.minimum(minimum, np.nanmin(batch, axis=0))
         maximum = np.maximum(maximum, np.nanmax(batch, axis=0))
@@ -134,7 +139,7 @@ def _get_array_norm_params(
 def normalize_array(
     cfg: WHARConfig,
     values: np.ndarray,
-    columns: List[str],
+    columns: list[str],
     norm_params: NormParams | None,
 ) -> np.ndarray:
     """Normalize a window directly as NumPy and return compact float32 data."""
@@ -162,8 +167,12 @@ def normalize_array(
     else:
         if norm_params is None:
             raise ValueError("Global normalization requires fitted parameters.")
-        center = np.asarray([norm_params[0][column] for column in columns], dtype=np.float32)
-        second = np.asarray([norm_params[1][column] for column in columns], dtype=np.float32)
+        center = np.asarray(
+            [norm_params[0][column] for column in columns], dtype=np.float32
+        )
+        second = np.asarray(
+            [norm_params[1][column] for column in columns], dtype=np.float32
+        )
         if mode == NormType.MIN_MAX_GLOBALLY:
             scale = second - center
         else:
@@ -176,7 +185,7 @@ def normalize_array(
     )
 
 
-def get_min_max_params(df: pd.DataFrame, exclude_columns: List[str] = []) -> NormParams:
+def get_min_max_params(df: pd.DataFrame, exclude_columns: list[str] = []) -> NormParams:
     """Compute min/max statistics used by min-max normalization."""
     cols = df.columns.difference(exclude_columns)
 
@@ -192,7 +201,7 @@ def get_min_max_params(df: pd.DataFrame, exclude_columns: List[str] = []) -> Nor
 
 
 def get_standardize_params(
-    df: pd.DataFrame, exclude_columns: List[str] = []
+    df: pd.DataFrame, exclude_columns: list[str] = []
 ) -> NormParams:
     """Compute mean/std statistics used by standardization."""
     cols = df.columns.difference(exclude_columns)
@@ -209,7 +218,7 @@ def get_standardize_params(
 
 
 def get_robust_scale_params(
-    df: pd.DataFrame, exclude_columns: List[str] = []
+    df: pd.DataFrame, exclude_columns: list[str] = []
 ) -> NormParams:
     """Compute median/IQR statistics used by robust scaling."""
     cols = df.columns.difference(exclude_columns)
@@ -226,7 +235,7 @@ def get_robust_scale_params(
 
 
 def min_max(
-    df: pd.DataFrame, norm_params: NormParams | None, exclude_columns: List[str] = []
+    df: pd.DataFrame, norm_params: NormParams | None, exclude_columns: list[str] = []
 ) -> pd.DataFrame:
     """Apply min-max normalization to numeric columns."""
     norm_params = (
@@ -244,7 +253,7 @@ def min_max(
 
 
 def standardize(
-    df: pd.DataFrame, norm_params: NormParams | None, exclude_columns: List[str] = []
+    df: pd.DataFrame, norm_params: NormParams | None, exclude_columns: list[str] = []
 ) -> pd.DataFrame:
     """Apply z-score standardization to numeric columns."""
     norm_params = (
@@ -264,7 +273,7 @@ def standardize(
 
 
 def robust_scale(
-    df: pd.DataFrame, norm_params: NormParams | None, exclude_columns: List[str] = []
+    df: pd.DataFrame, norm_params: NormParams | None, exclude_columns: list[str] = []
 ) -> pd.DataFrame:
     """Apply robust scaling (median/IQR) to numeric columns."""
     norm_params = (

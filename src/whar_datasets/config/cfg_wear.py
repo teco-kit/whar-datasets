@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -8,7 +7,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-WEAR_SENSOR_CHANNELS: List[str] = [
+WEAR_SENSOR_CHANNELS: list[str] = [
     "right_arm_acc_x",
     "right_arm_acc_y",
     "right_arm_acc_z",
@@ -23,7 +22,7 @@ WEAR_SENSOR_CHANNELS: List[str] = [
     "left_arm_acc_z",
 ]
 
-WEAR_ACTIVITY_NAMES: List[str] = [
+WEAR_ACTIVITY_NAMES: list[str] = [
     "bench-dips",
     "burpees",
     "jogging",
@@ -47,7 +46,7 @@ WEAR_ACTIVITY_NAMES: List[str] = [
 
 def parse_wear(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     data_root = Path(dir)
@@ -60,8 +59,8 @@ def parse_wear(
     }
     step_ms = int(1e3 / 50)
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
     next_session_id = 0
 
     loop = tqdm(file_paths, desc="Parsing WEAR")

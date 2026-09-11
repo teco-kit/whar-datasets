@@ -1,4 +1,4 @@
-from typing import Callable, List
+from collections.abc import Callable
 
 import numpy as np
 
@@ -6,9 +6,9 @@ from whar_datasets.config.config import TransformType, WHARConfig
 from whar_datasets.processing.utils.resampling import get_effective_sampling_freq
 
 
-def get_transform(cfg: WHARConfig) -> Callable[[np.ndarray], List[np.ndarray]]:
+def get_transform(cfg: WHARConfig) -> Callable[[np.ndarray], list[np.ndarray]]:
     """Build an optional feature-transform callable from config."""
-    transform: Callable[[np.ndarray], List[np.ndarray]]
+    transform: Callable[[np.ndarray], list[np.ndarray]]
     match cfg.transform:
         case TransformType.DWT:
             from whar_datasets.processing.transforms.dwt import signal_to_dwt_grid
@@ -20,6 +20,7 @@ def get_transform(cfg: WHARConfig) -> Callable[[np.ndarray], List[np.ndarray]]:
             transform = transform_dwt
         case TransformType.STFT:
             from whar_datasets.processing.transforms.stft import signal_to_stft
+
             sampling_freq = get_effective_sampling_freq(
                 cfg.sampling_freq, getattr(cfg, "resampling_freq", None)
             )

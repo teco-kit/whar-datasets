@@ -1,6 +1,5 @@
 import warnings
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -9,7 +8,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-GOTOV_GENEACTIV_CHANNELS: List[str] = [
+GOTOV_GENEACTIV_CHANNELS: list[str] = [
     "ankle_x",
     "ankle_y",
     "ankle_z",
@@ -21,7 +20,7 @@ GOTOV_GENEACTIV_CHANNELS: List[str] = [
     "chest_z",
 ]
 
-GOTOV_EQUIVITAL_SOURCE_TO_CHANNEL: Dict[str, str] = {
+GOTOV_EQUIVITAL_SOURCE_TO_CHANNEL: dict[str, str] = {
     "x": "equivital_x",
     "y": "equivital_y",
     "z": "equivital_z",
@@ -30,7 +29,7 @@ GOTOV_EQUIVITAL_SOURCE_TO_CHANNEL: Dict[str, str] = {
     "Breathing.Wave": "equivital_breathing_wave",
 }
 
-GOTOV_COSMED_SOURCE_TO_CHANNEL: Dict[str, str] = {
+GOTOV_COSMED_SOURCE_TO_CHANNEL: dict[str, str] = {
     "Rf": "cosmed_rf",
     "BR": "cosmed_br",
     "VT": "cosmed_vt",
@@ -46,13 +45,13 @@ GOTOV_COSMED_SOURCE_TO_CHANNEL: Dict[str, str] = {
     "HR": "cosmed_hr",
 }
 
-GOTOV_SENSOR_CHANNELS: List[str] = [
+GOTOV_SENSOR_CHANNELS: list[str] = [
     *GOTOV_GENEACTIV_CHANNELS,
     *list(GOTOV_EQUIVITAL_SOURCE_TO_CHANNEL.values()),
     *list(GOTOV_COSMED_SOURCE_TO_CHANNEL.values()),
 ]
 
-GOTOV_ACTIVITY_NAMES_ORIGINAL: List[str] = [
+GOTOV_ACTIVITY_NAMES_ORIGINAL: list[str] = [
     "syncJumping",
     "standing",
     "step",
@@ -71,7 +70,7 @@ GOTOV_ACTIVITY_NAMES_ORIGINAL: List[str] = [
     "cycling",
 ]
 
-GOTOV_ACTIVITY_NAMES_PREDICTED: List[str] = [
+GOTOV_ACTIVITY_NAMES_PREDICTED: list[str] = [
     "sitting",
     "standing",
     "walking",
@@ -82,12 +81,12 @@ GOTOV_ACTIVITY_NAMES_PREDICTED: List[str] = [
 ]
 
 GOTOV_GAP_MULTIPLIER: float = 3.0
-GOTOV_ENERGY_SENSOR_COLUMNS: List[str] = [
+GOTOV_ENERGY_SENSOR_COLUMNS: list[str] = [
     "time",
     *GOTOV_GENEACTIV_CHANNELS,
     *list(GOTOV_COSMED_SOURCE_TO_CHANNEL.keys()),
 ]
-GOTOV_EQUIVITAL_SOURCE_COLUMNS: List[str] = [
+GOTOV_EQUIVITAL_SOURCE_COLUMNS: list[str] = [
     "time",
     *list(GOTOV_EQUIVITAL_SOURCE_TO_CHANNEL.keys()),
 ]
@@ -145,7 +144,7 @@ def _find_equivital_file(activity_dir: Path, subject_token: str) -> Path | None:
 
 def parse_gotov(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     data_dir = Path(dir)
     energy_dir = _resolve_energy_dir(data_dir)
     activity_dir = _resolve_activity_dir(data_dir)
@@ -165,12 +164,12 @@ def parse_gotov(
     expected_step_ms = 1e3 / float(cfg_gotov.sampling_freq)
     max_gap_ms = expected_step_ms * GOTOV_GAP_MULTIPLIER
 
-    session_rows: List[Dict[str, int | str]] = []
-    sessions: Dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int | str]] = []
+    sessions: dict[int, pd.DataFrame] = {}
     observed_activity_names: set[str] = set()
     session_id = 0
     parsed_subject_tokens: set[str] = set()
-    skipped_subject_tokens: List[str] = []
+    skipped_subject_tokens: list[str] = []
 
     loop = tqdm(subject_files, desc="Parsing GOTOV")
     for file_path in loop:

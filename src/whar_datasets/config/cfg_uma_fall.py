@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -13,7 +12,7 @@ UMA_FILENAME_PATTERN = re.compile(
     r"(?P<trial>\d+)_(?P<date>\d{4}-\d{2}-\d{2})_(?P<time>\d{2}-\d{2}-\d{2})\.csv$"
 )
 
-UMA_ACTIVITY_NAMES: List[str] = [
+UMA_ACTIVITY_NAMES: list[str] = [
     "Walking",
     "Jogging",
     "GoUpstairs",
@@ -31,13 +30,13 @@ UMA_ACTIVITY_NAMES: List[str] = [
     "lateralFall",
 ]
 
-UMA_SENSOR_TYPE_TO_NAME: Dict[int, str] = {
+UMA_SENSOR_TYPE_TO_NAME: dict[int, str] = {
     0: "acc",
     1: "gyro",
     2: "mag",
 }
 
-UMA_SENSOR_ID_TO_NAME: Dict[int, str] = {
+UMA_SENSOR_ID_TO_NAME: dict[int, str] = {
     0: "right_pocket_phone",
     1: "chest",
     2: "waist",
@@ -46,8 +45,8 @@ UMA_SENSOR_ID_TO_NAME: Dict[int, str] = {
 }
 
 
-def _build_uma_sensor_channels() -> List[str]:
-    channels: List[str] = []
+def _build_uma_sensor_channels() -> list[str]:
+    channels: list[str] = []
     axes = ("x", "y", "z")
 
     for sensor_id in [0, 1, 2, 3, 4]:
@@ -65,7 +64,7 @@ def _build_uma_sensor_channels() -> List[str]:
     return channels
 
 
-UMA_SENSOR_CHANNELS: List[str] = _build_uma_sensor_channels()
+UMA_SENSOR_CHANNELS: list[str] = _build_uma_sensor_channels()
 
 
 def _find_uma_fall_root(data_dir: str) -> Path:
@@ -88,7 +87,7 @@ def _find_uma_fall_root(data_dir: str) -> Path:
     raise FileNotFoundError(f"Could not locate UMAFall CSV files under '{data_dir}'.")
 
 
-def _extract_file_metadata(file_path: Path) -> Tuple[int, str, pd.Timestamp]:
+def _extract_file_metadata(file_path: Path) -> tuple[int, str, pd.Timestamp]:
     match = UMA_FILENAME_PATTERN.match(file_path.name)
     if match is None:
         raise ValueError(f"Unexpected UMAFall filename format: '{file_path.name}'.")
@@ -206,7 +205,7 @@ def _load_phone_accelerometer_session(
 
 def parse_uma_fall(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     root = _find_uma_fall_root(dir)
@@ -214,8 +213,8 @@ def parse_uma_fall(
     if not files:
         raise FileNotFoundError(f"No UMAFall CSV files found in '{root}'.")
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[dict] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict] = []
 
     loop = tqdm(files)
     loop.set_description("Creating sessions")

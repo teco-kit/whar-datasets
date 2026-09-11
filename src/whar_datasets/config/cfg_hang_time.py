@@ -1,6 +1,5 @@
 import os
 import re
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -12,7 +11,7 @@ from whar_datasets.config.timestamps import to_datetime64_ms
 HANG_TIME_SAMPLING_FREQ = 50
 HANG_TIME_GAP_THRESHOLD_MS = (1e3 / HANG_TIME_SAMPLING_FREQ) * 3.0
 
-HANG_TIME_ACTIVITY_NAMES_BY_TIER: Dict[str, List[str]] = {
+HANG_TIME_ACTIVITY_NAMES_BY_TIER: dict[str, list[str]] = {
     "basketball": ["dribbling", "shot", "layup", "pass", "rebound", "not_labeled"],
     "locomotion": [
         "sitting",
@@ -25,7 +24,7 @@ HANG_TIME_ACTIVITY_NAMES_BY_TIER: Dict[str, List[str]] = {
     "in_out": ["in", "out", "not_labeled"],
 }
 
-HANG_TIME_LABEL_ALIASES: Dict[str, Dict[str, str]] = {
+HANG_TIME_LABEL_ALIASES: dict[str, dict[str, str]] = {
     "basketball": {
         "dribble": "dribbling",
         "dribbling": "dribbling",
@@ -100,7 +99,7 @@ def _resolve_label_tier(activity_id_col: str) -> str:
 
 
 def _resolve_label_col(df: pd.DataFrame, label_tier: str) -> str:
-    col_norm: Dict[str, str] = {col: _normalize_token(col) for col in df.columns}
+    col_norm: dict[str, str] = {col: _normalize_token(col) for col in df.columns}
     normalized_to_col = {norm: col for col, norm in col_norm.items()}
 
     priority_by_tier = {
@@ -148,7 +147,7 @@ def _resolve_timestamp_col(df: pd.DataFrame) -> str | None:
         "epoch",
         "ts",
     ]
-    col_norm: Dict[str, str] = {col: _normalize_token(col) for col in df.columns}
+    col_norm: dict[str, str] = {col: _normalize_token(col) for col in df.columns}
     normalized_to_col = {norm: col for col, norm in col_norm.items()}
 
     for candidate in candidates:
@@ -162,8 +161,8 @@ def _resolve_timestamp_col(df: pd.DataFrame) -> str | None:
     return None
 
 
-def _resolve_accel_cols(df: pd.DataFrame, blocked_cols: set[str]) -> List[str]:
-    col_norm: Dict[str, str] = {col: _normalize_token(col) for col in df.columns}
+def _resolve_accel_cols(df: pd.DataFrame, blocked_cols: set[str]) -> list[str]:
+    col_norm: dict[str, str] = {col: _normalize_token(col) for col in df.columns}
     normalized_to_col = {norm: col for col, norm in col_norm.items()}
 
     explicit_triplets = [
@@ -178,7 +177,7 @@ def _resolve_accel_cols(df: pd.DataFrame, blocked_cols: set[str]) -> List[str]:
             if all(col not in blocked_cols for col in cols):
                 return cols
 
-    numeric_candidates: List[str] = []
+    numeric_candidates: list[str] = []
     for col in df.columns:
         if col in blocked_cols:
             continue
@@ -225,10 +224,10 @@ def _to_timestamp_series(values: pd.Series, fallback_length: int) -> pd.Series:
 
 def parse_hang_time(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     label_tier = _resolve_label_tier(activity_id_col)
 
-    csv_files: List[str] = []
+    csv_files: list[str] = []
     for root, _dirs, files in os.walk(dir):
         for file in files:
             if not file.endswith(".csv"):
@@ -242,9 +241,9 @@ def parse_hang_time(
     subject_tokens = [os.path.basename(path).split(".")[0] for path in csv_files]
     subject_map = {token: idx for idx, token in enumerate(sorted(set(subject_tokens)))}
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, object]] = []
-    label_rows: List[str] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, object]] = []
+    label_rows: list[str] = []
     global_session_id = 0
 
     loop = tqdm(csv_files)

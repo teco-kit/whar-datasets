@@ -1,7 +1,6 @@
 import os
 import re
 from collections import defaultdict
-from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -92,7 +91,7 @@ ACTIVITY_MAP = {
 
 def parse_pamap2(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     dir = os.path.join(dir, "PAMAP2_Dataset/PAMAP2_Dataset/Protocol/")
     files = sorted(
         f for f in os.listdir(dir) if f.endswith(".dat") and not f.startswith("._")
@@ -169,7 +168,7 @@ def parse_pamap2(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     # loop over sessions
     loop = tqdm(session_metadata["session_id"].unique())

@@ -3,7 +3,7 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import List, Set, TypeAlias
+from typing import Set, TypeAlias
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -120,7 +120,7 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
 
         return None
 
-    def _normalize_download_urls(self) -> List[str]:
+    def _normalize_download_urls(self) -> list[str]:
         if isinstance(self.cfg.download_url, str):
             urls = [self.cfg.download_url]
         else:

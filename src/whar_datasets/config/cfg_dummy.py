@@ -1,5 +1,3 @@
-from typing import Dict, Tuple
-
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
@@ -7,7 +5,7 @@ from whar_datasets.config.config import WHARConfig
 
 def parse_dummy(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del dir, activity_id_col
     raise NotImplementedError("The dummy configuration has no dataset parser.")
 

@@ -1,5 +1,4 @@
 import os
-from typing import Dict, List, Tuple
 
 import pandas as pd
 import scipy
@@ -27,14 +26,14 @@ def find_unimib_full_data_mat(dir: str) -> str:
 
 def parse_unimib(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     file_path = find_unimib_full_data_mat(dir)
     full_data = scipy.io.loadmat(file_path, simplify_cells=True)["full_data"]
 
-    session_rows: List[dict] = []
-    sessions: Dict[int, pd.DataFrame] = {}
+    session_rows: list[dict] = []
+    sessions: dict[int, pd.DataFrame] = {}
     next_session_id = 0
 
     for subject_id, row in enumerate(full_data):

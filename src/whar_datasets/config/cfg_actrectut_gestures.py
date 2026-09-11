@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 import scipy.io
@@ -9,7 +8,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-HAND_GESTURES_ACTIVITY_NAMES: List[str] = [
+HAND_GESTURES_ACTIVITY_NAMES: list[str] = [
     "null",
     "open_window",
     "drink",
@@ -24,11 +23,11 @@ HAND_GESTURES_ACTIVITY_NAMES: List[str] = [
     "tennis_smash",
 ]
 
-SELECTED_ACTIVITIES: List[str] = [
+SELECTED_ACTIVITIES: list[str] = [
     a for a in HAND_GESTURES_ACTIVITY_NAMES if a != "null"
 ]
 
-HAND_GESTURES_CHANNELS: List[str] = [
+HAND_GESTURES_CHANNELS: list[str] = [
     "acc_1_x",
     "acc_1_y",
     "acc_1_z",
@@ -51,7 +50,7 @@ HAND_GESTURES_GAP_THRESHOLD_SECONDS = 5.0
 SUBJECT_DIR_PATTERN = re.compile(r"^subject(?P<subject>\d+)_gesture$", re.IGNORECASE)
 
 
-def _resolve_gesture_subject_dirs(data_dir: str) -> List[Path]:
+def _resolve_gesture_subject_dirs(data_dir: str) -> list[Path]:
     root = Path(data_dir)
     if not root.exists():
         raise FileNotFoundError(
@@ -59,7 +58,7 @@ def _resolve_gesture_subject_dirs(data_dir: str) -> List[Path]:
         )
 
     candidate_roots = [root, root / "Data"]
-    subject_dirs: List[Path] = []
+    subject_dirs: list[Path] = []
 
     for candidate in candidate_roots:
         if not candidate.is_dir():
@@ -80,7 +79,7 @@ def _resolve_gesture_subject_dirs(data_dir: str) -> List[Path]:
     return unique_subject_dirs
 
 
-def _load_gesture_mat(mat_path: Path) -> Tuple[pd.DataFrame, pd.Series]:
+def _load_gesture_mat(mat_path: Path) -> tuple[pd.DataFrame, pd.Series]:
     if not mat_path.is_file():
         raise FileNotFoundError(f"Missing required file: '{mat_path}'.")
 
@@ -120,14 +119,14 @@ def _load_gesture_mat(mat_path: Path) -> Tuple[pd.DataFrame, pd.Series]:
 
 def parse_actrectut_gestures(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     subject_dirs = _resolve_gesture_subject_dirs(dir)
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
-    subject_raw_ids: List[int] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
+    subject_raw_ids: list[int] = []
     next_session_id = 0
 
     loop = tqdm(subject_dirs, desc="Parsing Hand Gestures")

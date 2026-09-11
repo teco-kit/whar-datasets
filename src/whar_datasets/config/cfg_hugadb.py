@@ -1,5 +1,4 @@
 import os
-from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -26,7 +25,7 @@ ID_TO_ACTIVITY = {
 
 def parse_hugadb(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     all_dfs = []
     base_path = os.path.join(dir, "Data")
 
@@ -84,7 +83,7 @@ def parse_hugadb(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     loop = tqdm(session_metadata["session_id"].unique())
     loop.set_description("Creating sessions")

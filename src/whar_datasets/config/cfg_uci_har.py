@@ -1,5 +1,4 @@
 import os
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -8,7 +7,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-UCI_HAR_SIGNAL_NAMES: List[str] = [
+UCI_HAR_SIGNAL_NAMES: list[str] = [
     "total_acc_x",
     "total_acc_y",
     "total_acc_z",
@@ -22,7 +21,7 @@ UCI_HAR_SIGNAL_NAMES: List[str] = [
 
 
 def get_df_from_files_uci_har(
-    files: List[str],
+    files: list[str],
     files_dir: str,
     subj_path: str,
     labels_path: str,
@@ -67,9 +66,7 @@ def get_df_from_files_uci_har(
     # (num_segs, 1)
 
     # assert number of segs are the same
-    if not (
-        df.shape[0] / eff_seg_size == subjects_df.shape[0] == labels_df.shape[0]
-    ):
+    if not (df.shape[0] / eff_seg_size == subjects_df.shape[0] == labels_df.shape[0]):
         raise ValueError("UCI-HAR signals, subjects, and labels are misaligned.")
     NUM_SEGS = labels_df.shape[0]
 
@@ -94,7 +91,7 @@ def get_df_from_files_uci_har(
 
 def parse_uci_har(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     dir = os.path.join(dir, "UCI HAR Dataset/UCI HAR Dataset/")
 
     # directories of raw data
@@ -168,9 +165,11 @@ def parse_uci_har(
     df["activity_id"] = df["activity_name"].map(name_to_id).astype("int32")
 
     # identify where activity or subject changes
-    changes = (df["activity_id"] != df["activity_id"].shift(1)) | (
-        df["subject_id"] != df["subject_id"].shift(1)
-    ) | (df["source_partition"] != df["source_partition"].shift(1))
+    changes = (
+        (df["activity_id"] != df["activity_id"].shift(1))
+        | (df["subject_id"] != df["subject_id"].shift(1))
+        | (df["source_partition"] != df["source_partition"].shift(1))
+    )
 
     # assign a unique session to each continuous segment
     df["session_id"] = changes.cumsum()
@@ -199,7 +198,7 @@ def parse_uci_har(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     # loop over sessions
     loop = tqdm(session_metadata["session_id"].unique())

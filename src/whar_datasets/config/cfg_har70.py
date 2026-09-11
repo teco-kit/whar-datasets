@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -7,7 +6,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-HAR70_ACTIVITY_MAP: Dict[int, str] = {
+HAR70_ACTIVITY_MAP: dict[int, str] = {
     1: "walking",
     3: "shuffling",
     4: "stairs (ascending)",
@@ -17,7 +16,7 @@ HAR70_ACTIVITY_MAP: Dict[int, str] = {
     8: "lying",
 }
 
-HAR70_ACTIVITY_NAMES: List[str] = [
+HAR70_ACTIVITY_NAMES: list[str] = [
     "walking",
     "shuffling",
     "stairs (ascending)",
@@ -27,7 +26,7 @@ HAR70_ACTIVITY_NAMES: List[str] = [
     "lying",
 ]
 
-HAR70_SENSOR_CHANNELS: List[str] = [
+HAR70_SENSOR_CHANNELS: list[str] = [
     "back_x",
     "back_y",
     "back_z",
@@ -68,15 +67,15 @@ def _extract_subject_raw_id(csv_path: Path) -> int:
 
 def parse_har70(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     root = _resolve_har70_root(dir)
     csv_paths = sorted(root.glob("*.csv"))
     if not csv_paths:
         raise FileNotFoundError(f"No HAR70 recordings found inside '{root}'.")
 
     required_columns = ["timestamp", *HAR70_SENSOR_CHANNELS, "label"]
-    session_records: List[Dict[str, int | str]] = []
-    sessions: Dict[int, pd.DataFrame] = {}
+    session_records: list[dict[str, int | str]] = []
+    sessions: dict[int, pd.DataFrame] = {}
     next_session_id = 0
 
     loop = tqdm(csv_paths, desc="Parsing HAR70")

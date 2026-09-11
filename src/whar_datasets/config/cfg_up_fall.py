@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -7,7 +6,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-UP_FALL_ACTIVITY_MAP: Dict[int, str] = {
+UP_FALL_ACTIVITY_MAP: dict[int, str] = {
     1: "falling forward using hands",
     2: "falling forward using knees",
     3: "falling backwards",
@@ -21,11 +20,11 @@ UP_FALL_ACTIVITY_MAP: Dict[int, str] = {
     11: "laying",
 }
 
-UP_FALL_ACTIVITY_NAMES: List[str] = [
+UP_FALL_ACTIVITY_NAMES: list[str] = [
     UP_FALL_ACTIVITY_MAP[idx] for idx in sorted(UP_FALL_ACTIVITY_MAP)
 ]
 
-UP_FALL_SENSOR_CHANNELS: List[str] = [
+UP_FALL_SENSOR_CHANNELS: list[str] = [
     "ankle_acc_x",
     "ankle_acc_y",
     "ankle_acc_z",
@@ -151,7 +150,7 @@ def _load_up_fall_raw(csv_path: Path) -> pd.DataFrame:
     return df
 
 
-def _split_session_by_gap(session_df: pd.DataFrame) -> List[pd.DataFrame]:
+def _split_session_by_gap(session_df: pd.DataFrame) -> list[pd.DataFrame]:
     if session_df.empty:
         return []
 
@@ -159,7 +158,7 @@ def _split_session_by_gap(session_df: pd.DataFrame) -> List[pd.DataFrame]:
     split_markers = (deltas > UP_FALL_SESSION_GAP_SECONDS).astype("int32")
     group_ids = split_markers.cumsum()
 
-    chunks: List[pd.DataFrame] = []
+    chunks: list[pd.DataFrame] = []
     for _, group in session_df.groupby(group_ids):
         chunk = group.reset_index(drop=True)
         if not chunk.empty:
@@ -198,14 +197,14 @@ def _build_session_frame(rows: pd.DataFrame) -> pd.DataFrame:
 
 def parse_up_fall(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     csv_path = _resolve_up_fall_csv(dir)
     raw = _load_up_fall_raw(csv_path)
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[dict] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict] = []
     next_session_id = 0
 
     grouped = raw.groupby(

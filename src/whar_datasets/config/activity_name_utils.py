@@ -1,15 +1,15 @@
-from typing import Iterable, List
+from collections.abc import Iterable
 
 
-def canonicalize_activity_name_list(activity_names: Iterable[object]) -> List[str]:
+def canonicalize_activity_name_list(activity_names: Iterable[object]) -> list[str]:
     """Normalize activity labels for cross-dataset matching/comparison."""
-    canonical: List[str] = []
+    canonical: list[str] = []
     for name in activity_names:
         text = str(name).strip()
         for sep in ("-", "_", "/", "(", ")", ",", ":", ";"):
             text = text.replace(sep, " ")
 
-        split_parts: List[str] = []
+        split_parts: list[str] = []
         for raw_part in text.split():
             current = ""
             for char in raw_part:

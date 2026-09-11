@@ -1,7 +1,6 @@
 import os
 import re
 import zipfile
-from typing import Dict, List, Tuple
 
 import pandas as pd
 
@@ -39,8 +38,8 @@ REAL_WORLD_NON_FOREARM_POSITIONS = [
 ]
 
 
-def get_real_world_sensor_channels() -> List[str]:
-    channels: List[str] = []
+def get_real_world_sensor_channels() -> list[str]:
+    channels: list[str] = []
 
     for sensor in ("acc", "gyr", "mag"):
         for position in REAL_WORLD_IMU_POSITIONS:
@@ -93,8 +92,8 @@ def find_real_world_root(dir: str) -> str:
     )
 
 
-def load_csv_frames_from_source(source_path: str) -> List[Tuple[str, pd.DataFrame]]:
-    frames: List[Tuple[str, pd.DataFrame]] = []
+def load_csv_frames_from_source(source_path: str) -> list[tuple[str, pd.DataFrame]]:
+    frames: list[tuple[str, pd.DataFrame]] = []
 
     if os.path.isdir(source_path):
         for file in sorted(os.listdir(source_path)):
@@ -125,7 +124,7 @@ def get_position_from_filename(file_name: str) -> str | None:
     return match.group(1)
 
 
-def get_sensor_channel_map(sensor: str, position: str) -> Dict[str, str]:
+def get_sensor_channel_map(sensor: str, position: str) -> dict[str, str]:
     if sensor in ("acc", "gyr", "mag"):
         return {
             "attr_x": f"{sensor}_{position}_x",
@@ -180,8 +179,8 @@ def standardize_sensor_frame(
     return df[["timestamp"] + value_cols]
 
 
-def load_sensor_frames(source_path: str, sensor: str) -> List[pd.DataFrame]:
-    sensor_frames: List[pd.DataFrame] = []
+def load_sensor_frames(source_path: str, sensor: str) -> list[pd.DataFrame]:
+    sensor_frames: list[pd.DataFrame] = []
 
     for file_name, raw_df in load_csv_frames_from_source(source_path):
         position = get_position_from_filename(file_name)
@@ -198,10 +197,10 @@ def load_sensor_frames(source_path: str, sensor: str) -> List[pd.DataFrame]:
 
 
 def merge_real_world_session(
-    sensor_sources: Dict[str, str], sampling_freq: int
+    sensor_sources: dict[str, str], sampling_freq: int
 ) -> pd.DataFrame | None:
-    frames: List[pd.DataFrame] = []
-    frames_by_sensor: Dict[str, List[pd.DataFrame]] = {
+    frames: list[pd.DataFrame] = []
+    frames_by_sensor: dict[str, list[pd.DataFrame]] = {
         "acc": [],
         "gyr": [],
         "mag": [],
@@ -273,7 +272,7 @@ def merge_real_world_session(
 
 def parse_real_world(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     root_dir = find_real_world_root(dir)
@@ -282,8 +281,8 @@ def parse_real_world(
         r"^(acc|gyr|mag|lig|gps|mic)_([a-z]+)_csv(?:\.zip)?$", re.IGNORECASE
     )
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int | str]] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int | str]] = []
     session_id = 0
 
     proband_dirs = []
@@ -298,7 +297,7 @@ def parse_real_world(
         if not os.path.isdir(data_dir):
             continue
 
-        activity_sources: Dict[str, Dict[str, str]] = {}
+        activity_sources: dict[str, dict[str, str]] = {}
 
         for source_entry in os.listdir(data_dir):
             match = source_pattern.match(source_entry.lower())

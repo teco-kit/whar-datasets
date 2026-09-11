@@ -1,6 +1,5 @@
 import os
 import re
-from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -57,7 +56,7 @@ ACTIVITY_MAP = {
 
 def parse_mhealth(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     dir = os.path.join(dir, "MHEALTHDATASET/")
 
     files = [file for file in os.listdir(dir) if file.endswith(".log")]
@@ -132,7 +131,7 @@ def parse_mhealth(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     # loop over sessions
     loop = tqdm(session_metadata["session_id"].unique())

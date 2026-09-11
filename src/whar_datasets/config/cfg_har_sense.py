@@ -1,5 +1,4 @@
 import os
-from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -10,7 +9,7 @@ from whar_datasets.config.config import WHARConfig
 
 def parse_har_sense(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     files = [f for f in os.listdir(dir) if f.endswith(".csv") and f != "har_sense.csv"]
 
     sub_dfs = []
@@ -78,7 +77,7 @@ def parse_har_sense(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     # loop over sessions
     loop = tqdm(session_metadata["session_id"].unique())

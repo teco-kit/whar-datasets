@@ -5,12 +5,11 @@ import subprocess
 import tarfile
 import zipfile
 from pathlib import Path
-from typing import List
 
 
-def find_archives(root_dir: Path) -> List[Path]:
+def find_archives(root_dir: Path) -> list[Path]:
     """Return archive files recursively discovered under ``root_dir``."""
-    archive_paths: List[Path] = []
+    archive_paths: list[Path] = []
 
     for file_path in root_dir.rglob("*"):
         if not file_path.is_file():

@@ -1,35 +1,34 @@
 import inspect
 from pathlib import Path
-from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from whar_datasets.config.getter import WHARDatasetID, get_dataset_cfg, har_dataset_dict
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
-from whar_datasets.config.config import WINDOW_TIME_MEDIUM
 from whar_datasets.config.cfg_daphnet import parse_daphnet
 from whar_datasets.config.cfg_uci_har import get_df_from_files_uci_har
+from whar_datasets.config.cfg_w_har import parse_w_har
 from whar_datasets.config.cfg_wisdm_19_phone import (
     WISDM_19_MAX_GAP_NS,
     parse_wisdm_19_phone,
 )
 from whar_datasets.config.cfg_wisdm_19_watch import parse_wisdm_19_watch
-from whar_datasets.config.cfg_w_har import parse_w_har
+from whar_datasets.config.config import WINDOW_TIME_MEDIUM
+from whar_datasets.config.getter import WHARDatasetID, get_dataset_cfg, har_dataset_dict
+from whar_datasets.processing.steps.parsing_step import _align_activity_ids_to_config
 from whar_datasets.processing.utils.caching import cache_common_format
 from whar_datasets.processing.utils.selecting import select_activities
 from whar_datasets.processing.utils.sessions import process_session
 from whar_datasets.processing.utils.validation import validate_common_format
-from whar_datasets.processing.steps.parsing_step import _align_activity_ids_to_config
 
-CFG_ITEMS: List[Tuple[WHARDatasetID, object]] = sorted(
+CFG_ITEMS: list[tuple[WHARDatasetID, object]] = sorted(
     har_dataset_dict.items(),
     key=lambda item: item[0].value,
 )
 
 
-def _make_activity_names(cfg) -> List[str]:
+def _make_activity_names(cfg) -> list[str]:
     names = list(cfg.selected_activities or [])
 
     if len(names) < cfg.num_of_activities:
@@ -40,7 +39,7 @@ def _make_activity_names(cfg) -> List[str]:
     return names[: cfg.num_of_activities]
 
 
-def _make_all_channel_names(cfg) -> List[str]:
+def _make_all_channel_names(cfg) -> list[str]:
     channel_names = list(cfg.selected_channels or [])
     extra_needed = cfg.num_of_channels - len(channel_names)
 
@@ -53,7 +52,7 @@ def _make_all_channel_names(cfg) -> List[str]:
 def _make_common_format_payload(
     cfg,
     session_length: int = 8,
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     activity_names = _make_activity_names(cfg)
     channels = _make_all_channel_names(cfg)
 
@@ -67,7 +66,7 @@ def _make_common_format_payload(
     ).astype({"activity_id": "int32", "activity_name": "string"})
 
     session_rows = []
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     base_freq_ms = max(int(1e3 / cfg.sampling_freq), 1)
 
@@ -377,8 +376,10 @@ def test_w_har_parser_maps_undefined_to_excluded_unknown_class(tmp_path: Path) -
 def test_wisdm19_alignment_is_bounded_and_preserves_one_session(
     tmp_path: Path,
     device: str,
-    parser: Callable[[str, str], Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]],
-    channels: List[str],
+    parser: Callable[
+        [str, str], tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]
+    ],
+    channels: list[str],
 ) -> None:
     raw_root = tmp_path / "wisdm-dataset" / "wisdm-dataset" / "raw" / device
     timestamps = [1_700_000_000_000_000_000 + idx * 50_000_000 for idx in range(4)]

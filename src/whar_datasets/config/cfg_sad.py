@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -8,7 +7,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-SAD_SENSOR_POSITIONS: List[str] = [
+SAD_SENSOR_POSITIONS: list[str] = [
     "Left_pocket",
     "Right_pocket",
     "Wrist",
@@ -16,7 +15,7 @@ SAD_SENSOR_POSITIONS: List[str] = [
     "Belt",
 ]
 
-SAD_SENSOR_FEATURES: List[str] = [
+SAD_SENSOR_FEATURES: list[str] = [
     "time_stamp",
     "Ax",
     "Ay",
@@ -32,11 +31,11 @@ SAD_SENSOR_FEATURES: List[str] = [
     "Mz",
 ]
 
-SAD_ACTIVITY_NORMALIZATION: Dict[str, str] = {
+SAD_ACTIVITY_NORMALIZATION: dict[str, str] = {
     "upsatirs": "upstairs",
 }
 
-SAD_ACTIVITY_NAMES: List[str] = [
+SAD_ACTIVITY_NAMES: list[str] = [
     "walking",
     "standing",
     "jogging",
@@ -79,7 +78,7 @@ def _extract_participant_id(file_path: Path) -> int:
 
 
 def _load_participant_csv(file_path: Path) -> pd.DataFrame:
-    column_names: List[str] = []
+    column_names: list[str] = []
     for i, sensor in enumerate(SAD_SENSOR_POSITIONS):
         for feature in SAD_SENSOR_FEATURES:
             column_names.append(f"{sensor}_{feature}")
@@ -97,7 +96,7 @@ def _load_participant_csv(file_path: Path) -> pd.DataFrame:
 
 def parse_sad(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     root = _find_sad_dataset_root(dir)
@@ -152,7 +151,7 @@ def parse_sad(
         .reset_index(drop=True)
     )
 
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
     loop = tqdm(session_metadata["session_id"].unique())
     loop.set_description("Creating sessions")
 

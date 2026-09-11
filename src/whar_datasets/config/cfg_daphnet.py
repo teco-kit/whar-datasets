@@ -1,5 +1,4 @@
 import os
-from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -16,13 +15,11 @@ ACTIVITY_MAP = {
 
 def parse_daphnet(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     dir = os.path.join(dir, "dataset_fog_release/dataset/")
 
     files = sorted(
-        f
-        for f in os.listdir(dir)
-        if f.endswith(".txt") and not f.startswith("._")
+        f for f in os.listdir(dir) if f.endswith(".txt") and not f.startswith("._")
     )
 
     sub_dfs = []
@@ -100,7 +97,7 @@ def parse_daphnet(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     # loop over sessions
     loop = tqdm(session_metadata["session_id"].unique())

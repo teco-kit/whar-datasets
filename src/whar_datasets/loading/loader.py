@@ -1,6 +1,6 @@
+from collections.abc import Callable
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ class Loader:
         session_df: pd.DataFrame,
         window_df: pd.DataFrame,
         samples_dir: Path,
-        samples_dict: Dict[str, List[np.ndarray]] | None = None,
+        samples_dict: dict[str, list[np.ndarray]] | None = None,
     ) -> None:
         self.activity_df = activity_df
         self.session_df = session_df
@@ -80,7 +80,7 @@ class Loader:
             )
         }
 
-        self._sample_loader: Callable[[str], List[np.ndarray]]
+        self._sample_loader: Callable[[str], list[np.ndarray]]
         if self.samples_dict is None:
             # Cache repeated disk reads for frequently sampled windows.
             self._sample_loader = lru_cache(maxsize=4096)(self._load_sample_from_disk)
@@ -93,11 +93,11 @@ class Loader:
     def sample_items(
         self,
         batch_size: int,
-        indices: List[int] | None = None,
+        indices: list[int] | None = None,
         activity_id: int | None = None,
         subject_id: int | None = None,
         seed: int | None = None,
-    ) -> Tuple[List[int], List[int], List[List[np.ndarray]]]:
+    ) -> tuple[list[int], list[int], list[list[np.ndarray]]]:
         """Sample a batch with replacement, optionally filtered by subject/activity."""
         inds = self.filter_indices(indices, subject_id, activity_id)
         if not inds:
@@ -117,7 +117,7 @@ class Loader:
 
         return activity_labels, subject_labels, samples
 
-    def get_item(self, index: int) -> Tuple[int, int, List[np.ndarray]]:
+    def get_item(self, index: int) -> tuple[int, int, list[np.ndarray]]:
         """Return (activity_label, subject_label, sample) for a window index label."""
         pos = self._get_pos(index)
 
@@ -137,7 +137,7 @@ class Loader:
         pos = self._get_pos(index)
         return int(self._subject_by_pos[pos])
 
-    def get_sample(self, index: int) -> List[np.ndarray]:
+    def get_sample(self, index: int) -> list[np.ndarray]:
         """Return sample data for a window index label."""
         pos = self._get_pos(index)
         window_id = self._window_id_by_pos[pos]
@@ -147,11 +147,11 @@ class Loader:
 
         return sample
 
-    def _load_sample_from_disk(self, window_id: str) -> List[np.ndarray]:
+    def _load_sample_from_disk(self, window_id: str) -> list[np.ndarray]:
         """Load sample by window_id from disk."""
         return load_sample(self.samples_dir, window_id)
 
-    def _load_sample_from_dict(self, window_id: str) -> List[np.ndarray]:
+    def _load_sample_from_dict(self, window_id: str) -> list[np.ndarray]:
         """Load sample by window_id from in-memory dictionary."""
         if self.samples_dict is None:
             raise RuntimeError("The in-memory sample dictionary is unavailable.")
@@ -161,15 +161,15 @@ class Loader:
         """Map external window index label to its positional row offset."""
         pos = self.window_df.index.get_loc(index)
         if not isinstance(pos, (int, np.integer)):
-            raise ValueError("Expected a unique window index.")
+            raise TypeError("Expected a unique window index.")
         return int(pos)
 
     def filter_indices(
         self,
-        indices: List[int] | None = None,
+        indices: list[int] | None = None,
         subject_id: int | None = None,
         activity_id: int | None = None,
-    ) -> List[int]:
+    ) -> list[int]:
         """Filter indices by subject/activity using cached or vectorized paths."""
         if indices is None:
             if subject_id is not None and activity_id is not None:
@@ -203,7 +203,7 @@ class Loader:
 
         return inds_np[mask].tolist()
 
-    def plot_indices_statistics(self, indices: List[int] | None = None) -> None:
+    def plot_indices_statistics(self, indices: list[int] | None = None) -> None:
         from matplotlib import pyplot as plt
 
         indices = indices or self._window_indices.copy()
@@ -236,7 +236,7 @@ class Loader:
         plt.tight_layout()
         plt.show()
 
-    def get_class_weights(self, indices: List[int] | None = None) -> dict:
+    def get_class_weights(self, indices: list[int] | None = None) -> dict:
         indices = indices or self._window_indices.copy()
 
         return compute_class_weights(

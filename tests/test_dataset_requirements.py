@@ -1,6 +1,6 @@
 import os
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
 
 import pandas as pd
 import pyarrow.parquet as pq
@@ -10,7 +10,7 @@ from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.getter import WHARDatasetID, har_dataset_dict
 from whar_datasets.processing.utils.sessions import process_session
 
-CFG_ITEMS: List[Tuple[WHARDatasetID, WHARConfig]] = sorted(
+CFG_ITEMS: list[tuple[WHARDatasetID, WHARConfig]] = sorted(
     har_dataset_dict.items(),
     key=lambda item: item[0].value,
 )
@@ -26,7 +26,7 @@ def _config_for_dataset(dataset_id: str) -> WHARConfig:
     raise KeyError(f"Unknown registered dataset: {dataset_id}")
 
 
-def _dataset_cache_paths(dataset_id: str) -> Tuple[Path, Path, Path, Path]:
+def _dataset_cache_paths(dataset_id: str) -> tuple[Path, Path, Path, Path]:
     configured_root = os.environ.get("WHAR_DATASETS_DIR")
     datasets_root = Path(
         configured_root
@@ -43,7 +43,7 @@ def _dataset_cache_paths(dataset_id: str) -> Tuple[Path, Path, Path, Path]:
 
 def _require_cached_common_format(
     dataset_id: str,
-) -> Tuple[pd.DataFrame, pd.DataFrame, Path]:
+) -> tuple[pd.DataFrame, pd.DataFrame, Path]:
     metadata_dir, sessions_dir, _, _ = _dataset_cache_paths(dataset_id)
     dataset_dir = metadata_dir.parent
     session_df_path = metadata_dir / "session_df.parquet"
@@ -228,7 +228,7 @@ def _assert_windowing_integrity(
     sampled_session_ids = sorted(
         int(x) for x in sampled_window_df["session_id"].unique()
     )
-    generated_windows: Dict[str, pd.DataFrame] = {}
+    generated_windows: dict[str, pd.DataFrame] = {}
 
     for sid in sampled_session_ids:
         generated_window_df, generated_window_map = process_session(

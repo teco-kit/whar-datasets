@@ -1,6 +1,5 @@
 import os
 import re
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -43,13 +42,13 @@ ID_TO_ACTIVITY = {
 
 def parse_utd_mhad(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     root_path = os.path.join(dir, "Inertial")
     pattern = re.compile(r"^a(\d+)_s(\d+)_t(\d+)_inertial\.mat$")
     sensor_cols = ["Ax", "Ay", "Az", "GyroX", "GyroY", "GyroZ"]
     sampling_rate_hz = 50.0
 
-    file_records: List[Tuple[int, int, int, str]] = []
+    file_records: list[tuple[int, int, int, str]] = []
     for root, _, files in os.walk(root_path):
         for file_name in files:
             match = pattern.match(file_name)
@@ -69,8 +68,8 @@ def parse_utd_mhad(
 
     file_records.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
     session_id = 0
 
     loop = tqdm(file_records)

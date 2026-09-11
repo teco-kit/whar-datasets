@@ -1,7 +1,6 @@
 import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -16,7 +15,7 @@ from whar_datasets.processing.utils.windowing import generate_windowing
 from whar_datasets.utils.loading import load_session, load_sessions
 from whar_datasets.utils.logging import logger
 
-SessionResult = Tuple[pd.DataFrame | None, Dict[str, pd.DataFrame] | None]
+SessionResult = tuple[pd.DataFrame | None, dict[str, pd.DataFrame] | None]
 
 
 def _effective_worker_count(cfg: WHARConfig, task_count: int) -> int:
@@ -41,10 +40,14 @@ def _process_session_data(
 
 def _process_session_from_disk(args: tuple[WHARConfig, Path, int]) -> SessionResult:
     cfg, sessions_dir, session_id = args
-    return _process_session_data(cfg, session_id, load_session(sessions_dir, session_id))
+    return _process_session_data(
+        cfg, session_id, load_session(sessions_dir, session_id)
+    )
 
 
-def _combine_results(results: List[SessionResult]) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
+def _combine_results(
+    results: list[SessionResult],
+) -> tuple[pd.DataFrame, dict[str, pd.DataFrame]]:
     valid = [(frame, data) for frame, data in results if frame is not None and data]
     if not valid:
         return pd.DataFrame(columns=["session_id", "window_id"]), {}
@@ -57,7 +60,7 @@ def _combine_results(results: List[SessionResult]) -> Tuple[pd.DataFrame, Dict[s
 
 def process_sessions_seq(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
-) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, dict[str, pd.DataFrame]]:
     """Generate windows after scanning the sessions cache only once."""
     session_ids = [int(value) for value in session_df["session_id"].unique()]
     sessions = load_sessions(sessions_dir, session_ids=session_ids)
@@ -70,7 +73,7 @@ def process_sessions_seq(
 
 def process_sessions_para(
     cfg: WHARConfig, sessions_dir: Path, session_df: pd.DataFrame
-) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, dict[str, pd.DataFrame]]:
     """Process complete sessions concurrently using bounded local workers."""
     session_ids = [int(value) for value in session_df["session_id"].unique()]
     workers = _effective_worker_count(cfg, len(session_ids))
@@ -94,4 +97,6 @@ def process_session(
     cfg: WHARConfig, sessions_dir: Path, session_id: int
 ) -> SessionResult:
     """Generate windows from one cached session."""
-    return _process_session_data(cfg, session_id, load_session(sessions_dir, session_id))
+    return _process_session_data(
+        cfg, session_id, load_session(sessions_dir, session_id)
+    )

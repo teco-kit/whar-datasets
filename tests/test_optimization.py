@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -34,7 +33,7 @@ from whar_datasets.utils.loading import (
 
 def _unused_parser(
     data_dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del data_dir, activity_id_col
     raise NotImplementedError
 
@@ -108,7 +107,10 @@ def test_strict_train_validation_split_purges_overlaps() -> None:
         for val_index in split.val_indices:
             val = window_df.loc[val_index]
             if train["session_id"] == val["session_id"]:
-                assert train["end_index"] <= val["start_index"] or val["end_index"] <= train["start_index"]
+                assert (
+                    train["end_index"] <= val["start_index"]
+                    or val["end_index"] <= train["start_index"]
+                )
 
 
 def test_lkso_subject_shuffle_is_seeded_and_optional() -> None:
@@ -296,29 +298,37 @@ def test_legacy_train_validation_split_keeps_every_candidate() -> None:
     window_df = pd.DataFrame(
         {"session_id": [0] * 10, "window_id": [f"0:{i}" for i in range(10)]}
     )
-    train, validation = splitter._get_train_val_indices(list(window_df.index), window_df)
+    train, validation = splitter._get_train_val_indices(
+        list(window_df.index), window_df
+    )
     assert len(train) + len(validation) == len(window_df)
     assert len(validation) == 2
 
 
 def test_array_caches_round_trip_without_pickle(tmp_path: Path) -> None:
-    window_df = pd.DataFrame(
-        {"session_id": [0, 0], "window_id": ["0:0", "0:1"]}
-    )
+    window_df = pd.DataFrame({"session_id": [0, 0], "window_id": ["0:0", "0:1"]})
     windows = {
-        "0:0": pd.DataFrame(np.arange(6, dtype=np.float32).reshape(3, 2), columns=["x", "y"]),
-        "0:1": pd.DataFrame(np.arange(6, 12, dtype=np.float32).reshape(3, 2), columns=["x", "y"]),
+        "0:0": pd.DataFrame(
+            np.arange(6, dtype=np.float32).reshape(3, 2), columns=["x", "y"]
+        ),
+        "0:1": pd.DataFrame(
+            np.arange(6, 12, dtype=np.float32).reshape(3, 2), columns=["x", "y"]
+        ),
     }
     windows_dir = tmp_path / "windows"
     cache_windows(windows_dir, window_df, windows)
-    np.testing.assert_array_equal(load_window(windows_dir, "0:1").to_numpy(), windows["0:1"].to_numpy())
+    np.testing.assert_array_equal(
+        load_window(windows_dir, "0:1").to_numpy(), windows["0:1"].to_numpy()
+    )
 
     samples_dir = tmp_path / "samples"
     samples = {window_id: [frame.to_numpy()] for window_id, frame in windows.items()}
     cache_samples(samples_dir, window_df, samples)
     assert not (samples_dir / "samples.pkl").exists()
     np.testing.assert_array_equal(load_sample(samples_dir, "0:0")[0], samples["0:0"][0])
-    np.testing.assert_array_equal(open_sample_store(samples_dir).get("0:1")[0], samples["0:1"][0])
+    np.testing.assert_array_equal(
+        open_sample_store(samples_dir).get("0:1")[0], samples["0:1"][0]
+    )
     assert set(load_samples(samples_dir)) == {"0:0", "0:1"}
 
 
@@ -362,9 +372,7 @@ def test_process_backend_matches_single_core_preparation(tmp_path: Path) -> None
         {"session_id": [0] * 8, "window_id": [f"0:{i}" for i in range(8)]}
     )
     windows = {
-        f"0:{i}": pd.DataFrame(
-            np.full((10, 1), i, dtype=np.float32), columns=["x"]
-        )
+        f"0:{i}": pd.DataFrame(np.full((10, 1), i, dtype=np.float32), columns=["x"])
         for i in range(8)
     }
     windows_dir = tmp_path / "parallel_windows"
@@ -407,9 +415,7 @@ def test_cache_cleanup_ignores_disappearing_hidden_files(
     directory.mkdir()
     hidden_file = directory / "._data.npy"
 
-    def simulate_macos_metadata_race(
-        path: str, *, onerror=None
-    ) -> None:
+    def simulate_macos_metadata_race(path: str, *, onerror=None) -> None:
         del path
         assert onerror is not None
         error = FileNotFoundError(2, "No such file or directory", str(hidden_file))

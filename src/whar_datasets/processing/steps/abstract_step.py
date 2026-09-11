@@ -3,7 +3,7 @@ import inspect
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Generic, List, Set, TypeVar
+from typing import Any, Generic, TypeVar
 
 from whar_datasets.config.config import CACHE_SCHEMA_VERSION, WHARConfig
 from whar_datasets.utils.logging import logger
@@ -30,13 +30,13 @@ class AbstractStep(ABC, Generic[InputT, OutputT]):
         self,
         cfg: WHARConfig,
         hash_dir: Path,
-        dependent_on: List["AbstractStep[Any, Any]"] | None = None,
+        dependent_on: list["AbstractStep[Any, Any]"] | None = None,
     ) -> None:
         self.cfg = cfg
         self.hash_dir = hash_dir
         self.hash_name: str
-        self.relevant_cfg_keys: Set[str] = set()
-        self.relevant_values: List[str] = []
+        self.relevant_cfg_keys: set[str] = set()
+        self.relevant_values: list[str] = []
         self.dependent_on = dependent_on or []
 
     def run(self, force_recompute: bool) -> None:
@@ -46,7 +46,7 @@ class AbstractStep(ABC, Generic[InputT, OutputT]):
 
         # check wether an update is needed
         if self._check_hash() and not force_recompute:
-            return None
+            return
 
         # pass or load input
         step_input = self.load_input()
@@ -134,24 +134,19 @@ class AbstractStep(ABC, Generic[InputT, OutputT]):
     @abstractmethod
     def load_input(self) -> InputT:
         """Load/prepare all inputs required to execute this step."""
-        pass
 
     @abstractmethod
     def validate_input(self, step_input: InputT) -> bool:
         """Validate that input artifacts have the expected format and content."""
-        pass
 
     @abstractmethod
     def build_output(self, step_input: InputT) -> OutputT:
         """Execute the core transformation for this step."""
-        pass
 
     @abstractmethod
     def save_output(self, step_output: OutputT) -> None:
         """Persist step output artifacts to cache/storage."""
-        pass
 
     @abstractmethod
     def load_output(self) -> OutputT:
         """Load cached outputs produced by this step."""
-        pass

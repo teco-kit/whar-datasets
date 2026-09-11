@@ -1,7 +1,6 @@
 import os
 import re
 from collections import defaultdict
-from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -35,7 +34,7 @@ ACTIVITY_MAP = {
 
 def parse_ku_har(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     session_metadata_dict = defaultdict(list)
@@ -46,9 +45,9 @@ def parse_ku_har(
     # "extracting_hash.txt" that may be present in the same directory.
     activity_dirs = sorted(
         [
-        entry
-        for entry in os.listdir(dir)
-        if os.path.isdir(os.path.join(dir, entry)) and re.match(r"^\d+\.", entry)
+            entry
+            for entry in os.listdir(dir)
+            if os.path.isdir(os.path.join(dir, entry)) and re.match(r"^\d+\.", entry)
         ],
         key=lambda entry: int(entry.split(".", 1)[0]),
     )
@@ -155,7 +154,7 @@ def parse_ku_har(
     session_metadata["subject_id"] = pd.factorize(session_metadata["subject_id"])[0]
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     # loop over sessions
     loop = tqdm(session_metadata["session_id"].unique())

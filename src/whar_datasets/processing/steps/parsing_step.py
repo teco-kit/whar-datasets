@@ -2,22 +2,25 @@ import inspect
 import os
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Iterator, List, Set, Tuple, TypeAlias
+
+, Iterator, Set, TypeAlias
 
 import pandas as pd
 
-from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
+from whar_datasets.config.activity_name_utils import \
+    canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.steps.abstract_step import AbstractStep
 from whar_datasets.processing.utils.caching import cache_common_format
-from whar_datasets.utils.loading import load_activity_df, load_session_df, load_sessions
+from whar_datasets.utils.loading import (load_activity_df, load_session_df,
+                                         load_sessions)
 from whar_datasets.utils.logging import logger
 
 InputT: TypeAlias = None
-OutputT: TypeAlias = Tuple[
+OutputT: TypeAlias = tuple[
     pd.DataFrame,
     pd.DataFrame,
-    Dict[int, pd.DataFrame],
+    dict[int, pd.DataFrame],
 ]
 
 
@@ -25,7 +28,7 @@ def _align_activity_ids_to_config(
     cfg: WHARConfig,
     activity_df: pd.DataFrame,
     session_df: pd.DataFrame,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Align parser IDs by activity names, never by parser/file order.
 
     Parsers are allowed to discover activities in dataset-specific order, but
@@ -37,8 +40,7 @@ def _align_activity_ids_to_config(
     required_session_columns = {"activity_id"}
     if not required_activity_columns.issubset(activity_df.columns):
         raise ValueError(
-            "Parser activity metadata must contain 'activity_id' and "
-            "'activity_name'."
+            "Parser activity metadata must contain 'activity_id' and 'activity_name'."
         )
     if not required_session_columns.issubset(session_df.columns):
         raise ValueError("Parser session metadata must contain 'activity_id'.")
@@ -46,7 +48,9 @@ def _align_activity_ids_to_config(
     config_names = canonicalize_activity_name_list(cfg.available_activities)
     config_name_to_id = {name: idx for idx, name in enumerate(config_names)}
     if len(config_name_to_id) != len(config_names):
-        raise ValueError("Configured activity names are not unique after normalization.")
+        raise ValueError(
+            "Configured activity names are not unique after normalization."
+        )
 
     parsed = activity_df.copy()
     parsed_names = canonicalize_activity_name_list(parsed["activity_name"].tolist())
@@ -83,8 +87,7 @@ def _align_activity_ids_to_config(
     if unmapped_session_ids:
         raise ValueError(
             "Parser session metadata references activity IDs absent from activity "
-            "metadata: "
-            + ", ".join(str(value) for value in unmapped_session_ids)
+            "metadata: " + ", ".join(str(value) for value in unmapped_session_ids)
         )
     sessions["activity_id"] = session_ids.astype(int).map(parsed_id_to_config_id)
     if sessions["activity_id"].isna().any():
@@ -103,7 +106,7 @@ class ParsingStep(AbstractStep[InputT, OutputT]):
         data_dir: Path,
         metadata_dir: Path,
         sessions_dir: Path,
-        dependent_on: List[AbstractStep],
+        dependent_on: list[AbstractStep],
     ):
         super().__init__(cfg, sessions_dir, dependent_on)
 
@@ -204,7 +207,7 @@ def _ignore_sidecar_files() -> Iterator[None]:
     original_path_glob = Path.glob
     original_path_rglob = Path.rglob
 
-    def _filtered_listdir(path: str | os.PathLike[str] = ".") -> List[str]:
+    def _filtered_listdir(path: str | os.PathLike[str] = ".") -> list[str]:
         return [name for name in original_listdir(path) if not _is_sidecar_entry(name)]
 
     def _filtered_walk(

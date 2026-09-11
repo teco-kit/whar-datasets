@@ -1,5 +1,4 @@
 import os
-from typing import Dict, List, Tuple
 
 import pandas as pd
 
@@ -32,7 +31,7 @@ REAL_LIFE_HAR_SENSOR_CHANNELS = [
     "gps_accuracy",
 ]
 
-REAL_LIFE_HAR_SENSOR_SPECS: Dict[str, Dict[str, str | List[str]]] = {
+REAL_LIFE_HAR_SENSOR_SPECS: dict[str, dict[str, str | list[str]]] = {
     "acc": {
         "file": "sensoringData_acc_prepared_20.csv",
         "raw_cols": ["acc_x_axis", "acc_y_axis", "acc_z_axis"],
@@ -115,8 +114,8 @@ def _find_real_life_har_root(dir: str) -> str:
 
 
 def _init_empty_sensor_storage(
-    session_ids: List[int],
-) -> Dict[str, Dict[int, List[pd.DataFrame]]]:
+    session_ids: list[int],
+) -> dict[str, dict[int, list[pd.DataFrame]]]:
     return {
         sensor: {sid: [] for sid in session_ids}
         for sensor in REAL_LIFE_HAR_SENSOR_SPECS.keys()
@@ -127,11 +126,11 @@ def _load_sensor_data_by_session(
     root_path: str,
     session_bounds: pd.DataFrame,
     chunksize: int = 750_000,
-) -> Tuple[Dict[str, Dict[int, List[pd.DataFrame]]], Dict[int, str]]:
+) -> tuple[dict[str, dict[int, list[pd.DataFrame]]], dict[int, str]]:
     sensor_values_by_session = _init_empty_sensor_storage(
         [int(sid) for sid in session_bounds["session_id"].tolist()]
     )
-    session_activity_names: Dict[int, str] = {}
+    session_activity_names: dict[int, str] = {}
 
     relevant_cols = [
         "session_id",
@@ -214,7 +213,7 @@ def _load_sensor_data_by_session(
 
 def _merge_session_modalities(
     session_info: pd.Series,
-    sensor_values_by_session: Dict[str, Dict[int, List[pd.DataFrame]]],
+    sensor_values_by_session: dict[str, dict[int, list[pd.DataFrame]]],
     sampling_freq: int,
 ) -> pd.DataFrame:
     session_id = int(session_info["session_id"])
@@ -273,7 +272,7 @@ def _merge_session_modalities(
 
 def parse_real_life_har(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     root_path = _find_real_life_har_root(dir)
@@ -306,8 +305,8 @@ def parse_real_life_har(
         root_path, valid_sessions
     )
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
 
     activity_name_to_id = {
         name: idx for idx, name in enumerate(REAL_LIFE_HAR_ACTIVITY_NAMES)

@@ -2,8 +2,8 @@ import json
 import shutil
 import tempfile
 import uuid
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -72,7 +72,7 @@ def _atomic_parquet(df: pd.DataFrame, path: Path) -> None:
 def cache_samples(
     samples_dir: Path,
     window_df: pd.DataFrame,
-    samples: Dict[str, List[np.ndarray]],
+    samples: dict[str, list[np.ndarray]],
 ) -> None:
     """Persist fixed-shape features as memory-mappable arrays."""
     ordered_ids = [str(value) for value in window_df["window_id"]]
@@ -104,7 +104,9 @@ def cache_samples(
                 raise ValueError(
                     f"Feature {feature_index} has variable shapes and cannot be array-cached."
                 )
-            dtype = np.dtype(np.float32 if np.issubdtype(first.dtype, np.floating) else first.dtype)
+            dtype = np.dtype(
+                np.float32 if np.issubdtype(first.dtype, np.floating) else first.dtype
+            )
             filename = f"feature_{feature_index}.npy"
             target = np.lib.format.open_memmap(
                 directory / filename,
@@ -133,7 +135,7 @@ def cache_samples(
 
 
 def cache_windows(
-    windows_dir: Path, window_df: pd.DataFrame, windows: Dict[str, pd.DataFrame]
+    windows_dir: Path, window_df: pd.DataFrame, windows: dict[str, pd.DataFrame]
 ) -> None:
     """Persist windows as one dense float32 tensor with constant-time row access."""
     ordered_ids = [str(value) for value in window_df["window_id"]]
@@ -173,7 +175,9 @@ def cache_windows(
 
 def cache_window_df(metadata_dir: Path, window_df: pd.DataFrame) -> None:
     """Persist typed window metadata."""
-    _atomic_parquet(window_df.reset_index(drop=True), metadata_dir / "window_df.parquet")
+    _atomic_parquet(
+        window_df.reset_index(drop=True), metadata_dir / "window_df.parquet"
+    )
 
 
 def cache_common_format(
@@ -181,11 +185,15 @@ def cache_common_format(
     sessions_dir: Path,
     activity_df: pd.DataFrame,
     session_df: pd.DataFrame,
-    sessions: Dict[int, pd.DataFrame],
+    sessions: dict[int, pd.DataFrame],
 ) -> None:
     """Persist metadata and one Parquet row group per session without concatenation."""
-    _atomic_parquet(activity_df.reset_index(drop=True), metadata_dir / "activity_df.parquet")
-    _atomic_parquet(session_df.reset_index(drop=True), metadata_dir / "session_df.parquet")
+    _atomic_parquet(
+        activity_df.reset_index(drop=True), metadata_dir / "activity_df.parquet"
+    )
+    _atomic_parquet(
+        session_df.reset_index(drop=True), metadata_dir / "session_df.parquet"
+    )
 
     def build(directory: Path) -> None:
         writer: pq.ParquetWriter | None = None
@@ -195,7 +203,9 @@ def cache_common_format(
                 frame["timestamp"] = pd.to_datetime(frame["timestamp"])
                 sensor_columns = frame.columns.difference(["timestamp"])
                 frame[sensor_columns] = frame[sensor_columns].astype(np.float32)
-                table = pa.Table.from_pandas(frame, preserve_index=False).replace_schema_metadata()
+                table = pa.Table.from_pandas(
+                    frame, preserve_index=False
+                ).replace_schema_metadata()
                 table = table.append_column(
                     "session_id",
                     pa.array(np.full(len(frame), session_id, dtype=np.int64)),

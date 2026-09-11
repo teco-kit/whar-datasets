@@ -1,30 +1,27 @@
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, TypeAlias
+
+, Set, TypeAlias
 
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.pipeline import AbstractStep
-from whar_datasets.processing.utils.caching import cache_window_df, cache_windows
+from whar_datasets.processing.utils.caching import (cache_window_df,
+                                                    cache_windows)
 from whar_datasets.processing.utils.selecting import select_activities
-from whar_datasets.processing.utils.sessions import (
-    process_sessions_para,
-    process_sessions_seq,
-)
+from whar_datasets.processing.utils.sessions import (process_sessions_para,
+                                                     process_sessions_seq)
 from whar_datasets.processing.utils.validation import validate_common_format
-from whar_datasets.utils.loading import (
-    load_activity_df,
-    load_session_df,
-    load_window_df,
-)
+from whar_datasets.utils.loading import (load_activity_df, load_session_df,
+                                         load_window_df)
 from whar_datasets.utils.logging import logger
 
-InputT: TypeAlias = Tuple[pd.DataFrame, pd.DataFrame]
-OutputT: TypeAlias = Tuple[
+InputT: TypeAlias = tuple[pd.DataFrame, pd.DataFrame]
+OutputT: TypeAlias = tuple[
     pd.DataFrame,
     pd.DataFrame,
     pd.DataFrame,
-    Dict[str, pd.DataFrame],
+    dict[str, pd.DataFrame],
 ]
 
 
@@ -37,7 +34,7 @@ class WindowingStep(AbstractStep[InputT, OutputT]):
         metadata_dir: Path,
         sessions_dir: Path,
         windows_dir: Path,
-        dependent_on: List[AbstractStep],
+        dependent_on: list[AbstractStep],
     ):
         super().__init__(cfg, windows_dir, dependent_on)
 

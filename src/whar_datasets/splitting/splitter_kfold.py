@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 import pandas as pd
 
@@ -21,7 +19,7 @@ class KFoldSplitter(Splitter):
 
     def get_splits(
         self, session_df: pd.DataFrame, window_df: pd.DataFrame
-    ) -> List[Split]:
+    ) -> list[Split]:
         """Create ``n_folds`` train/val/test splits over shuffled window indices."""
         indices = list(window_df.index)
         self.rng.shuffle(indices)
@@ -29,7 +27,7 @@ class KFoldSplitter(Splitter):
         folds = np.array_split(indices, self.n_folds)
 
         self._reset_split_diagnostics()
-        splits: List[Split] = []
+        splits: list[Split] = []
         for fold_idx in range(self.n_folds):
             test_indices = folds[fold_idx].tolist()
             train_val_indices = [

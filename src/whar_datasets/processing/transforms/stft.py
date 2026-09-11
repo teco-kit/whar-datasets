@@ -42,7 +42,5 @@ def signal_to_stft(
     # (sensor_channels, freq_bins, time_bins)
     magnitude = np.stack(magnitudes, axis=0)
     phase = np.stack(phases, axis=0)
-    reconstruction_info = np.array(
-        [time_steps, segment_len, overlap], dtype=np.int32
-    )
+    reconstruction_info = np.array([time_steps, segment_len, overlap], dtype=np.int32)
     return magnitude, phase, reconstruction_info

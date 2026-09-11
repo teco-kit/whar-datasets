@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
@@ -10,7 +8,7 @@ from whar_datasets.splitting.splitter import Splitter
 class LOSOSplitter(Splitter):
     """Leave-one-subject-out splitting strategy."""
 
-    def __init__(self, cfg: WHARConfig, subject_ids: List[int] | None = None):
+    def __init__(self, cfg: WHARConfig, subject_ids: list[int] | None = None):
         super().__init__(cfg)
 
         self.subject_ids = subject_ids
@@ -19,12 +17,12 @@ class LOSOSplitter(Splitter):
         self,
         session_df: pd.DataFrame,
         window_df: pd.DataFrame,
-    ) -> List[Split]:
+    ) -> list[Split]:
         """Create one split per held-out subject."""
         subject_ids = self.subject_ids or session_df["subject_id"].unique().tolist()
 
         self._reset_split_diagnostics()
-        splits: List[Split] = []
+        splits: list[Split] = []
 
         for s in subject_ids:
             test_sessions = session_df[session_df["subject_id"] == s][

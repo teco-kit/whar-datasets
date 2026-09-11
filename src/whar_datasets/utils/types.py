@@ -1,10 +1,11 @@
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable, Dict, Tuple, TypeAlias
+from typing import TypeAlias
 
 import pandas as pd
 
 Parse: TypeAlias = Callable[
-    [str, str], Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]
+    [str, str], tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]
 ]
 # Signature for dataset parser callbacks:
 # (data_dir, activity_id_column_name) -> (activity_df, session_df, sessions_by_id)

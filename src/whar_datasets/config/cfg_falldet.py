@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -9,9 +8,9 @@ from whar_datasets.config.activity_name_utils import canonicalize_activity_name_
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
 
-FALLDET_SENSOR_CHANNELS: List[str] = ["acc_x", "acc_y", "acc_z"]
+FALLDET_SENSOR_CHANNELS: list[str] = ["acc_x", "acc_y", "acc_z"]
 
-FALLDET_ACTIVITY_ALIASES: Dict[str, str] = {
+FALLDET_ACTIVITY_ALIASES: dict[str, str] = {
     "downsit": "downSit",
     "freefall": "freeFall",
     "runfall": "runFall",
@@ -20,7 +19,7 @@ FALLDET_ACTIVITY_ALIASES: Dict[str, str] = {
     "walksit": "walkSit",
 }
 
-FALLDET_FINE_ACTIVITY_NAMES: List[str] = [
+FALLDET_FINE_ACTIVITY_NAMES: list[str] = [
     "downSit",
     "freeFall",
     "runFall",
@@ -29,7 +28,7 @@ FALLDET_FINE_ACTIVITY_NAMES: List[str] = [
     "walkSit",
 ]
 
-FALLDET_BINARY_ACTIVITY_NAMES: List[str] = ["fall", "non_fall"]
+FALLDET_BINARY_ACTIVITY_NAMES: list[str] = ["fall", "non_fall"]
 FALLDET_SAMPLING_FREQ_HZ = 50.0
 FALLDET_MAX_STEP_MULTIPLIER = 3.0
 FALLDET_SESSION_GAP_SECONDS = FALLDET_MAX_STEP_MULTIPLIER / FALLDET_SAMPLING_FREQ_HZ
@@ -137,7 +136,7 @@ def _load_session_from_csv(file_path: Path) -> pd.DataFrame:
     return session_df
 
 
-def _split_by_timestamp_gap(session_df: pd.DataFrame) -> List[pd.DataFrame]:
+def _split_by_timestamp_gap(session_df: pd.DataFrame) -> list[pd.DataFrame]:
     if session_df.empty:
         return []
 
@@ -145,7 +144,7 @@ def _split_by_timestamp_gap(session_df: pd.DataFrame) -> List[pd.DataFrame]:
     split_markers = (deltas > FALLDET_SESSION_GAP_SECONDS).astype("int32")
     group_ids = split_markers.cumsum()
 
-    split_sessions: List[pd.DataFrame] = []
+    split_sessions: list[pd.DataFrame] = []
     for _, group in session_df.groupby(group_ids):
         chunk = group.reset_index(drop=True)
         if not chunk.empty:
@@ -156,7 +155,7 @@ def _split_by_timestamp_gap(session_df: pd.DataFrame) -> List[pd.DataFrame]:
 
 def parse_falldet(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     root = _resolve_falldet_root(dir)
     scheme = _select_activity_scheme(activity_id_col)
 
@@ -168,8 +167,8 @@ def parse_falldet(
     if not session_files:
         raise FileNotFoundError(f"No FallDet CSV files found in '{root}'.")
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int | str]] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int | str]] = []
 
     loop = tqdm(session_files)
     loop.set_description("Creating sessions")

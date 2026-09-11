@@ -1,5 +1,4 @@
 import random
-from typing import Dict, Tuple
 
 import numpy as np
 
@@ -40,9 +39,9 @@ class TorchAdapter(Dataset):
     def __len__(self) -> int:
         return len(self.loader)
 
-    def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
+    def __getitem__(self, index: int) -> tuple[Tensor, Tensor]:
         """Return ``(label, sample)`` tensors for one window index."""
-        activity_label, subject_label, sample = self.loader.get_item(index)
+        activity_label, _, sample = self.loader.get_item(index)
 
         y = torch.tensor(activity_label, dtype=torch.long)
         array = np.asarray(sample[0], dtype=np.float32)
@@ -50,7 +49,7 @@ class TorchAdapter(Dataset):
 
         return y, x
 
-    def get_dataloaders(self, batch_size: int) -> Dict[str, DataLoader]:
+    def get_dataloaders(self, batch_size: int) -> dict[str, DataLoader]:
         """Build train/validation/test dataloaders for the current split."""
         train_set = Subset(self, self.split.train_indices)
         val_set = Subset(self, self.split.val_indices)

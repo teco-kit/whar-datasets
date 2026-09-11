@@ -1,7 +1,6 @@
 import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -13,7 +12,7 @@ from whar_datasets.processing.utils.transform import get_transform
 from whar_datasets.utils.loading import WindowStore, open_window_store
 from whar_datasets.utils.logging import logger
 
-WindowSource = Dict[str, pd.DataFrame] | WindowStore
+WindowSource = dict[str, pd.DataFrame] | WindowStore
 
 
 def _prepare_one(
@@ -21,7 +20,7 @@ def _prepare_one(
     norm_params: NormParams | None,
     source: WindowSource,
     window_id: str,
-) -> Tuple[str, List[np.ndarray]]:
+) -> tuple[str, list[np.ndarray]]:
     if isinstance(source, WindowStore):
         values = source.get_array(window_id)
         columns = source.columns
@@ -40,7 +39,7 @@ def prepare_windows_seq(
     window_df: pd.DataFrame,
     windows_dir: Path,
     windows: WindowSource | None = None,
-) -> Dict[str, List[np.ndarray]]:
+) -> dict[str, list[np.ndarray]]:
     """Normalize and transform windows from one scan or memory map."""
     logger.info("Normalizing and transforming windows")
     source = windows or open_window_store(windows_dir)
@@ -55,8 +54,8 @@ def prepare_windows_seq(
 
 
 def _prepare_chunk(
-    args: tuple[WHARConfig, NormParams | None, Path, List[str]]
-) -> Dict[str, List[np.ndarray]]:
+    args: tuple[WHARConfig, NormParams | None, Path, list[str]],
+) -> dict[str, list[np.ndarray]]:
     cfg, norm_params, windows_dir, window_ids = args
     source = open_window_store(windows_dir)
     return {
@@ -71,7 +70,7 @@ def prepare_windows_para(
     window_df: pd.DataFrame,
     windows_dir: Path,
     windows: WindowSource | None = None,
-) -> Dict[str, List[np.ndarray]]:
+) -> dict[str, list[np.ndarray]]:
     """Normalize/transform bounded window chunks in actual worker processes."""
     ids = [str(value) for value in window_df["window_id"]]
     requested = cfg.num_workers or (os.cpu_count() or 1)
@@ -80,10 +79,12 @@ def prepare_windows_para(
         return prepare_windows_seq(cfg, norm_params, window_df, windows_dir, windows)
 
     chunk_size = max(1, int(np.ceil(len(ids) / (workers * 4))))
-    chunks = [ids[start : start + chunk_size] for start in range(0, len(ids), chunk_size)]
+    chunks = [
+        ids[start : start + chunk_size] for start in range(0, len(ids), chunk_size)
+    ]
     tasks = [(cfg, norm_params, windows_dir, chunk) for chunk in chunks]
     logger.info("Preparing windows with %d worker processes", workers)
-    prepared: Dict[str, List[np.ndarray]] = {}
+    prepared: dict[str, list[np.ndarray]] = {}
     with ProcessPoolExecutor(max_workers=workers) as executor:
         for result in tqdm(
             executor.map(_prepare_chunk, tasks),

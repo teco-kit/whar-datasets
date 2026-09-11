@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -9,7 +8,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-SKODA_ACTIVITY_NAMES: List[str] = [
+SKODA_ACTIVITY_NAMES: list[str] = [
     "write on notepad",
     "open hood",
     "close hood",
@@ -22,13 +21,13 @@ SKODA_ACTIVITY_NAMES: List[str] = [
     "check steering wheel",
 ]
 
-LEFT_SENSOR_IDS: List[int] = [3, 17, 19, 20, 23, 25, 26, 28, 30, 31]
-RIGHT_SENSOR_IDS: List[int] = [1, 2, 14, 16, 18, 21, 22, 24, 27, 29]
-AXES: Tuple[str, str, str] = ("x", "y", "z")
+LEFT_SENSOR_IDS: list[int] = [3, 17, 19, 20, 23, 25, 26, 28, 30, 31]
+RIGHT_SENSOR_IDS: list[int] = [1, 2, 14, 16, 18, 21, 22, 24, 27, 29]
+AXES: tuple[str, str, str] = ("x", "y", "z")
 SKODA_SAMPLING_HZ = 98.0
 
 
-def _build_arm_channels(arm_prefix: str, sensor_ids: List[int]) -> List[str]:
+def _build_arm_channels(arm_prefix: str, sensor_ids: list[int]) -> list[str]:
     return [
         f"{arm_prefix}_acc_sensor{sensor_id:02d}_{axis}"
         for sensor_id in sensor_ids
@@ -36,9 +35,9 @@ def _build_arm_channels(arm_prefix: str, sensor_ids: List[int]) -> List[str]:
     ]
 
 
-LEFT_CHANNELS: List[str] = _build_arm_channels("left", LEFT_SENSOR_IDS)
-RIGHT_CHANNELS: List[str] = _build_arm_channels("right", RIGHT_SENSOR_IDS)
-ALL_CHANNELS: List[str] = LEFT_CHANNELS + RIGHT_CHANNELS
+LEFT_CHANNELS: list[str] = _build_arm_channels("left", LEFT_SENSOR_IDS)
+RIGHT_CHANNELS: list[str] = _build_arm_channels("right", RIGHT_SENSOR_IDS)
+ALL_CHANNELS: list[str] = LEFT_CHANNELS + RIGHT_CHANNELS
 
 
 def _resolve_skoda_segmented_mat(data_dir: str) -> Path:
@@ -70,7 +69,7 @@ def _extract_axis_vector(
 
 def parse_skoda(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     segmented_mat_path = _resolve_skoda_segmented_mat(dir)
     mat = scipy.io.loadmat(segmented_mat_path)
 
@@ -108,8 +107,8 @@ def parse_skoda(
             f"{class_count_left} vs {len(SKODA_ACTIVITY_NAMES)}."
         )
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
     session_id = 0
 
     class_loop = tqdm(range(class_count_left))
@@ -163,7 +162,10 @@ def parse_skoda(
             session_df = session_df[["timestamp", *ALL_CHANNELS]]
 
             sessions[session_id] = session_df.astype(
-                {"timestamp": "datetime64[ms]", **{ch: "float32" for ch in ALL_CHANNELS}}
+                {
+                    "timestamp": "datetime64[ms]",
+                    **{ch: "float32" for ch in ALL_CHANNELS},
+                }
             )
             session_rows.append(
                 {

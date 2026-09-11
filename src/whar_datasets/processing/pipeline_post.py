@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import numpy as np
 import pandas as pd
 
@@ -17,7 +15,7 @@ class PostProcessingPipeline(ProcessingPipeline):
         cfg: WHARConfig,
         pre_processing_pipeline: PreProcessingPipeline,
         window_df: pd.DataFrame,
-        indices: List[int],
+        indices: list[int],
     ):
         self.cfg = cfg
         self.samples_root_dir = pre_processing_pipeline.dataset_dir / "samples"
@@ -38,8 +36,8 @@ class PostProcessingPipeline(ProcessingPipeline):
         super().__init__(steps=[self.sampling_step])
 
     def run(
-        self, force_recompute: bool | List[bool] | None = None
-    ) -> Dict[str, List[np.ndarray]] | None:
+        self, force_recompute: bool | list[bool] | None = None
+    ) -> dict[str, list[np.ndarray]] | None:
         super().run(force_recompute)
 
         samples = self.sampling_step.load_output() if self.cfg.in_memory else None

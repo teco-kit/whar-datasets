@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -8,7 +7,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-HARTH_ACTIVITY_NAMES: List[str] = [
+HARTH_ACTIVITY_NAMES: list[str] = [
     "walking",
     "running",
     "shuffling",
@@ -23,7 +22,7 @@ HARTH_ACTIVITY_NAMES: List[str] = [
     "cycling (stand, inactive)",
 ]
 
-HARTH_ACTIVITY_MAP: Dict[int, str] = {
+HARTH_ACTIVITY_MAP: dict[int, str] = {
     1: "walking",
     2: "running",
     3: "shuffling",
@@ -38,7 +37,7 @@ HARTH_ACTIVITY_MAP: Dict[int, str] = {
     140: "cycling (stand, inactive)",
 }
 
-HARTH_SENSOR_CHANNELS: List[str] = [
+HARTH_SENSOR_CHANNELS: list[str] = [
     "back_x",
     "back_y",
     "back_z",
@@ -60,7 +59,7 @@ def _extract_subject_id(path: Path) -> int:
 
 def parse_harth(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     data_dir = Path(dir)
     if not data_dir.exists():
         raise FileNotFoundError(f"HARTH data directory not found at '{data_dir}'.")
@@ -69,7 +68,7 @@ def parse_harth(
     if not csv_paths:
         raise FileNotFoundError(f"No HARTH recordings found inside '{data_dir}'.")
 
-    session_dfs: List[pd.DataFrame] = []
+    session_dfs: list[pd.DataFrame] = []
     global_session_id = 0
 
     required_columns = ["timestamp", *HARTH_SENSOR_CHANNELS, "label"]
@@ -121,7 +120,7 @@ def parse_harth(
         .reset_index(drop=True)
     )
 
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
     loop = tqdm(session_metadata["session_id"].unique(), desc="Creating sessions")
     for session_id in loop:
         session_df = df[df["session_id"] == session_id]

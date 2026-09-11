@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 import numpy as np
 import pywt
 
@@ -29,7 +27,7 @@ def signal_to_dwt_grid(
     wavelet: str = "db4",
     mode: str = "periodization",
     level: int | None = None,
-) -> Tuple[np.ndarray, List[List[int]]]:
+) -> tuple[np.ndarray, list[list[int]]]:
     """Convert ``(time, channels)`` signals into padded multi-level DWT grids."""
     # (time_steps, sensor_channels)
 
@@ -66,7 +64,7 @@ def signal_to_dwt_grid(
 
 def dtw_grid_to_signal(
     grid: np.ndarray,
-    all_lengths: List[List[int]],
+    all_lengths: list[list[int]],
     wavelet: str = "db4",
     mode: str = "periodization",
 ) -> np.ndarray:

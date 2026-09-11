@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -10,7 +9,7 @@ from whar_datasets.config.activity_name_utils import canonicalize_activity_name_
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.timestamps import to_datetime64_ms
 
-BMHAD_ACTIVITY_NAMES: List[str] = [
+BMHAD_ACTIVITY_NAMES: list[str] = [
     "jumping_in_place",
     "jumping_jacks",
     "bending",
@@ -24,7 +23,7 @@ BMHAD_ACTIVITY_NAMES: List[str] = [
     "sit_down_and_stand_up",
 ]
 
-BMHAD_SENSOR_CHANNELS: List[str] = [
+BMHAD_SENSOR_CHANNELS: list[str] = [
     f"mocap_marker_{marker:02d}_{axis}"
     for marker in range(43)
     for axis in ("x", "y", "z")
@@ -55,10 +54,10 @@ def _resolve_bmhad_data_dir(data_dir: str) -> Path:
 
 def parse_bmhad(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     data_dir = _resolve_bmhad_data_dir(dir)
 
-    file_records: List[Tuple[int, int, int, Path]] = []
+    file_records: list[tuple[int, int, int, Path]] = []
     for file_path in data_dir.iterdir():
         if not file_path.is_file():
             continue
@@ -79,8 +78,8 @@ def parse_bmhad(
 
     file_records.sort(key=lambda row: (row[0], row[1], row[2], row[3].name))
 
-    sessions: Dict[int, pd.DataFrame] = {}
-    session_rows: List[Dict[str, int]] = []
+    sessions: dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
 
     loop = tqdm(file_records)
     loop.set_description("Parsing BMHAD sessions")

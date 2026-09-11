@@ -1,7 +1,9 @@
 import pandas as pd
 
 
-def get_effective_sampling_freq(sampling_freq: float, resampling_freq: float | None) -> float:
+def get_effective_sampling_freq(
+    sampling_freq: float, resampling_freq: float | None
+) -> float:
     """Return the configured output frequency used by windows and transforms."""
     return float(resampling_freq if resampling_freq is not None else sampling_freq)
 

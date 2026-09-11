@@ -1,7 +1,6 @@
 import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from tqdm import tqdm
@@ -22,10 +21,16 @@ def validate_common_format(
     required_session = {"session_id", "subject_id", "activity_id"}
     required_activity = {"activity_id", "activity_name"}
     if not required_session.issubset(session_df.columns):
-        logger.error("Session metadata lacks required columns: %s", required_session - set(session_df))
+        logger.error(
+            "Session metadata lacks required columns: %s",
+            required_session - set(session_df),
+        )
         return False
     if not required_activity.issubset(activity_df.columns):
-        logger.error("Activity metadata lacks required columns: %s", required_activity - set(activity_df))
+        logger.error(
+            "Activity metadata lacks required columns: %s",
+            required_activity - set(activity_df),
+        )
         return False
 
     for column in required_session:
@@ -95,7 +100,9 @@ def _validate_session_frame(
             cfg.num_of_channels,
         )
         return False
-    if any(not pd.api.types.is_float_dtype(session[column]) for column in sensor_columns):
+    if any(
+        not pd.api.types.is_float_dtype(session[column]) for column in sensor_columns
+    ):
         logger.error("Session %s contains a non-floating sensor channel.", session_id)
         return False
     if session.isna().any().any():
@@ -120,7 +127,9 @@ def validate_sessions_seq(
 
 def _validate_from_disk(args: tuple[WHARConfig, Path, int]) -> bool:
     cfg, sessions_dir, session_id = args
-    return _validate_session_frame(cfg, session_id, load_session(sessions_dir, session_id))
+    return _validate_session_frame(
+        cfg, session_id, load_session(sessions_dir, session_id)
+    )
 
 
 def validate_sessions_para(
@@ -133,7 +142,7 @@ def validate_sessions_para(
         return validate_sessions_seq(cfg, sessions_dir, session_df)
     tasks = [(cfg, sessions_dir, session_id) for session_id in session_ids]
     with ProcessPoolExecutor(max_workers=workers) as executor:
-        results: List[bool] = list(
+        results: list[bool] = list(
             tqdm(
                 executor.map(_validate_from_disk, tasks),
                 total=len(tasks),
@@ -144,4 +153,6 @@ def validate_sessions_para(
 
 
 def validate_session(cfg: WHARConfig, sessions_dir: Path, session_id: int) -> bool:
-    return _validate_session_frame(cfg, session_id, load_session(sessions_dir, session_id))
+    return _validate_session_frame(
+        cfg, session_id, load_session(sessions_dir, session_id)
+    )

@@ -1,7 +1,8 @@
 import hashlib
 import json
 from pathlib import Path
-from typing import Dict, List, Set, TypeAlias
+
+, Set, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -10,19 +11,14 @@ from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.steps.abstract_step import AbstractStep
 from whar_datasets.processing.utils.caching import cache_samples
 from whar_datasets.processing.utils.normalization import get_norm_params
-from whar_datasets.processing.utils.preparation import (
-    prepare_windows_para,
-    prepare_windows_seq,
-)
-from whar_datasets.utils.loading import (
-    WindowStore,
-    load_samples,
-    open_window_store,
-)
+from whar_datasets.processing.utils.preparation import (prepare_windows_para,
+                                                        prepare_windows_seq)
+from whar_datasets.utils.loading import (WindowStore, load_samples,
+                                         open_window_store)
 from whar_datasets.utils.logging import logger
 
-InputT: TypeAlias = Dict[str, pd.DataFrame] | WindowStore
-OutputT: TypeAlias = Dict[str, List[np.ndarray]]
+InputT: TypeAlias = dict[str, pd.DataFrame] | WindowStore
+OutputT: TypeAlias = dict[str, list[np.ndarray]]
 
 
 class SamplingStep(AbstractStep[InputT, OutputT]):
@@ -35,8 +31,8 @@ class SamplingStep(AbstractStep[InputT, OutputT]):
         samples_dir: Path,
         windows_dir: Path,
         window_df: pd.DataFrame,
-        indices: List[int],
-        dependent_on: List[AbstractStep],
+        indices: list[int],
+        dependent_on: list[AbstractStep],
     ):
         self.samples_root_dir = samples_dir
         self.metadata_dir = metadata_dir
@@ -93,7 +89,7 @@ class SamplingStep(AbstractStep[InputT, OutputT]):
 
         return load_samples(self.samples_dir)
 
-    def _compute_split_hash(self, indices: List[int]) -> str:
+    def _compute_split_hash(self, indices: list[int]) -> str:
         # Hash normalized train indices so identical splits map to one cache directory.
         payload = json.dumps(sorted(indices), separators=(",", ":"))
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()

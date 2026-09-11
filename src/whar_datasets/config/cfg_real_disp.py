@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -9,7 +8,7 @@ from tqdm import tqdm
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 
-SENSOR_POSITIONS: List[str] = [
+SENSOR_POSITIONS: list[str] = [
     # REALDISP raw columns are S1..S9 in this documented order.
     "lc",
     "lt",
@@ -22,8 +21,8 @@ SENSOR_POSITIONS: List[str] = [
     "rua",
 ]
 
-SENSOR_MODALITIES: List[str] = ["acc", "gyro", "mag", "quat"]
-SENSOR_AXES: Dict[str, List[str]] = {
+SENSOR_MODALITIES: list[str] = ["acc", "gyro", "mag", "quat"]
+SENSOR_AXES: dict[str, list[str]] = {
     "acc": ["x", "y", "z"],
     "gyro": ["x", "y", "z"],
     "mag": ["x", "y", "z"],
@@ -31,8 +30,8 @@ SENSOR_AXES: Dict[str, List[str]] = {
 }
 
 
-def _build_sensor_columns() -> List[str]:
-    cols: List[str] = []
+def _build_sensor_columns() -> list[str]:
+    cols: list[str] = []
     for position in SENSOR_POSITIONS:
         for modality in SENSOR_MODALITIES:
             for axis in SENSOR_AXES[modality]:
@@ -40,9 +39,9 @@ def _build_sensor_columns() -> List[str]:
     return cols
 
 
-SENSOR_COLUMNS: List[str] = _build_sensor_columns()
+SENSOR_COLUMNS: list[str] = _build_sensor_columns()
 
-ACTIVITY_NAMES: List[str] = [
+ACTIVITY_NAMES: list[str] = [
     "no_activity",
     "walking",
     "jogging",
@@ -93,7 +92,7 @@ def _extract_subject_id(log_path: Path) -> int:
 
 def parse_real_disp(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     data_dir = Path(dir)
     log_paths = sorted(data_dir.glob("subject*_*.log"))
     if not log_paths:
@@ -102,8 +101,8 @@ def parse_real_disp(
     sampling_step_us = int(1e6 / 50)
     max_gap_us = int(sampling_step_us * REAL_DISP_GAP_MULTIPLIER)
 
-    session_rows: List[Dict[str, int]] = []
-    sessions: Dict[int, pd.DataFrame] = {}
+    session_rows: list[dict[str, int]] = []
+    sessions: dict[int, pd.DataFrame] = {}
     observed_activity_ids: set[int] = set()
     session_id = 0
 
@@ -113,7 +112,7 @@ def parse_real_disp(
         loop.set_postfix(file=log_path.name, refresh=False)
         expected_cols = 2 + len(SENSOR_COLUMNS) + 1
         csv_columns = ["timestamp_s", "timestamp_us", *SENSOR_COLUMNS, activity_id_col]
-        dtype_map: Dict[str, str] = {
+        dtype_map: dict[str, str] = {
             "timestamp_s": "int64",
             "timestamp_us": "int64",
             activity_id_col: "int32",

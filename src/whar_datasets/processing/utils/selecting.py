@@ -1,5 +1,3 @@
-from typing import Dict, List, Tuple
-
 import pandas as pd
 
 from whar_datasets.utils.logging import logger
@@ -8,8 +6,8 @@ from whar_datasets.utils.logging import logger
 def select_activities(
     activity_df: pd.DataFrame,
     session_df: pd.DataFrame,
-    selected_activities: List[str],
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    selected_activities: list[str],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Filter activities and remap activity ids to contiguous integers."""
     logger.info("Selecting activities")
 
@@ -24,11 +22,7 @@ def select_activities(
     )
 
     old_ids = (
-        selected_activity_df["activity_id"]
-        .astype(int)
-        .sort_values()
-        .unique()
-        .tolist()
+        selected_activity_df["activity_id"].astype(int).sort_values().unique().tolist()
     )
     if len(old_ids) == 0:
         raise ValueError(
@@ -36,13 +30,10 @@ def select_activities(
         )
 
     # Ensure labels are contiguous after activity filtering, e.g. [1..12] -> [0..11].
-    id_map: Dict[int, int] = {old_id: new_id for new_id, old_id in enumerate(old_ids)}
+    id_map: dict[int, int] = {old_id: new_id for new_id, old_id in enumerate(old_ids)}
 
     selected_activity_df["activity_id"] = (
-        selected_activity_df["activity_id"]
-        .astype(int)
-        .map(id_map)
-        .astype("int32")
+        selected_activity_df["activity_id"].astype(int).map(id_map).astype("int32")
     )
     selected_activity_df = selected_activity_df.sort_values("activity_id").reset_index(
         drop=True
@@ -52,17 +43,14 @@ def select_activities(
         session_df["activity_id"].astype(int).isin(old_ids)
     ].copy()
     selected_session_df["activity_id"] = (
-        selected_session_df["activity_id"]
-        .astype(int)
-        .map(id_map)
-        .astype("int32")
+        selected_session_df["activity_id"].astype(int).map(id_map).astype("int32")
     )
     selected_session_df = selected_session_df.reset_index(drop=True)
 
     return selected_activity_df, selected_session_df
 
 
-def select_channels(session_df: pd.DataFrame, channels: List[str]) -> pd.DataFrame:
+def select_channels(session_df: pd.DataFrame, channels: list[str]) -> pd.DataFrame:
     """Return selected sensor channels plus timestamp."""
     # if channels is empty, return df
     return session_df[channels + ["timestamp"]] if len(channels) != 0 else session_df

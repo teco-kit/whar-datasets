@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -22,17 +21,17 @@ class Splitter(ABC):
     @abstractmethod
     def get_splits(
         self, session_df: pd.DataFrame, window_df: pd.DataFrame
-    ) -> List[Split]:
+    ) -> list[Split]:
         """Return train/validation/test splits for the provided metadata."""
         pass
 
     def _get_train_val_indices(
         self,
-        indices: List[int],
+        indices: list[int],
         window_df: pd.DataFrame,
         *,
         emit_diagnostics: bool = True,
-    ) -> Tuple[List[int], List[int]]:
+    ) -> tuple[list[int], list[int]]:
         """Split candidate indices into train/validation subsets."""
         if self.strict_train_val_separation:
             result = self._get_purged_train_val_indices(indices, window_df)
@@ -43,7 +42,7 @@ class Splitter(ABC):
         n_train = len(indices)
         n_val = int(n_train * self.val_percentage)
 
-        shuffled_indices: List[int] = self.rng.permutation(indices).tolist()
+        shuffled_indices: list[int] = self.rng.permutation(indices).tolist()
 
         val_indices = shuffled_indices[:n_val]
         train_indices = shuffled_indices[n_val:]
@@ -51,8 +50,8 @@ class Splitter(ABC):
         return train_indices, val_indices
 
     def _get_purged_train_val_indices(
-        self, indices: List[int], window_df: pd.DataFrame
-    ) -> Tuple[List[int], List[int]]:
+        self, indices: list[int], window_df: pd.DataFrame
+    ) -> tuple[list[int], list[int]]:
         """Split eligible sessions into validation blocks and purge overlaps."""
         if not indices:
             return [], []
@@ -122,7 +121,7 @@ class Splitter(ABC):
 
     def _split_session_strict(
         self, group: pd.DataFrame
-    ) -> Tuple[set[int], set[int]] | None:
+    ) -> tuple[set[int], set[int]] | None:
         """Create a feasible, distributed strict split for one session."""
         count = len(group)
         validation_count = max(
@@ -171,14 +170,12 @@ class Splitter(ABC):
 
     def _distributed_block_candidates(
         self, length: int, validation_count: int, block_count: int
-    ) -> List[List[int]]:
+    ) -> list[list[int]]:
         """Generate reproducible block layouts spread over a session timeline."""
         block_sizes = np.full(block_count, validation_count // block_count, dtype=int)
         block_sizes[: validation_count % block_count] += 1
 
-        minimum_gaps = np.asarray(
-            [0, *([1] * (block_count - 1)), 0], dtype=int
-        )
+        minimum_gaps = np.asarray([0, *([1] * (block_count - 1)), 0], dtype=int)
         remaining = length - validation_count - int(minimum_gaps.sum())
         if remaining < 0:
             return []
@@ -199,7 +196,7 @@ class Splitter(ABC):
             )
             gap_layouts.append(minimum_gaps + extras)
 
-        layouts: List[List[int]] = []
+        layouts: list[list[int]] = []
         for gaps in gap_layouts:
             positions: list[int] = []
             cursor = int(gaps[0])
@@ -211,7 +208,7 @@ class Splitter(ABC):
 
     def _assign_unsplittable_sessions(
         self, sessions: list[tuple[int, pd.DataFrame]]
-    ) -> Tuple[set[int], set[int]]:
+    ) -> tuple[set[int], set[int]]:
         """Assign indivisible sessions wholly, stratified by their window count."""
         if not sessions:
             return set(), set()
@@ -262,9 +259,7 @@ class Splitter(ABC):
         for session_id, val_group in window_df.loc[list(validation)].groupby(
             "session_id"
         ):
-            session_train_group = train_group[
-                train_group["session_id"] == session_id
-            ]
+            session_train_group = train_group[train_group["session_id"] == session_id]
             merged_intervals: list[tuple[int, int]] = []
             intervals = val_group[["start_index", "end_index"]].sort_values(
                 "start_index"
@@ -291,7 +286,7 @@ class Splitter(ABC):
         return keep
 
     def _check_indices_overlap(
-        self, train_indices: List[int], val_indices: List[int], test_indices: List[int]
+        self, train_indices: list[int], val_indices: list[int], test_indices: list[int]
     ) -> bool:
         """Return ``True`` when any split pair shares at least one index."""
         train_set = set(train_indices)

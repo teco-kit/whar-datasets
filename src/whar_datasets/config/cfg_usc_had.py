@@ -1,5 +1,4 @@
 import os
-from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -27,7 +26,7 @@ ID_TO_ACTIVITY = {
 
 def parse_usc_had(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
 
     root_path = os.path.join(dir, r"USC-HAD")
     all_dfs = []
@@ -92,7 +91,7 @@ def parse_usc_had(
         df.groupby("session_id")[metadata_cols].first().reset_index(drop=True)
     )
 
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     loop = tqdm(session_metadata["session_id"].unique())
     loop.set_description("Creating sessions")

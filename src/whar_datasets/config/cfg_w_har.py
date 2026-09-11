@@ -1,5 +1,4 @@
 import os
-from typing import Dict, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -65,7 +64,7 @@ def _estimate_stretch_tolerance_seconds(stretch_df: pd.DataFrame) -> float:
 
 def parse_w_har(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
     motion_path = os.path.join(dir, "motion_data_22_users.csv")
     stretch_path = os.path.join(dir, "stretch_data_22_users.csv")
@@ -180,7 +179,7 @@ def parse_w_har(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     loop = tqdm(session_metadata["session_id"].unique())
     loop.set_description("Creating sessions")

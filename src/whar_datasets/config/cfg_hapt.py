@@ -1,5 +1,4 @@
 import os
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -49,13 +48,13 @@ def find_hapt_root(dir: str) -> str:
     )
 
 
-def load_signal_df(path: str, cols: List[str]) -> pd.DataFrame:
+def load_signal_df(path: str, cols: list[str]) -> pd.DataFrame:
     return pd.read_csv(path, sep=r"\s+", header=None, names=cols)
 
 
 def parse_hapt(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     del activity_id_col
 
     root_dir = find_hapt_root(dir)
@@ -80,8 +79,8 @@ def parse_hapt(
     labels_df["session_id"] = labels_df.index.astype("int32")
 
     # cache experiment/user files to avoid repeated disk reads
-    signals_cache: Dict[Tuple[int, int], pd.DataFrame] = {}
-    sessions: Dict[int, pd.DataFrame] = {}
+    signals_cache: dict[tuple[int, int], pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     loop = tqdm(labels_df.itertuples(index=False), total=len(labels_df))
     loop.set_description("Creating sessions")

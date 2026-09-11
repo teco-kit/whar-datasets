@@ -1,5 +1,5 @@
 import random
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 
@@ -47,7 +47,7 @@ class TFAdapter:
         np.random.seed(self.cfg.seed)
         random.seed(self.cfg.seed)
 
-    def _generator(self, indices: List[int]) -> Any:
+    def _generator(self, indices: list[int]) -> Any:
         """Yield ``(label, sample)`` pairs for TensorFlow dataset construction."""
         for idx in indices:
             activity_label, _, sample = self.loader.get_item(idx)
@@ -58,7 +58,7 @@ class TFAdapter:
 
             yield y, x
 
-    def _create_dataset(self, indices: List[int]) -> Any:
+    def _create_dataset(self, indices: list[int]) -> Any:
         """Create a typed ``tf.data.Dataset`` for the given window indices."""
         # Define the explicit signature.
         output_signature = (
@@ -72,7 +72,7 @@ class TFAdapter:
             lambda: self._generator(indices), output_signature=output_signature
         )
 
-    def get_datasets(self, batch_size: int) -> Dict[str, Any]:
+    def get_datasets(self, batch_size: int) -> dict[str, Any]:
         """Build train/validation/test TensorFlow datasets for one split."""
         train_ds = self._create_dataset(self.split.train_indices)
         val_ds = self._create_dataset(self.split.val_indices)

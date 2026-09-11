@@ -1,5 +1,4 @@
 import os
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -18,12 +17,12 @@ ACTIVITY_MAP = {
 
 
 def get_sub_dfs(
-    dir: str, names: List[str] | None
-) -> Dict[Tuple[str, str], pd.DataFrame]:
+    dir: str, names: list[str] | None
+) -> dict[tuple[str, str], pd.DataFrame]:
     # The directory suffix is a repetition/recording identifier. It must be
     # part of the key: the same subject performs several recordings of some
     # activities (for example dws_1, dws_2, and dws_11).
-    sub_dfs: Dict[Tuple[str, str], pd.DataFrame] = {}
+    sub_dfs: dict[tuple[str, str], pd.DataFrame] = {}
 
     for sub_dir_name in sorted(os.listdir(dir)):
         if not os.path.isdir(os.path.join(dir, sub_dir_name)):
@@ -65,7 +64,7 @@ def get_sub_dfs(
 
 def parse_motion_sense(
     dir: str, activity_id_col: str
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[int, pd.DataFrame]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
     dir = os.path.join(dir, "motion-sense-master/data/")
     motion_dir = os.path.join(dir, "A_DeviceMotion_data/A_DeviceMotion_data/")
     accel_dir = os.path.join(dir, "B_Accelerometer_data/B_Accelerometer_data/")
@@ -85,7 +84,7 @@ def parse_motion_sense(
             + ", ".join(f"{recording}/{subject}" for recording, subject in missing[:10])
         )
 
-    sub_dfs: List[pd.DataFrame] = []
+    sub_dfs: list[pd.DataFrame] = []
     for key in sorted(keys):
         m_df, a_df, g_df = motion_dfs[key], accel_dfs[key], gyro_dfs[key]
         # MotionSense stores no physical timestamp; the shared row index is
@@ -94,9 +93,7 @@ def parse_motion_sense(
         # contains occasional trailing samples in only one stream.
         sample_count = min(len(m_df), len(a_df), len(g_df))
         if sample_count == 0:
-            raise ValueError(
-                f"MotionSense recording {key[0]}/{key[1]} is empty."
-            )
+            raise ValueError(f"MotionSense recording {key[0]}/{key[1]} is empty.")
         sub_dfs.append(
             pd.concat(
                 [
@@ -161,7 +158,7 @@ def parse_motion_sense(
     )
 
     # create sessions
-    sessions: Dict[int, pd.DataFrame] = {}
+    sessions: dict[int, pd.DataFrame] = {}
 
     # loop over sessions
     loop = tqdm(session_metadata["session_id"].unique())

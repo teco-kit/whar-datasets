@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
@@ -16,18 +16,18 @@ class WHARConfig(BaseModel):
     # metadata fields
     dataset_id: str
     dataset_url: str
-    download_url: Union[str, List[str]]
+    download_url: str | list[str]
     sampling_freq: int = Field(gt=0)
     num_of_subjects: int = Field(gt=0)
     num_of_activities: int = Field(gt=0)
     num_of_channels: int = Field(gt=0)
-    available_activities: List[str]
-    available_channels: List[str]
+    available_activities: list[str]
+    available_channels: list[str]
 
     # flow fields
     datasets_dir: str = "./datasets/"  # directory to cache datasets
     in_memory: bool = True  # whether to load the dataset fully into memory
-    num_workers: Optional[int] = Field(default=None, ge=1)
+    num_workers: int | None = Field(default=None, ge=1)
     execution_backend: Literal["sequential", "process"] = "sequential"
     cache_each_split: bool = True  # cache samples per split hash
 
@@ -36,19 +36,19 @@ class WHARConfig(BaseModel):
     activity_id_col: str = "activity_id"  # column to use as activity id
 
     # preprocessing fields
-    selected_activities: Optional[List[str]]
-    selected_channels: Optional[List[str]]
+    selected_activities: list[str] | None
+    selected_channels: list[str] | None
     window_time: float = Field(default=WINDOW_TIME_MEDIUM, gt=0)
     window_overlap: float = Field(default=0.5, ge=0, lt=1)
-    resampling_freq: Optional[int] = None
-    max_session_gap_seconds: Optional[float] = 60.0
+    resampling_freq: int | None = None
+    max_session_gap_seconds: float | None = 60.0
 
     # postprocessing fields
     val_percentage: float = Field(default=0.2, ge=0, lt=1)
-    num_folds: Optional[int] = 10  # used for k-fold-splitting
+    num_folds: int | None = 10  # used for k-fold-splitting
     shuffle_subject: bool = True  # seed-shuffle subjects before LKSO grouping
-    normalization: Optional[NormType] = NormType.STD_GLOBALLY
-    transform: Optional[TransformType] = None
+    normalization: NormType | None = NormType.STD_GLOBALLY
+    transform: TransformType | None = None
     strict_train_val_separation: bool = True
 
     # training fields
@@ -63,14 +63,14 @@ class WHARConfig(BaseModel):
 
     @field_validator("resampling_freq")
     @classmethod
-    def validate_resampling_freq(cls, value: Optional[int]) -> Optional[int]:
+    def validate_resampling_freq(cls, value: int | None) -> int | None:
         if value is not None and value <= 0:
             raise ValueError("resampling_freq must be greater than zero.")
         return value
 
     @field_validator("max_session_gap_seconds")
     @classmethod
-    def validate_max_session_gap(cls, value: Optional[float]) -> Optional[float]:
+    def validate_max_session_gap(cls, value: float | None) -> float | None:
         if value is not None and value <= 0:
             raise ValueError("max_session_gap_seconds must be greater than zero.")
         return value
