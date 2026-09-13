@@ -54,7 +54,6 @@ class WindowingStep(AbstractStep[InputT, OutputT]):
             "window_overlap",
             "resampling_freq",
             "max_session_gap_seconds",
-            "max_interpolation_gap_seconds",
         }
 
     def load_input(self) -> InputT:

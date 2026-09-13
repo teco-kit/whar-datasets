@@ -171,7 +171,6 @@ cfg.window_overlap = 0.5
 | `window_overlap` | Window overlap ratio. | `0.5` |
 | `resampling_freq` | Optional resampling rate in Hz before windowing. | `None` |
 | `max_session_gap_seconds` | Reject sessions containing a larger timestamp gap; use `None` to disable. | `60.0` |
-| `max_interpolation_gap_seconds` | Maximum timestamp gap that resampling may interpolate; defaults to three source sample periods. | `None` |
 | `val_percentage` | Fraction of training data reserved for validation. | `0.2` |
 | `num_folds` | Number of folds used for K-fold or LKSO splitting. | `10` |
 | `shuffle_subject` | Seed-shuffle subjects before assigning LKSO folds. | `True` |

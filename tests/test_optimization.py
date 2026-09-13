@@ -136,67 +136,6 @@ def test_resampling_regularizes_jitter_before_polyphase_conversion() -> None:
     assert result["x"].notna().all()
 
 
-def test_resampling_marks_gaps_that_are_too_large_to_interpolate() -> None:
-    session = pd.DataFrame(
-        {
-            "timestamp": pd.to_datetime(
-                [
-                    "2025-01-01 00:00:00.000",
-                    "2025-01-01 00:00:00.100",
-                    "2025-01-01 00:00:01.100",
-                    "2025-01-01 00:00:01.200",
-                ]
-            ),
-            "x": np.asarray([0.0, 1.0, 11.0, 12.0], dtype=np.float32),
-        }
-    )
-
-    result = resample(session, 10.0, source_freq=10.0)
-
-    assert result["x"].isna().any()
-    assert len(result.attrs["invalid_intervals"]) == 1
-
-
-def test_windowing_rejects_and_logs_windows_that_cross_an_unsafe_gap(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    session = pd.DataFrame(
-        {
-            "timestamp": pd.date_range(
-                "2025-01-01", periods=40, freq="100ms"
-            ),
-            "x": np.arange(40, dtype=np.float32),
-        }
-    )
-    session.attrs["invalid_intervals"] = [
-        (
-            pd.Timestamp("2025-01-01 00:00:01.000"),
-            pd.Timestamp("2025-01-01 00:00:02.000"),
-        )
-    ]
-
-    with caplog.at_level("INFO"):
-        metadata, windows = generate_windowing(
-            2,
-            session,
-            window_time=0.5,
-            overlap=0.0,
-            sampling_freq=10.0,
-            max_gap_seconds=0.3,
-        )
-
-    assert metadata is not None and windows is not None
-    assert len(metadata) == 6
-    assert "Session 2: rejected 2 candidate windows" in caplog.text
-    assert all(
-        not (
-            row["window_start"] < pd.Timestamp("2025-01-01 00:00:02.000")
-            and row["window_end"] > pd.Timestamp("2025-01-01 00:00:01.000")
-        )
-        for _, row in metadata.iterrows()
-    )
-
-
 @pytest.mark.parametrize(
     "timestamps",
     [

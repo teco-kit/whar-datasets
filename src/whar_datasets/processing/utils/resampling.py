@@ -30,7 +30,6 @@ def _infer_sampling_freq(timestamps: pd.Series) -> float:
 def _regularize_session(
     session_df: pd.DataFrame,
     source_freq: float,
-    max_interpolation_gap_seconds: float,
 ) -> pd.DataFrame:
     """Map timestamp-jittered samples onto a regular source-rate grid."""
     timestamps = session_df["timestamp"]
@@ -41,13 +40,6 @@ def _regularize_session(
         freq=source_period,
     )
 
-    gaps = timestamps.diff().dt.total_seconds().dropna()
-    invalid_intervals = [
-        (timestamps.iloc[index - 1], timestamps.iloc[index])
-        for index, gap in enumerate(gaps.tolist(), start=1)
-        if float(gap) > max_interpolation_gap_seconds
-    ]
-
     indexed = session_df.set_index("timestamp")
     combined_index = indexed.index.union(regular_index).sort_values()
     combined = indexed.reindex(combined_index)
@@ -55,10 +47,11 @@ def _regularize_session(
     regular = combined.reindex(regular_index).reset_index(names="timestamp")
 
     sensor_columns = [column for column in regular.columns if column != "timestamp"]
-    for left, right in invalid_intervals:
-        missing = regular["timestamp"].gt(left) & regular["timestamp"].lt(right)
-        regular.loc[missing, sensor_columns] = np.nan
-    regular.attrs["invalid_intervals"] = invalid_intervals
+    if regular[sensor_columns].isna().any().any():
+        raise ValueError(
+            "Timestamp regularization produced missing sensor values. Check "
+            "session boundaries and source data completeness."
+        )
     return regular
 
 
@@ -68,7 +61,6 @@ def resample(
     max_gap_seconds: float | None = None,
     *,
     source_freq: float | None = None,
-    max_interpolation_gap_seconds: float | None = None,
 ) -> pd.DataFrame:
     """Resample one regular sensor session with bounded interpolation.
 
@@ -84,11 +76,6 @@ def resample(
         raise ValueError("source_freq must be greater than zero.")
     if max_gap_seconds is not None and max_gap_seconds <= 0:
         raise ValueError("max_gap_seconds must be greater than zero.")
-    if (
-        max_interpolation_gap_seconds is not None
-        and max_interpolation_gap_seconds <= 0
-    ):
-        raise ValueError("max_interpolation_gap_seconds must be greater than zero.")
     if "timestamp" not in session_df.columns:
         raise ValueError("Session must contain a timestamp column.")
 
@@ -137,18 +124,7 @@ def resample(
             f"frequency ({actual_source_freq:.6f}Hz)."
         )
 
-    interpolation_limit = max_interpolation_gap_seconds
-    if interpolation_limit is None:
-        # Allow a small amount of timestamp jitter and short dropouts by
-        # default. Larger gaps are retained as invalid intervals and cause
-        # overlapping windows to be rejected downstream.
-        interpolation_limit = 3.0 / actual_source_freq
-
-    regular = _regularize_session(
-        result,
-        actual_source_freq,
-        interpolation_limit,
-    )
+    regular = _regularize_session(result, actual_source_freq)
     channel_columns = [column for column in regular.columns if column != "timestamp"]
     if not channel_columns:
         raise ValueError("Session must contain at least one sensor channel.")
@@ -157,9 +133,8 @@ def resample(
         Fraction(str(resampling_freq)) / Fraction(str(actual_source_freq))
     ).limit_denominator(10_000)
     values = regular[channel_columns].to_numpy(dtype=np.float64)
-    finite_or_missing = np.isfinite(values) | np.isnan(values)
-    if not finite_or_missing.all():
-        raise ValueError("Sensor channels must contain only finite values or NaN gaps.")
+    if not np.isfinite(values).all():
+        raise ValueError("Sensor channels must contain only finite values.")
 
     if ratio.numerator == ratio.denominator:
         resampled_values = values
@@ -190,5 +165,4 @@ def resample(
     output = pd.DataFrame(resampled_values, columns=channel_columns)
     output.insert(0, "timestamp", start + target_offsets)
     output[channel_columns] = output[channel_columns].astype(np.float32)
-    output.attrs["invalid_intervals"] = regular.attrs.get("invalid_intervals", [])
     return output
