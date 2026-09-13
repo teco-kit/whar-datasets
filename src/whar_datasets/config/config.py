@@ -41,7 +41,7 @@ class WHARConfig(BaseModel):
     window_time: float = Field(default=WINDOW_TIME_MEDIUM, gt=0)
     window_overlap: float = Field(default=0.5, ge=0, lt=1)
     resampling_freq: float | None = None
-    max_session_gap_seconds: float | None = 60.0
+    max_session_gap_seconds: float | None = 2.0
 
     # postprocessing fields
     val_percentage: float = Field(default=0.2, ge=0, lt=1)
