@@ -18,6 +18,7 @@ from whar_datasets.processing.utils.preparation import (
     prepare_windows_seq,
 )
 from whar_datasets.processing.utils.resampling import resample
+from whar_datasets.processing.utils.sessions import _process_session_data
 from whar_datasets.processing.utils.windowing import generate_windowing
 from whar_datasets.splitting.splitter_lkso import LKSOSplitter
 from whar_datasets.splitting.splitter_loso import LOSOSplitter
@@ -81,6 +82,164 @@ def test_resampling_supports_non_integer_millisecond_rates() -> None:
     result = resample(session, 60.0)
     delta_ns = result["timestamp"].diff().dropna().median().value
     assert abs(delta_ns - round(1e9 / 60)) <= 1
+
+
+def test_resampling_grid_is_anchored_to_session_start() -> None:
+    session = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(
+                [
+                    "2025-01-01 00:00:00.250",
+                    "2025-01-01 00:00:00.750",
+                    "2025-01-01 00:00:01.250",
+                ]
+            ),
+            "x": np.asarray([0.0, 1.0, 2.0], dtype=np.float32),
+        }
+    )
+
+    result = resample(session, 2.0, source_freq=2.0)
+
+    assert result["timestamp"].tolist() == session["timestamp"].tolist()
+    np.testing.assert_allclose(result["x"], session["x"])
+
+
+def test_resampling_regularizes_jitter_before_polyphase_conversion() -> None:
+    session = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(
+                [
+                    "2025-01-01 00:00:00.000",
+                    "2025-01-01 00:00:00.101",
+                    "2025-01-01 00:00:00.199",
+                    "2025-01-01 00:00:00.301",
+                ]
+            ),
+            "x": np.asarray([0.0, 1.0, 2.0, 3.0], dtype=np.float32),
+        }
+    )
+
+    result = resample(session, 20.0, source_freq=10.0)
+    expected_timestamps = pd.to_datetime(
+        [
+            "2025-01-01 00:00:00.000",
+            "2025-01-01 00:00:00.050",
+            "2025-01-01 00:00:00.100",
+            "2025-01-01 00:00:00.150",
+            "2025-01-01 00:00:00.200",
+            "2025-01-01 00:00:00.250",
+            "2025-01-01 00:00:00.300",
+        ]
+    )
+
+    assert result["timestamp"].tolist() == expected_timestamps.tolist()
+    assert result["x"].notna().all()
+
+
+def test_resampling_marks_gaps_that_are_too_large_to_interpolate() -> None:
+    session = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(
+                [
+                    "2025-01-01 00:00:00.000",
+                    "2025-01-01 00:00:00.100",
+                    "2025-01-01 00:00:01.100",
+                    "2025-01-01 00:00:01.200",
+                ]
+            ),
+            "x": np.asarray([0.0, 1.0, 11.0, 12.0], dtype=np.float32),
+        }
+    )
+
+    result = resample(session, 10.0, source_freq=10.0)
+
+    assert result["x"].isna().any()
+    assert len(result.attrs["invalid_intervals"]) == 1
+
+
+def test_windowing_rejects_and_logs_windows_that_cross_an_unsafe_gap(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    session = pd.DataFrame(
+        {
+            "timestamp": pd.date_range(
+                "2025-01-01", periods=40, freq="100ms"
+            ),
+            "x": np.arange(40, dtype=np.float32),
+        }
+    )
+    session.attrs["invalid_intervals"] = [
+        (
+            pd.Timestamp("2025-01-01 00:00:01.000"),
+            pd.Timestamp("2025-01-01 00:00:02.000"),
+        )
+    ]
+
+    with caplog.at_level("INFO"):
+        metadata, windows = generate_windowing(
+            2,
+            session,
+            window_time=0.5,
+            overlap=0.0,
+            sampling_freq=10.0,
+            max_gap_seconds=0.3,
+        )
+
+    assert metadata is not None and windows is not None
+    assert len(metadata) == 6
+    assert "Session 2: rejected 2 candidate windows" in caplog.text
+    assert all(
+        not (
+            row["window_start"] < pd.Timestamp("2025-01-01 00:00:02.000")
+            and row["window_end"] > pd.Timestamp("2025-01-01 00:00:01.000")
+        )
+        for _, row in metadata.iterrows()
+    )
+
+
+@pytest.mark.parametrize(
+    "timestamps",
+    [
+        [
+            "2025-01-01 00:00:00.000",
+            "2025-01-01 00:00:00.000",
+        ],
+        [
+            "2025-01-01 00:00:00.100",
+            "2025-01-01 00:00:00.000",
+        ],
+    ],
+)
+def test_resampling_rejects_duplicate_or_unordered_timestamps(
+    timestamps: list[str],
+) -> None:
+    session = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(timestamps),
+            "x": np.asarray([0.0, 1.0], dtype=np.float32),
+        }
+    )
+
+    with pytest.raises(ValueError):
+        resample(session, 10.0, source_freq=10.0)
+
+
+def test_missing_resampling_frequency_preserves_the_source_session() -> None:
+    cfg = _config(resampling_freq=None, selected_channels=["x"])
+    session = pd.DataFrame(
+        {
+            "timestamp": pd.date_range(
+                "2025-01-01 00:00:00.250", periods=30, freq="100ms"
+            ),
+            "x": np.arange(30, dtype=np.float32),
+        }
+    )
+
+    metadata, windows = _process_session_data(cfg, 4, session)
+
+    assert metadata is not None and windows is not None
+    assert metadata.iloc[0]["window_start"] == session.iloc[0]["timestamp"]
+    np.testing.assert_array_equal(windows["4:0"]["x"], session.iloc[:20]["x"])
 
 
 def test_strict_train_validation_split_purges_overlaps() -> None:

@@ -2,6 +2,7 @@ import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -79,8 +80,12 @@ def _validate_session_frame(
     if not pd.api.types.is_datetime64_any_dtype(session["timestamp"]):
         logger.error("timestamp in session %s is not datetime64.", session_id)
         return False
-    if not session["timestamp"].is_monotonic_increasing:
+    timestamps = session["timestamp"]
+    if not timestamps.is_monotonic_increasing:
         logger.error("Timestamps in session %s are not monotonic.", session_id)
+        return False
+    if not timestamps.is_unique:
+        logger.error("Timestamps in session %s are not unique.", session_id)
         return False
     if cfg.max_session_gap_seconds is not None:
         gaps = session["timestamp"].diff().dt.total_seconds()
@@ -107,6 +112,9 @@ def _validate_session_frame(
         return False
     if session.isna().any().any():
         logger.error("Session %s contains NaN values.", session_id)
+        return False
+    if not np.isfinite(session[sensor_columns].to_numpy(dtype=np.float64)).all():
+        logger.error("Session %s contains non-finite sensor values.", session_id)
         return False
     return True
 

@@ -40,8 +40,10 @@ class WHARConfig(BaseModel):
     selected_channels: list[str] | None
     window_time: float = Field(default=WINDOW_TIME_MEDIUM, gt=0)
     window_overlap: float = Field(default=0.5, ge=0, lt=1)
-    resampling_freq: int | None = None
+    resampling_freq: float | None = None
     max_session_gap_seconds: float | None = 60.0
+    # If omitted, resampling permits gaps up to three source sample periods.
+    max_interpolation_gap_seconds: float | None = None
 
     # postprocessing fields
     val_percentage: float = Field(default=0.2, ge=0, lt=1)
@@ -63,7 +65,7 @@ class WHARConfig(BaseModel):
 
     @field_validator("resampling_freq")
     @classmethod
-    def validate_resampling_freq(cls, value: int | None) -> int | None:
+    def validate_resampling_freq(cls, value: float | None) -> float | None:
         if value is not None and value <= 0:
             raise ValueError("resampling_freq must be greater than zero.")
         return value
@@ -73,6 +75,15 @@ class WHARConfig(BaseModel):
     def validate_max_session_gap(cls, value: float | None) -> float | None:
         if value is not None and value <= 0:
             raise ValueError("max_session_gap_seconds must be greater than zero.")
+        return value
+
+    @field_validator("max_interpolation_gap_seconds")
+    @classmethod
+    def validate_max_interpolation_gap(cls, value: float | None) -> float | None:
+        if value is not None and value <= 0:
+            raise ValueError(
+                "max_interpolation_gap_seconds must be greater than zero."
+            )
         return value
 
     @field_serializer("parse")

@@ -28,13 +28,24 @@ def _process_session_data(
 ) -> SessionResult:
     session = select_channels(session, cfg.selected_channels or [])
     frequency = get_effective_sampling_freq(cfg.sampling_freq, cfg.resampling_freq)
-    session = resample(session, frequency, cfg.max_session_gap_seconds)
+    if cfg.resampling_freq is not None:
+        session = resample(
+            session,
+            cfg.resampling_freq,
+            cfg.max_session_gap_seconds,
+            source_freq=cfg.sampling_freq,
+            max_interpolation_gap_seconds=cfg.max_interpolation_gap_seconds,
+        )
+    interpolation_limit = cfg.max_interpolation_gap_seconds
+    if interpolation_limit is None:
+        interpolation_limit = 3.0 / float(cfg.sampling_freq)
     return generate_windowing(
         session_id,
         session,
         cfg.window_time,
         cfg.window_overlap,
         frequency,
+        max_gap_seconds=interpolation_limit,
     )
 
 
