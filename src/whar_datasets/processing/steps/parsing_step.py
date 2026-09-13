@@ -1,19 +1,17 @@
 import inspect
 import os
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-
-, Iterator, Set, TypeAlias
+from typing import TypeAlias
 
 import pandas as pd
 
-from whar_datasets.config.activity_name_utils import \
-    canonicalize_activity_name_list
+from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.steps.abstract_step import AbstractStep
 from whar_datasets.processing.utils.caching import cache_common_format
-from whar_datasets.utils.loading import (load_activity_df, load_session_df,
-                                         load_sessions)
+from whar_datasets.utils.loading import load_activity_df, load_session_df, load_sessions
 from whar_datasets.utils.logging import logger
 
 InputT: TypeAlias = None
@@ -115,7 +113,7 @@ class ParsingStep(AbstractStep[InputT, OutputT]):
         self.sessions_dir = sessions_dir
 
         self.hash_name: str = "parsing_hash"
-        self.relevant_cfg_keys: Set[str] = {
+        self.relevant_cfg_keys: set[str] = {
             "dataset_id",
             "activity_id_col",
             "available_activities",
@@ -201,7 +199,7 @@ def _is_sidecar_path(path: Path) -> bool:
 
 
 @contextmanager
-def _ignore_sidecar_files() -> Iterator[None]:
+def _ignore_sidecar_files() -> Generator[None]:
     original_listdir = os.listdir
     original_walk = os.walk
     original_path_glob = Path.glob
@@ -233,8 +231,8 @@ def _ignore_sidecar_files() -> Iterator[None]:
 
     os.listdir = _filtered_listdir  # type: ignore
     os.walk = _filtered_walk  # type: ignore
-    Path.glob = _filtered_glob  # type: ignore
-    Path.rglob = _filtered_rglob  # type: ignore
+    Path.glob = _filtered_glob
+    Path.rglob = _filtered_rglob
     try:
         yield
     finally:

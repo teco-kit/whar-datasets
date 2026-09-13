@@ -3,7 +3,7 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Set, TypeAlias
+from typing import TypeAlias
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -37,7 +37,7 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
         self.data_dir = data_dir
 
         self.hash_name: str = "download_hash"
-        self.relevant_cfg_keys: Set[str] = {"dataset_id", "download_url"}
+        self.relevant_cfg_keys: set[str] = {"dataset_id", "download_url"}
 
     def load_input(self) -> InputT:
         return None
@@ -145,7 +145,7 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
         self,
         url: str,
         index: int,
-        used_filenames: Set[str],
+        used_filenames: set[str],
     ) -> Path:
         input_name = self._filename_from_url(url)
         candidate = input_name
@@ -361,7 +361,7 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
             return None
 
         download_urls = self._normalize_download_urls()
-        used_filenames: Set[str] = set()
+        used_filenames: set[str] = set()
 
         logger.info(
             f"Downloading {self.cfg.dataset_id} from {len(download_urls)} URL(s)"

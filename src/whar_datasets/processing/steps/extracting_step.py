@@ -1,6 +1,6 @@
 import hashlib
 from pathlib import Path
-from typing import Set, TypeAlias
+from typing import TypeAlias
 
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.steps.abstract_step import AbstractStep
@@ -28,7 +28,7 @@ class ExtractingStep(AbstractStep[InputT, OutputT]):
         self.data_dir = data_dir
 
         self.hash_name: str = "extracting_hash"
-        self.relevant_cfg_keys: Set[str] = {"dataset_id", "download_url"}
+        self.relevant_cfg_keys: set[str] = {"dataset_id", "download_url"}
 
     def load_input(self) -> InputT:
         return None

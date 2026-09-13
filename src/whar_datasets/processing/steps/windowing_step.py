@@ -1,19 +1,22 @@
 from pathlib import Path
-
-, Set, TypeAlias
+from typing import TypeAlias
 
 import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.pipeline import AbstractStep
-from whar_datasets.processing.utils.caching import (cache_window_df,
-                                                    cache_windows)
+from whar_datasets.processing.utils.caching import cache_window_df, cache_windows
 from whar_datasets.processing.utils.selecting import select_activities
-from whar_datasets.processing.utils.sessions import (process_sessions_para,
-                                                     process_sessions_seq)
+from whar_datasets.processing.utils.sessions import (
+    process_sessions_para,
+    process_sessions_seq,
+)
 from whar_datasets.processing.utils.validation import validate_common_format
-from whar_datasets.utils.loading import (load_activity_df, load_session_df,
-                                         load_window_df)
+from whar_datasets.utils.loading import (
+    load_activity_df,
+    load_session_df,
+    load_window_df,
+)
 from whar_datasets.utils.logging import logger
 
 InputT: TypeAlias = tuple[pd.DataFrame, pd.DataFrame]
@@ -43,7 +46,7 @@ class WindowingStep(AbstractStep[InputT, OutputT]):
         self.windows_dir = windows_dir
 
         self.hash_name: str = "windowing_hash"
-        self.relevant_cfg_keys: Set[str] = {
+        self.relevant_cfg_keys: set[str] = {
             "sampling_freq",
             "selected_activities",
             "selected_channels",
