@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import threading
+import zipfile
 from pathlib import Path
 from typing import TypeAlias
 from urllib.parse import parse_qs, urlparse
@@ -206,10 +207,11 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
                 os.environ["KAGGLE_KEY"] = prev_key
 
     def _download_single_url(self, url: str, file_path: Path) -> None:
+        temporary_path = file_path.with_name(f"{file_path.name}.part")
         request_headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            "User-Agent": os.environ.get(
+                "WHAR_DOWNLOAD_USER_AGENT",
+                "whar-datasets/0.1.0",
             ),
         }
         is_kaggle_api_download = self._is_kaggle_api_download(url)
@@ -229,56 +231,163 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
             self._download_kaggle_dataset(url, request_auth)
             return
 
-        should_fallback_to_playwright = False
+        def finish_download() -> None:
+            if not temporary_path.is_file() or temporary_path.stat().st_size == 0:
+                raise ValueError(f"Downloaded file is empty: {url}")
+            if file_path.suffix.lower() == ".zip" and not zipfile.is_zipfile(
+                temporary_path
+            ):
+                raise ValueError(f"Downloaded content is not a ZIP archive: {url}")
+            temporary_path.replace(file_path)
+            logger.info(f"Downloaded {file_path.stat().st_size} bytes to {file_path}")
 
-        try:
-            # First-pass plain HTTP download for direct file URLs.
-            with requests.get(
-                url,
-                headers=request_headers,
-                auth=request_auth,
-                timeout=120,
-                stream=True,
-            ) as response:
+        def receive_response(response: requests.Response, method: str) -> bool:
+            try:
                 content_type = (response.headers.get("content-type") or "").lower()
                 if response.ok and "text/html" not in content_type:
-                    with file_path.open("wb") as f:
+                    with temporary_path.open("wb") as f:
                         for chunk in response.iter_content(chunk_size=1024 * 1024):
                             if chunk:
                                 f.write(chunk)
-                    total_size = file_path.stat().st_size
-                    if total_size > 0:
-                        logger.info(f"File size: {total_size / (1024 * 1024):.2f} MB")
-                        logger.info(f"Downloaded to {file_path}")
-                        return
+                    expected_size = response.headers.get("content-length")
+                    if (
+                        expected_size
+                        and not response.headers.get("content-encoding")
+                        and temporary_path.stat().st_size != int(expected_size)
+                    ):
+                        raise ValueError(
+                            f"Incomplete download from {url}: expected {expected_size} bytes, "
+                            f"received {temporary_path.stat().st_size}"
+                        )
+                    finish_download()
+                    return True
 
-                if is_kaggle_api_download:
-                    error_preview = response.text[:300].replace("\n", " ")
-                    raise RuntimeError(
-                        "Kaggle API download failed. "
-                        f"status={response.status_code}, content_type={content_type}, "
-                        f"body_preview='{error_preview}'"
-                    )
-
-                should_fallback_to_playwright = True
-                logger.info(
-                    "Requests download returned HTML/empty content; falling back to Playwright",
+                preview = ""
+                if "text/" in content_type or "json" in content_type:
+                    first_chunk = next(response.iter_content(chunk_size=512), b"")
+                    preview = first_chunk[:300].decode("utf-8", errors="replace")
+                    preview = preview.replace("\r", " ").replace("\n", " ")
+                logger.warning(
+                    "%s returned status=%s, final_url=%s, content_type=%s, "
+                    "content_length=%s, body_preview=%r",
+                    method,
+                    response.status_code,
+                    response.url,
+                    content_type or "unknown",
+                    response.headers.get("content-length", "unknown"),
+                    preview,
                 )
-        except requests.RequestException as e:
-            should_fallback_to_playwright = True
-            logger.info(f"Requests download failed, falling back to Playwright: {e}")
+                return False
+            except (requests.RequestException, ValueError) as exc:
+                logger.warning("%s failed for %s: %s", method, url, exc)
+                return False
+            finally:
+                temporary_path.unlink(missing_ok=True)
 
-        if is_kaggle_api_download:
+        try:
+            with requests.get(
+                url, headers=request_headers, timeout=120, stream=True
+            ) as response:
+                if receive_response(response, "Direct HTTP download"):
+                    return
+        except requests.RequestException as exc:
+            logger.warning("Direct HTTP request failed for %s: %s", url, exc)
+
+        parsed_url = urlparse(url)
+        zenodo_parts = parsed_url.path.strip("/").split("/")
+        zenodo_file = (
+            parsed_url.hostname == "zenodo.org"
+            and len(zenodo_parts) == 4
+            and zenodo_parts[0] == "records"
+            and zenodo_parts[1].isdigit()
+            and zenodo_parts[2] == "files"
+        )
+        if zenodo_file:
+            record_id, filename = zenodo_parts[1], zenodo_parts[3]
+            api_url = f"https://zenodo.org/api/records/{record_id}"
+            try:
+                with requests.get(api_url, timeout=30) as metadata_response:
+                    metadata_response.raise_for_status()
+                    metadata = metadata_response.json()
+                files = metadata.get("files", {})
+                if isinstance(files, dict):
+                    entries = files.get("entries", {})
+                    file_info = (
+                        entries.get(filename) if isinstance(entries, dict) else None
+                    )
+                elif isinstance(files, list):
+                    file_info = next(
+                        (
+                            entry
+                            for entry in files
+                            if isinstance(entry, dict)
+                            and entry.get("key") == filename
+                        ),
+                        None,
+                    )
+                else:
+                    file_info = None
+                if not isinstance(file_info, dict):
+                    raise ValueError(
+                        f"Zenodo record {record_id} does not list {filename}"
+                    )
+                links = file_info.get("links", {})
+                if not isinstance(links, dict):
+                    raise ValueError(f"Zenodo record {record_id} has invalid file links")
+                content_url = links.get("content") or links.get("self")
+                if (
+                    not isinstance(content_url, str)
+                    or urlparse(content_url).hostname != "zenodo.org"
+                ):
+                    raise ValueError(
+                        f"Zenodo record {record_id} has no trusted file link "
+                        f"for {filename}"
+                    )
+                with requests.get(
+                    content_url, headers=request_headers, timeout=120, stream=True
+                ) as response:
+                    if receive_response(response, "Zenodo API file download"):
+                        return
+                    if response.status_code == 403:
+                        raise RuntimeError(
+                            "Zenodo returned 403 for its API file content link. "
+                            "The server is refusing this automated transfer. "
+                            "Ask Zenodo to unblock the cluster's public IP, "
+                            "set cfg.download_url to an approved dataset mirror, "
+                            f"or stage the archive in the shared cache at {file_path}."
+                        )
+            except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+                logger.warning("Zenodo API download failed for %s: %s", url, exc)
             raise RuntimeError(
-                "Kaggle API download failed via HTTP request. "
-                "Playwright fallback is not supported for Kaggle API endpoints."
+                "Zenodo file download failed via both the public URL and the "
+                "record API. Set cfg.download_url to an approved mirror, or "
+                f"place {filename} in the shared cache at {file_path}."
             )
 
-        if not should_fallback_to_playwright:
-            return
+        # Some servers set a cookie on their home page before serving files.
+        # Zenodo uses its record API above instead of repeating a blocked URL.
+        origin = f"{parsed_url.scheme}://{parsed_url.netloc}/"
+        if not zenodo_file:
+            try:
+                with requests.Session() as session:
+                    with session.get(
+                        origin, headers=request_headers, timeout=30, stream=True
+                    ):
+                        pass
+                    retry_headers = {**request_headers, "Referer": origin}
+                    with session.get(
+                        url, headers=retry_headers, timeout=120, stream=True
+                    ) as response:
+                        if receive_response(response, "Session HTTP download"):
+                            return
+            except requests.RequestException as exc:
+                logger.warning("Session HTTP request failed for %s: %s", url, exc)
+
+        logger.info("HTTP downloads failed; falling back to Playwright for %s", url)
 
         async def download_async() -> None:
             from playwright.async_api import async_playwright
+            from playwright.async_api import Error as PlaywrightError
 
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
@@ -288,35 +397,18 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
                 )
                 page = await context.new_page()
                 try:
-                    # Fast path: works for direct file URLs and avoids waiting on page load events.
-                    response = await context.request.get(url, timeout=120000)
-                    content_type = (response.headers.get("content-type") or "").lower()
-                    if response.ok and "text/html" not in content_type:
-                        body = await response.body()
-                        if body:
-                            file_path.write_bytes(body)
-                            total_size = file_path.stat().st_size
-                            logger.info(
-                                f"File size: {total_size / (1024 * 1024):.2f} MB"
-                            )
-                            logger.info(f"Downloaded to {file_path}")
-                            return
-
-                    logger.info(
-                        "Direct request returned HTML/empty content; falling back to browser download flow"
-                    )
-                    async with page.expect_download(timeout=120000) as download_info:
-                        await page.goto(
-                            url,
-                            wait_until="domcontentloaded",
-                            timeout=120000,
-                        )
+                    async with page.expect_download(timeout=60000) as download_info:
+                        # A download navigation may abort page.goto while
+                        # still producing a browser download event.
+                        try:
+                            await page.goto(url, wait_until="commit", timeout=60000)
+                        except PlaywrightError as exc:
+                            if "ERR_ABORTED" not in str(exc):
+                                raise
 
                     download = await download_info.value
-                    await download.save_as(file_path)
-                    total_size = file_path.stat().st_size
-                    logger.info(f"File size: {total_size / (1024 * 1024):.2f} MB")
-                    logger.info(f"Downloaded to {file_path}")
+                    await download.save_as(temporary_path)
+                    finish_download()
                 finally:
                     await context.close()
                     await browser.close()
@@ -343,6 +435,7 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
                 if thread_error:
                     raise thread_error[0]
         except Exception as e:
+            temporary_path.unlink(missing_ok=True)
             logger.error(f"Async download failed: {e}")
             raise
 
@@ -350,7 +443,9 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
         existing_files = [
             path
             for path in self.data_dir.rglob("*")
-            if path.is_file() and "hash" not in path.name.lower()
+            if path.is_file()
+            and "hash" not in path.name.lower()
+            and not path.name.endswith(".part")
         ]
         if existing_files:
             logger.info(
@@ -382,6 +477,8 @@ class DownloadingStep(AbstractStep[InputT, OutputT]):
 
     def output_exists(self) -> bool:
         return self.data_dir.exists() and any(
-            path.is_file() and "hash" not in path.name.lower()
+            path.is_file()
+            and "hash" not in path.name.lower()
+            and not path.name.endswith(".part")
             for path in self.data_dir.rglob("*")
         )
