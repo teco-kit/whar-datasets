@@ -9,6 +9,7 @@ import pytest
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.getter import WHARDatasetID, har_dataset_dict
 from whar_datasets.processing.utils.sessions import process_session
+from whar_datasets.processing.utils.resampling import get_effective_sampling_freq
 
 CFG_ITEMS: list[tuple[WHARDatasetID, WHARConfig]] = sorted(
     har_dataset_dict.items(),
@@ -218,7 +219,12 @@ def _assert_windowing_integrity(
 
     assert set(window_df["session_id"]).issubset(set(session_df["session_id"]))
 
-    window_size = max(int(float(cfg.window_time) * float(cfg.sampling_freq)), 1)
+    window_size = max(
+        int(float(cfg.window_time) * get_effective_sampling_freq(
+            cfg.sampling_freq, cfg.resampling_freq
+        )),
+        1,
+    )
     sampled_window_df = window_df.sample(
         n=min(WINDOW_SAMPLE_COUNT, len(window_df)),
         random_state=0,

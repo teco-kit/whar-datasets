@@ -81,6 +81,10 @@ GOTOV_ACTIVITY_NAMES_PREDICTED: list[str] = [
 ]
 
 GOTOV_GAP_MULTIPLIER: float = 3.0
+# The merged GENEActiv timeline advances by 7/600 s per sample. Millisecond
+# timestamps alternate between 11 and 12 ms, so 1 / median(step) is not the
+# physical source rate.
+GOTOV_SOURCE_FREQ: float = 600.0 / 7.0
 GOTOV_ENERGY_SENSOR_COLUMNS: list[str] = [
     "time",
     *GOTOV_GENEACTIV_CHANNELS,
@@ -161,7 +165,7 @@ def parse_gotov(
         token: idx for idx, token in enumerate(sorted(set(subject_tokens)))
     }
 
-    expected_step_ms = 1e3 / float(cfg_gotov.sampling_freq)
+    expected_step_ms = 1e3 / GOTOV_SOURCE_FREQ
     max_gap_ms = expected_step_ms * GOTOV_GAP_MULTIPLIER
 
     session_rows: list[dict[str, int | str]] = []
@@ -400,7 +404,7 @@ cfg_gotov = WHARConfig(
     dataset_id="gotov",
     dataset_url="https://data.4tu.nl/articles/dataset/GOTOV_Human_Physical_Activity_and_Energy_Expenditure_Dataset_on_Older_Individuals/12716081",
     download_url="https://data.4tu.nl/ndownloader/items/f9bae0cd-ec4e-4cfb-aaa5-41bd1c5554ce/versions/2",
-    sampling_freq=20,
+    sampling_freq=GOTOV_SOURCE_FREQ,
     num_of_subjects=30,
     num_of_activities=16,
     num_of_channels=len(GOTOV_SENSOR_CHANNELS),

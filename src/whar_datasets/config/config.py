@@ -17,7 +17,7 @@ class WHARConfig(BaseModel):
     dataset_id: str
     dataset_url: str
     download_url: str | list[str]
-    sampling_freq: int = Field(gt=0)
+    sampling_freq: float = Field(gt=0)
     num_of_subjects: int = Field(gt=0)
     num_of_activities: int = Field(gt=0)
     num_of_channels: int = Field(gt=0)

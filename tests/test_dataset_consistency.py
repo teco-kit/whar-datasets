@@ -457,8 +457,8 @@ def test_process_session_windowing_semantics_hold_for_all_datasets(
         {"session_id": [0], "subject_id": [0], "activity_id": [0]}
     ).astype({"session_id": "int32", "subject_id": "int32", "activity_id": "int32"})
 
-    base_freq_ms = max(int(1e3 / cfg.sampling_freq), 1)
-    ts = pd.date_range("2020-01-01", periods=session_length, freq=f"{base_freq_ms}ms")
+    source_period = pd.to_timedelta(1.0 / cfg.sampling_freq, unit="s")
+    ts = pd.date_range("2020-01-01", periods=session_length, freq=source_period)
     session_data = {"timestamp": ts}
     for col_idx, col_name in enumerate(channels):
         session_data[col_name] = np.asarray(
