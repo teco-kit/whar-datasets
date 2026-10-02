@@ -87,6 +87,14 @@ def _resolve_up_fall_csv(data_dir: str) -> Path:
         csvs = sorted(candidate.glob("*.csv"))
         if csvs:
             return csvs[0]
+        # Google Drive's /uc endpoint has no filename in its URL. The
+        # downloader therefore stores the CSV as "uc".
+        unnamed_download = candidate / "uc"
+        if unnamed_download.is_file():
+            with unnamed_download.open("rb") as source:
+                header = source.readline()
+            if header.startswith(b"TimeStamps,") and b",Subject,Activity,Trial" in header:
+                return unnamed_download
         merged = sorted(candidate.glob("uc?id=*export=download"))
         if merged:
             return merged[0]
