@@ -169,6 +169,8 @@ cfg.window_overlap = 0.5
 | `selected_channels` | Optional channel filter applied before windowing. | `None` |
 | `window_time` | Sliding window length in seconds. | `2.0` |
 | `window_overlap` | Window overlap ratio. | `0.5` |
+| `sampling_freq` | Verified source rate in Hz for fixed-rate datasets; `None` when the rate is inferred per session. | Dataset-specific |
+| `source_rate_mode` | `"fixed"` uses `sampling_freq`; `"per_session"` estimates each session from its timestamps and requires `resampling_freq`. | `"fixed"` |
 | `resampling_freq` | Optional resampling rate in Hz before windowing. | `None` |
 | `max_session_gap_seconds` | Reject sessions containing a larger timestamp gap; use `None` to disable. | `2.0` |
 | `val_percentage` | Fraction of training data reserved for validation. | `0.2` |

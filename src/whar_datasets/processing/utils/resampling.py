@@ -6,9 +6,11 @@ from scipy.signal import resample_poly
 
 
 def get_effective_sampling_freq(
-    sampling_freq: float, resampling_freq: float | None
+    sampling_freq: float | None, resampling_freq: float | None
 ) -> float:
     """Return the configured output frequency used by windows and transforms."""
+    if sampling_freq is None and resampling_freq is None:
+        raise ValueError("A per-session source rate requires resampling_freq.")
     return float(resampling_freq if resampling_freq is not None else sampling_freq)
 
 

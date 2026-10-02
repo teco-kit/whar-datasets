@@ -8,8 +8,8 @@ import pytest
 
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.config.getter import WHARDatasetID, har_dataset_dict
-from whar_datasets.processing.utils.sessions import process_session
 from whar_datasets.processing.utils.resampling import get_effective_sampling_freq
+from whar_datasets.processing.utils.sessions import process_session
 
 CFG_ITEMS: list[tuple[WHARDatasetID, WHARConfig]] = sorted(
     har_dataset_dict.items(),
@@ -67,8 +67,11 @@ def _require_cached_common_format(
     return activity_df, session_df, sessions_path
 
 
-def _expected_step_ms(cfg: WHARConfig) -> float:
-    return 1e3 / float(cfg.sampling_freq)
+def _max_allowed_gap_ms(cfg: WHARConfig) -> float:
+    if cfg.sampling_freq is None:
+        assert cfg.max_session_gap_seconds is not None
+        return cfg.max_session_gap_seconds * 1e3
+    return 1e3 / cfg.sampling_freq * MAX_ALLOWED_GAP_MULTIPLIER
 
 
 def _assert_non_time_series_modalities_are_excluded(channels: Iterable[str]) -> None:
@@ -143,8 +146,7 @@ def _assert_parquet_sessions_integrity(
     assert len(sensor_cols) == int(cfg.num_of_channels)
     _assert_non_time_series_modalities_are_excluded(sensor_cols)
 
-    expected_step_ms = _expected_step_ms(cfg)
-    max_allowed_gap_ms = expected_step_ms * MAX_ALLOWED_GAP_MULTIPLIER
+    max_allowed_gap_ms = _max_allowed_gap_ms(cfg)
 
     ts_df = pq.read_table(
         sessions_path, columns=["session_id", "timestamp"]
@@ -302,8 +304,7 @@ def test_parser_output_requirements_when_raw_data_is_available(
         int(sid) for sid in session_df["session_id"]
     )
 
-    expected_step_ms = _expected_step_ms(cfg)
-    max_allowed_gap_ms = expected_step_ms * MAX_ALLOWED_GAP_MULTIPLIER
+    max_allowed_gap_ms = _max_allowed_gap_ms(cfg)
 
     for sid, session in sessions.items():
         assert "timestamp" in session.columns

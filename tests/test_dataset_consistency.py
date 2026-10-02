@@ -18,6 +18,7 @@ from whar_datasets.config.config import WINDOW_TIME_MEDIUM
 from whar_datasets.config.getter import WHARDatasetID, get_dataset_cfg, har_dataset_dict
 from whar_datasets.processing.steps.parsing_step import _align_activity_ids_to_config
 from whar_datasets.processing.utils.caching import cache_common_format
+from whar_datasets.processing.utils.resampling import get_effective_sampling_freq
 from whar_datasets.processing.utils.selecting import select_activities
 from whar_datasets.processing.utils.sessions import process_session
 from whar_datasets.processing.utils.validation import validate_common_format
@@ -68,7 +69,8 @@ def _make_common_format_payload(
     session_rows = []
     sessions: dict[int, pd.DataFrame] = {}
 
-    base_freq_ms = max(int(1e3 / cfg.sampling_freq), 1)
+    source_freq = cfg.sampling_freq or 100.0
+    base_freq_ms = max(int(1e3 / source_freq), 1)
 
     for session_id in range(num_sessions):
         subject_id = session_id % cfg.num_of_subjects
@@ -117,7 +119,8 @@ def test_dataset_cfg_basic_semantics(dataset_id: WHARDatasetID, cfg) -> None:
         download_urls = list(cfg.download_url)
     assert len(download_urls) > 0
     assert all(url.startswith(("http://", "https://")) for url in download_urls)
-    assert cfg.sampling_freq > 0
+    assert cfg.sampling_freq is None or cfg.sampling_freq > 0
+    assert cfg.sampling_freq is not None or cfg.resampling_freq is not None
     assert cfg.num_of_subjects > 0
     assert cfg.num_of_activities > 0
     assert cfg.num_of_channels > 0
@@ -447,8 +450,15 @@ def test_process_session_windowing_semantics_hold_for_all_datasets(
     tmp_path: Path,
 ) -> None:
     channels = _make_all_channel_names(cfg)
-    window_size = max(int(cfg.window_time * cfg.sampling_freq), 1)
-    session_length = max(window_size * 3, 12)
+    source_freq = cfg.sampling_freq or 100.0
+    window_size = max(
+        int(
+            cfg.window_time
+            * get_effective_sampling_freq(cfg.sampling_freq, cfg.resampling_freq)
+        ),
+        1,
+    )
+    session_length = max(window_size * 3, int(cfg.window_time * source_freq * 3), 12)
 
     activity_df = pd.DataFrame(
         {"activity_id": [0], "activity_name": [_make_activity_names(cfg)[0]]}
@@ -457,7 +467,7 @@ def test_process_session_windowing_semantics_hold_for_all_datasets(
         {"session_id": [0], "subject_id": [0], "activity_id": [0]}
     ).astype({"session_id": "int32", "subject_id": "int32", "activity_id": "int32"})
 
-    source_period = pd.to_timedelta(1.0 / cfg.sampling_freq, unit="s")
+    source_period = pd.to_timedelta(1.0 / source_freq, unit="s")
     ts = pd.date_range("2020-01-01", periods=session_length, freq=source_period)
     session_data = {"timestamp": ts}
     for col_idx, col_name in enumerate(channels):

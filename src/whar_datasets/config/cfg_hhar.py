@@ -277,7 +277,8 @@ cfg_hhar = WHARConfig(
     dataset_id="hhar",
     dataset_url="https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition",
     download_url="https://archive.ics.uci.edu/static/public/344/heterogeneity+activity+recognition.zip",
-    sampling_freq=20,
+    sampling_freq=None,  # HHAR device streams have different source rates.
+    source_rate_mode="per_session",
     num_of_subjects=9,
     num_of_activities=6,
     num_of_channels=6,
@@ -289,5 +290,7 @@ cfg_hhar = WHARConfig(
     selected_activities=canonicalize_activity_name_list(SELECTED_ACTIVITIES),
     available_channels=HHAR_SENSOR_CHANNELS,
     selected_channels=HHAR_SENSOR_CHANNELS,
+    resampling_freq=50,
+    max_session_gap_seconds=HHAR_MAX_GAP_MS / 1e3,
     # Training (split info)
 )

@@ -29,6 +29,16 @@ def _process_session_data(
     session = select_channels(session, cfg.selected_channels or [])
     frequency = get_effective_sampling_freq(cfg.sampling_freq, cfg.resampling_freq)
     if cfg.resampling_freq is not None:
+        if cfg.sampling_freq is None:
+            if len(session) < 2:
+                return None, None
+            # A source recording shorter than one time window cannot produce a
+            # complete output window, regardless of its input sample count.
+            duration = (
+                session["timestamp"].iloc[-1] - session["timestamp"].iloc[0]
+            ).total_seconds()
+            if duration < cfg.window_time - 1.0 / cfg.resampling_freq:
+                return None, None
         session = resample(
             session,
             cfg.resampling_freq,

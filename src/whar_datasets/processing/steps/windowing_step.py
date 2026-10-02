@@ -48,6 +48,7 @@ class WindowingStep(AbstractStep[InputT, OutputT]):
         self.hash_name: str = "windowing_hash"
         self.relevant_cfg_keys: set[str] = {
             "sampling_freq",
+            "source_rate_mode",
             "selected_activities",
             "selected_channels",
             "window_time",

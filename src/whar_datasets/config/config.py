@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from whar_datasets.utils.types import NormType, Parse, TransformType
 
@@ -17,7 +17,9 @@ class WHARConfig(BaseModel):
     dataset_id: str
     dataset_url: str
     download_url: str | list[str]
-    sampling_freq: float = Field(gt=0)
+    # None is used only with source_rate_mode="per_session".
+    sampling_freq: float | None = Field(gt=0)
+    source_rate_mode: Literal["fixed", "per_session"] = "fixed"
     num_of_subjects: int = Field(gt=0)
     num_of_activities: int = Field(gt=0)
     num_of_channels: int = Field(gt=0)
@@ -67,6 +69,21 @@ class WHARConfig(BaseModel):
         if value is not None and value <= 0:
             raise ValueError("resampling_freq must be greater than zero.")
         return value
+
+    @model_validator(mode="after")
+    def validate_variable_source_rate(self) -> "WHARConfig":
+        if self.source_rate_mode == "fixed" and self.sampling_freq is None:
+            raise ValueError("A fixed source rate requires sampling_freq.")
+        if self.source_rate_mode == "per_session" and self.sampling_freq is not None:
+            raise ValueError(
+                "A per-session source rate requires sampling_freq=None."
+            )
+        if self.source_rate_mode == "per_session" and self.resampling_freq is None:
+            raise ValueError(
+                "A per-session source rate requires resampling_freq for "
+                "fixed-size time windows."
+            )
+        return self
 
     @field_validator("max_session_gap_seconds")
     @classmethod
