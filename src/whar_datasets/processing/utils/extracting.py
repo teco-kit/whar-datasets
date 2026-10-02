@@ -60,6 +60,13 @@ def extract(file_path: Path, extract_dir: Path) -> None:
 
     # 3. RAR Handling using 'unrar' ONLY
     elif file_path.suffix.lower() == ".rar":
+        if shutil.which("unrar") is None:
+            raise RuntimeError(
+                f"Cannot extract RAR archive '{file_path}': the 'unrar' command "
+                "is required but was not found on PATH. Install the unrar "
+                "executable on the extraction node, or extract the archive "
+                "before running preprocessing."
+            )
         extract_dir.mkdir(parents=True, exist_ok=True)
         try:
             # Command: unrar x file.rar /path/to/extract/ -y
@@ -71,11 +78,15 @@ def extract(file_path: Path, extract_dir: Path) -> None:
             )
             file_path.unlink()
         except subprocess.CalledProcessError as e:
-            print(f"!!! Error extracting {file_path}")
-            print(f"unrar Output:\n{e.stderr.decode()}")
-        except FileNotFoundError:
-            print("!!! Error: 'unrar' command not found.")
-            print("Please install it (e.g., 'sudo apt install unrar')")
+            raise RuntimeError(
+                f"Failed to extract RAR archive '{file_path}' with unrar: "
+                f"{e.stderr.decode(errors='replace')}"
+            ) from e
+        except FileNotFoundError as e:
+            raise RuntimeError(
+                f"Cannot extract RAR archive '{file_path}': the 'unrar' "
+                "command is no longer available on PATH."
+            ) from e
 
     # 4. Recursively extract nested archives
     for root, _, files in os.walk(extract_dir):
