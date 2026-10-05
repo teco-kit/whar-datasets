@@ -11,6 +11,7 @@ from whar_datasets.config.activity_name_utils import canonicalize_activity_name_
 from whar_datasets.config.config import WHARConfig
 from whar_datasets.processing.steps.abstract_step import AbstractStep
 from whar_datasets.processing.utils.caching import cache_common_format
+from whar_datasets.processing.utils.sampling_rate import audit_session_sampling_rates
 from whar_datasets.utils.loading import load_activity_df, load_session_df, load_sessions
 from whar_datasets.utils.logging import logger
 
@@ -129,6 +130,15 @@ class ParsingStep(AbstractStep[InputT, OutputT]):
 
     def load_input(self) -> InputT:
         return None
+
+    def run(self, force_recompute: bool) -> None:
+        """Run parsing, then audit source rates even when parsed data is cached."""
+        super().run(force_recompute)
+
+        session_df = load_session_df(self.metadata_dir)
+        session_ids = [int(value) for value in session_df["session_id"]]
+        sessions = load_sessions(self.sessions_dir, session_ids=session_ids)
+        audit_session_sampling_rates(self.cfg, sessions)
 
     def validate_input(self, step_input: InputT) -> bool:
         logger.info("Checking extracted data")
