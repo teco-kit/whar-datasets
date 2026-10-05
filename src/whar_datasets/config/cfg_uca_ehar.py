@@ -28,6 +28,13 @@ UCA_EHAR_ACTIVITY_NAMES: list[str] = [
 
 UCA_EHAR_SENSOR_CHANNELS: list[str] = ["Ax", "Ay", "Az", "Gx", "Gy", "Gz", "P"]
 
+# The CSV provides one `T` timestamp per row for the IMU stream. The UCA-EHAR
+# paper reports the barometer (`P`) at 6.66 Hz, separately from the ~26 Hz IMU.
+# This parser preserves `P` as packaged on each CSV row and assigns that row's
+# `T`; it does not have independent pressure timestamps to align or resample.
+# Therefore the output timestamps establish the IMU cadence, not an independent
+# native sampling rate for `P`.
+
 UCA_EHAR_GAP_MULTIPLIER = 5.0
 UCA_EHAR_MIN_GAP_MS = 120.0
 UCA_EHAR_MAX_GAP_MS = 2_000.0
@@ -204,7 +211,7 @@ cfg_uca_ehar = WHARConfig(
     dataset_id="uca_ehar",
     dataset_url="https://zenodo.org/records/5659336",
     download_url="https://zenodo.org/records/5659336/files/UCA-EHAR-1.0.0.zip?download=1",
-    sampling_freq=25,
+    sampling_freq=26,
     num_of_subjects=20,
     num_of_activities=12,
     num_of_channels=7,
