@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.config import WHARConfig
-from whar_datasets.config.timestamps import to_datetime64_ms
 
 BMHAD_ACTIVITY_NAMES: list[str] = [
     "jumping_in_place",
@@ -93,7 +92,15 @@ def parse_bmhad(
                 f"(expected at least {expected_cols})."
             )
 
-        timestamp = to_datetime64_ms(raw_df.iloc[:, 130], default_unit="s")
+        # Column 130 stores Unix timestamps in seconds. Keep microsecond
+        # precision: rounding these epoch timestamps to milliseconds turns the
+        # nominal 480 Hz frame intervals (~2.083 ms) into mostly 2 ms steps,
+        # which falsely appears to be 500 Hz.
+        timestamp = pd.to_datetime(
+            pd.to_numeric(raw_df.iloc[:, 130], errors="coerce"),
+            unit="s",
+            errors="coerce",
+        ).astype("datetime64[us]")
         sensor_values = raw_df.iloc[:, : len(BMHAD_SENSOR_CHANNELS)].apply(
             pd.to_numeric, errors="coerce"
         )
@@ -124,7 +131,7 @@ def parse_bmhad(
             raise ValueError(f"No valid timestamps parsed in '{file_path.name}'.")
 
         session_df = session_df.sort_values("timestamp").reset_index(drop=True)
-        session_df["timestamp"] = session_df["timestamp"].astype("datetime64[ms]")
+        session_df["timestamp"] = session_df["timestamp"].astype("datetime64[us]")
         session_df[BMHAD_SENSOR_CHANNELS] = session_df[BMHAD_SENSOR_CHANNELS].astype(
             "float32"
         )
@@ -164,7 +171,7 @@ cfg_bmhad = WHARConfig(
     dataset_id="bmhad",
     dataset_url="https://www.kaggle.com/datasets/dasmehdixtr/berkeley-multimodal-human-action-database",
     download_url="https://www.kaggle.com/api/v1/datasets/download/dasmehdixtr/berkeley-multimodal-human-action-database",
-    sampling_freq=50,
+    sampling_freq=480,
     num_of_subjects=12,
     num_of_activities=len(BMHAD_ACTIVITY_NAMES),
     num_of_channels=len(BMHAD_SENSOR_CHANNELS),
