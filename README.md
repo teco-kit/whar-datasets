@@ -179,7 +179,7 @@ cfg.window_overlap = 0.5
 | `shuffle_subject` | Seed-shuffle subjects before assigning LKSO folds. | `True` |
 | `normalization` | Normalization strategy used in post-processing. | `STD_GLOBALLY` |
 | `transform` | Optional transform applied to windows, such as STFT or DWT. | `None` |
-| `strict_train_val_separation` | Allocate distributed validation blocks per eligible session and purge overlaps; sessions too short to split safely are assigned wholly to training or validation. | `False` |
+| `strict_train_val_separation` | Allocate distributed validation blocks per eligible session and purge overlaps; sessions too short to split safely are assigned wholly to training or validation. | `True` |
 | `dataloader_num_workers` | PyTorch loading workers; `0` keeps loading in the main process. | `0` |
 | `batch_size` | Default batch size used by adapters and training helpers. | `64` |
 | `learning_rate` | Default learning rate for downstream training. | `1e-4` |
