@@ -1,6 +1,12 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from whar_datasets.utils.types import NormType, Parse, TransformType
 
@@ -75,9 +81,7 @@ class WHARConfig(BaseModel):
         if self.source_rate_mode == "fixed" and self.sampling_freq is None:
             raise ValueError("A fixed source rate requires sampling_freq.")
         if self.source_rate_mode == "per_session" and self.sampling_freq is not None:
-            raise ValueError(
-                "A per-session source rate requires sampling_freq=None."
-            )
+            raise ValueError("A per-session source rate requires sampling_freq=None.")
         if self.source_rate_mode == "per_session" and self.resampling_freq is None:
             raise ValueError(
                 "A per-session source rate requires resampling_freq for "

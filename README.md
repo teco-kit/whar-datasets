@@ -11,7 +11,7 @@ This library offers comprehensive support for widely used WHAR (Wearable Human A
 - built-in caching and multi-processing for improved efficiency
 - seamless integration with PyTorch and TensorFlow
 
-The library currently includes out-of-the-box support for 37 datasets (listed below). Additional WHAR datasets can be easily integrated by defining a custom configuration with an associated parser and registering it with the framework.
+The library currently includes out-of-the-box support for 38 datasets (listed below). Additional WHAR datasets can be easily integrated by defining a custom configuration with an associated parser and registering it with the framework.
 
 ## Notice
 
@@ -141,6 +141,7 @@ dataloaders = adapter.get_dataloaders(batch_size=64)
 | ✅ | [HAR70+](https://archive.ics.uci.edu/dataset/780/har70) | 2021 | *A machine learning classifier for detection of physical activity types and postures during free-living* | 55 |
 | ✅ | [UCA-EHAR](https://zenodo.org/records/5659336) | 2022 | *UCA-EHAR: A Dataset for Human Activity Recognition with Embedded AI on Smart Glasses* | 35 |
 | ✅ | [GOTOV](https://data.4tu.nl/articles/dataset/GOTOV_Human_Physical_Activity_and_Energy_Expenditure_Dataset_on_Older_Individuals/12716081) | 2022 | *A recurrent neural network architecture to model physical activity energy expenditure in older people* | 33 |
+| ✅ | [AICOS-HAR](https://zenodo.org/records/19452049) | 2026 | *AICOS-HAR: A human activity recognition dataset spanning multiple devices and body positions* | - |
 
 ## Configuration Reference
 

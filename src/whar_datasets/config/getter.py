@@ -45,6 +45,7 @@ class WHARDatasetID(Enum):
     SKODA = "skoda"
     ACTRECTUT_GESTURES = "actrectut_gestures"
     ACTRECTUT_WALKING = "actrectut_walking"
+    AICOS_HAR = "aicos_har"
 
 
 _CONFIG_IMPORTS: dict[WHARDatasetID, tuple[str, str]] = {
@@ -122,7 +123,6 @@ BENCHMARK_DATASET_IDS: list[WHARDatasetID] = [
     WHARDatasetID.HAR70,
     WHARDatasetID.UCA_EHAR,
     WHARDatasetID.GOTOV,
-    WHARDatasetID.ACTRECTUT_GESTURES,
-    WHARDatasetID.ACTRECTUT_WALKING,
     WHARDatasetID.BMHAD,
+    WHARDatasetID.AICOS_HAR,
 ]
