@@ -1,7 +1,9 @@
 import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+from scipy.signal import resample_poly
 from tqdm import tqdm
 
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
@@ -48,6 +50,48 @@ HARTH_SENSOR_CHANNELS: list[str] = [
 
 HARTH_MAX_STEP_MULTIPLIER = 3.0
 _SUBJECT_PATTERN = re.compile(r"^S(\d+)", re.IGNORECASE)
+HARTH_SOURCE_STEP_SECONDS = 1.0 / 100.0
+HARTH_OUTPUT_STEP_SECONDS = 1.0 / 50.0
+
+
+def _downsample_s006_session_to_50_hz(session_df: pd.DataFrame) -> pd.DataFrame:
+    """Anti-alias the anomalous 100 Hz S006 file to HARTH's published 50 Hz."""
+    timestamps = session_df["timestamp"]
+    step_seconds = timestamps.diff().dt.total_seconds().dropna().to_numpy()
+    if len(step_seconds) and not np.allclose(
+        step_seconds,
+        HARTH_SOURCE_STEP_SECONDS,
+        rtol=0.0,
+        atol=1e-6,
+    ):
+        raise ValueError(
+            "HARTH S006 was expected to contain regular 100 Hz samples within "
+            "each label/gap-delimited session before downsampling. Found a "
+            "different cadence; inspect its raw timestamps instead of silently "
+            "resampling across missing samples."
+        )
+
+    values = session_df[HARTH_SENSOR_CHANNELS].to_numpy(dtype=np.float64)
+    if len(values) >= 3:
+        # Polyphase filtering removes frequencies above the 25 Hz output
+        # Nyquist limit before retaining every other 100 Hz sample.
+        values = resample_poly(values, up=1, down=2, axis=0, padtype="line")
+    else:
+        # Very short event fragments cannot support a useful anti-alias filter.
+        # Retain the first 50 Hz-grid sample without extending the source range.
+        values = values[::2]
+
+    output = pd.DataFrame(values, columns=HARTH_SENSOR_CHANNELS)
+    output.insert(
+        0,
+        "timestamp",
+        timestamps.iloc[0]
+        + pd.to_timedelta(
+            np.arange(len(output), dtype=np.float64) * HARTH_OUTPUT_STEP_SECONDS,
+            unit="s",
+        ),
+    )
+    return output
 
 
 def _extract_subject_id(path: Path) -> int:
@@ -89,6 +133,7 @@ def parse_harth(
         df["subject_id"] = _extract_subject_id(csv_path)
         df["activity_name"] = df[activity_id_col].map(HARTH_ACTIVITY_MAP)
         df["activity_name"] = df["activity_name"].fillna("unknown")
+        df["source_file"] = csv_path.name
 
         time_diff = df["timestamp"].diff().dt.total_seconds().fillna(0.0)
         activity_change = df[activity_id_col] != df[activity_id_col].shift(1)
@@ -124,12 +169,14 @@ def parse_harth(
     loop = tqdm(session_metadata["session_id"].unique(), desc="Creating sessions")
     for session_id in loop:
         session_df = df[df["session_id"] == session_id]
+        source_file = str(session_df["source_file"].iloc[0])
         session_df = session_df.drop(
             columns=[
                 "session_id",
                 "subject_id",
                 "activity_id",
                 "activity_name",
+                "source_file",
                 "label",
                 activity_id_col,
                 "raw_activity_id",
@@ -138,6 +185,13 @@ def parse_harth(
         ).reset_index(drop=True)
 
         session_df["timestamp"] = pd.to_datetime(session_df["timestamp"])
+        if Path(source_file).stem.upper() == "S006":
+            # UCI describes the distributed HARTH data as 50 Hz, and the
+            # original paper says 100 Hz recordings were downsampled to 50 Hz.
+            # The distributed S006.csv is the exception: its raw timestamps
+            # are uniformly 10 ms apart (100 Hz), while the other 21 files are
+            # 20 ms apart. Normalize this file here so HARTH remains fixed-rate.
+            session_df = _downsample_s006_session_to_50_hz(session_df)
         float_cols = [col for col in session_df.columns if col != "timestamp"]
         session_df[float_cols] = session_df[float_cols].astype("float32")
         session_df[float_cols] = session_df[float_cols].round(6)
