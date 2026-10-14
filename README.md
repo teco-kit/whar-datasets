@@ -2,16 +2,16 @@
 
 ## Overview
 
-This library offers comprehensive support for widely used WHAR (Wearable Human Activity Recognition) datasets, including:
+This library provides a common workflow for wearable human activity recognition (WHAR) datasets:
 
 - automated downloading from original sources and data extraction
 - parsing into a unified, standardized data format
-- configurable pre-processing (e.g., resampling, windowing) and post-processing (e.g., normalization)
-- dataset splitting for common evaluation protocols such as LOSO and K-Fold cross-validation
+- configurable pre-processing (e.g. resampling, windowing) and post-processing (e.g. normalization)
+- dataset splitting for common evaluation protocols such as LOSO, LKSO and K-Fold cross-validation
 - built-in caching and multiprocessing for improved efficiency
 - seamless integration with PyTorch and TensorFlow
 
-The library currently includes out-of-the-box support for 38 datasets (listed below). Additional WHAR datasets can be easily integrated by defining a custom configuration with an associated parser and registering it with the framework.
+It currently supports 38 datasets. New datasets can be added with a parser and configuration.
 
 ## Notice
 
@@ -19,41 +19,19 @@ This library does not host any datasets. To use a dataset, please visit its orig
 
 ## Installation
 
-### With `uv`:
-
-```bash
-uv add "whar-datasets @ git+https://github.com/teco-kit/whar-datasets.git"
-```
-
-With optional TensorFlow support:
-
-```bash
-uv add "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"
-```
-
-With PyTorch support, as used in the quickstart:
+With `uv`:
 
 ```bash
 uv add "whar-datasets[torch] @ git+https://github.com/teco-kit/whar-datasets.git"
 ```
 
-### With `pip`:
-
-```bash
-pip install "whar-datasets @ git+https://github.com/teco-kit/whar-datasets.git"
-```
-
-With optional TensorFlow support:
-
-```bash
-pip install "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"
-```
-
-With PyTorch support:
+With `pip`:
 
 ```bash
 pip install "whar-datasets[torch] @ git+https://github.com/teco-kit/whar-datasets.git"
 ```
+
+The quickstart uses the `torch` extra. Replace it with `tf` for TensorFlow, or omit `[torch]` to install only the core package.
 
 ## Quickstart
 
@@ -78,7 +56,7 @@ activity_df, session_df, window_df = pre_pipeline.run()
 # create LOSO splits
 splitter = LOSOSplitter(cfg)
 splits = splitter.get_splits(session_df, window_df)
-split = splits[0]
+split = splits[0]  # use the first split
 
 # create and run post-processing pipeline for the specific split
 post_pipeline = PostProcessingPipeline(
@@ -104,7 +82,7 @@ cfg.window_time = 3.0
 cfg.window_overlap = 0.5
 ```
 
-`get_dataset_cfg(...)` returns an independent copy of a dataset-specific [`WHARConfig`](src/whar_datasets/config/config.py). The most useful fields are:
+`get_dataset_cfg(...)` returns an independent [`WHARConfig`](src/whar_datasets/config/config.py). Common settings are:
 
 | Field | Meaning | Default |
 | --- | --- | --- |
@@ -123,14 +101,8 @@ cfg.window_overlap = 0.5
 | `max_session_gap_seconds` | Reject sessions containing a larger timestamp gap; use `None` to disable. | `2.0` |
 | `val_percentage` | Fraction of training data reserved for validation. | `0.2` |
 | `num_folds` | Number of folds used for K-fold or LKSO splitting. | `10` |
-| `shuffle_subject` | Seed-shuffle subjects before assigning LKSO folds. | `True` |
 | `normalization` | Normalization strategy used in post-processing. | `STD_GLOBALLY` |
-| `transform` | Optional transform applied to windows, such as STFT or DWT. | `None` |
 | `strict_train_val_separation` | Purge overlapping raw intervals between training and validation. | `True` |
-| `dataloader_num_workers` | PyTorch loading workers; `0` keeps loading in the main process. | `0` |
-| `batch_size` | Default batch size used by adapters and training helpers. | `64` |
-| `learning_rate` | Default learning rate for downstream training. | `1e-4` |
-| `num_epochs` | Default number of training epochs. | `100` |
 | `seed` | Random seed used for sampling and dataloader shuffling. | `0` |
 
 ## Supported Datasets
@@ -185,7 +157,7 @@ cfg.window_overlap = 0.5
 
 ## Adding a Dataset
 
-Each integration lives in `src/whar_datasets/config/cfg_<dataset>.py` and has two parts: a parser that converts the raw files to the common format, and a [`WHARConfig`](src/whar_datasets/config/config.py) instance describing the dataset. Usually you instantiate `WHARConfig`; a custom subclass is not required. See [`cfg_wisdm.py`](src/whar_datasets/config/cfg_wisdm.py) for a complete example.
+Each integration lives in `src/whar_datasets/config/cfg_<dataset>.py` and contains a parser plus a [`WHARConfig`](src/whar_datasets/config/config.py) instance. See [`cfg_wisdm.py`](src/whar_datasets/config/cfg_wisdm.py) for a complete example.
 
 The parser returns three objects forming the standardized representation:
 
@@ -195,7 +167,7 @@ The parser returns three objects forming the standardized representation:
 | `session_df` | One row per session: integer `session_id`, `subject_id`, and `activity_id`. |
 | `sessions` | A dictionary keyed by `session_id`; each value contains a datetime `timestamp` followed by floating-point sensor channels in `available_channels` order. |
 
-IDs must be zero-based and deterministic, timestamps must be unique and increasing, and values must not contain NaN or infinity. A session is one continuous recording of one subject performing one activity: start a new session when the subject, activity, or source recording changes, or when a large timestamp gap occurs. Simultaneously recorded sensors should be aligned by timestamp and stacked as channels; modalities recorded at different times should remain separate datasets. Audio, image, and video data are not included.
+IDs must be zero-based and deterministic; timestamps must be unique and increasing; values must be finite. A session is one continuous recording of one subject performing one activity. Split on subject, activity, source recording, or a large time gap. Align simultaneous sensors by timestamp, but keep modalities recorded at different times as separate datasets. Exclude audio, images, and video.
 
 A minimal configuration looks like this:
 
@@ -204,12 +176,15 @@ import pandas as pd
 
 from whar_datasets.config.config import WHARConfig
 
+ACTIVITIES = ["Walking", "Running", "Sitting", "Standing"]
+CHANNELS = ["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"]
+
 
 def parse_example(
     dir: str, activity_id_col: str
 ) -> tuple[
     pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]
-]: ...  # Convert the dataset's raw layout to the format described above.
+]: ...  # Return activity_df, session_df, and sessions.
 
 
 cfg_example = WHARConfig(
@@ -221,10 +196,10 @@ cfg_example = WHARConfig(
     num_of_activities=4,
     num_of_channels=6,
     parse=parse_example,
-    available_activities=["Walking", "Running", "Sitting", "Standing"],
-    selected_activities=["Walking", "Running", "Sitting", "Standing"],
-    available_channels=["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"],
-    selected_channels=["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"],
+    available_activities=ACTIVITIES,
+    selected_activities=ACTIVITIES,
+    available_channels=CHANNELS,
+    selected_channels=CHANNELS,
 )
 ```
 
