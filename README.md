@@ -8,7 +8,7 @@ This library offers comprehensive support for widely used WHAR (Wearable Human A
 - parsing into a unified, standardized data format
 - configurable pre-processing (e.g., resampling, windowing) and post-processing (e.g., normalization)
 - dataset splitting for common evaluation protocols such as LOSO and K-Fold cross-validation
-- built-in caching and multi-processing for improved efficiency
+- built-in caching and multiprocessing for improved efficiency
 - seamless integration with PyTorch and TensorFlow
 
 The library currently includes out-of-the-box support for 38 datasets (listed below). Additional WHAR datasets can be easily integrated by defining a custom configuration with an associated parser and registering it with the framework.
@@ -28,7 +28,7 @@ uv add "whar-datasets @ git+https://github.com/teco-kit/whar-datasets.git"
 With optional TensorFlow support:
 
 ```bash
-uv add "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"  
+uv add "whar-datasets[tf] @ git+https://github.com/teco-kit/whar-datasets.git"
 ```
 
 With PyTorch support, as used in the quickstart:
@@ -92,57 +92,6 @@ adapter = TorchAdapter(cfg, loader, split)
 dataloaders = adapter.get_dataloaders(batch_size=64)
 ```
 
-## Supported Datasets
-
-### Single-Sensor Datasets
-
-| Supported | Name | Year | Paper | Citations |
-| --- | --- | --- | --- | --- |
-| ✅ | [WISDM](https://www.cis.fordham.edu/wisdm/dataset.php) | 2010 | *Activity Recognition using Cell Phone Accelerometers* | 3862 |
-| ✅ | [UCI-HAR](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones) | 2013 | *A Public Domain Dataset for Human Activity Recognition using Smartphones* | 3372 |
-| ✅ | [UTD-MHAD](https://personal.utdallas.edu/~kehtar/UTD-MHAD.html) | 2015 | *UTD-MHAD: A Multimodal Dataset for Human Action Recognition Utilizing a Depth Camera and a Wearable Inertial Sensor* | 997 |
-| ✅ | [HAPT](https://archive.ics.uci.edu/dataset/341/smartphone+based+recognition+of+human+activities+and+postural+transitions) | 2016 | *Transition-aware human activity recognition using smartphones.* | 939 |
-| ✅ | [USC-HAD](https://sipi.usc.edu/had/) | 2012 | *USC-HAD: A Daily Activity Dataset for Ubiquitous Activity Recognition Using Wearable Sensors* | 753 |
-| ✅ | [UniMiB-SHAR](http://www.sal.disco.unimib.it/technologies/unimib-shar/) | 2017 | *Unimib shar: a dataset for human activity recognition using acceleration data from smartphones* | 712 |
-| ✅ | [MotionSense](https://github.com/mmalekzadeh/motion-sense) | 2019 | *Mobile Sensor Data Anonymization* | 345 |
-| ✅ | [RealLifeHAR](https://lbd.udc.es/research/real-life-HAR-dataset/) | 2020 | *A Public Domain Dataset for Real-Life Human Activity Recognition Using Smartphone Sensors* | 208 |
-| ✅ | [WISDM-19-PHONE](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset) | 2019 | *WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset* | 198 |
-| ✅ | [WISDM-19-WATCH](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset) | 2019 | *WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset* | 198 |
-| ✅ | [KU-HAR](https://data.mendeley.com/datasets/45f952y38r/5) | 2021 | *KU-HAR: An open dataset for heterogeneous human activity recognition* | 187 |
-| ✅ | [Hang-Time](https://ahoelzemann.github.io/hangtime_har/) | 2023 | *Hang-time HAR: A benchmark dataset for basketball activity recognition using wrist-worn inertial sensors* | 52 |
-| ✅ | [CAPTURE-24](https://ora.ox.ac.uk/objects/uuid:99d7c092-d865-4a19-b096-cc16440cd001) | 2024 | *CAPTURE-24: A large dataset of wrist-worn activity tracker data collected in the wild for human activity recognition* | 45 |
-| ✅ | [HARSense](https://ieee-dataport.org/open-access/harsense-statistical-human-activity-recognition-dataset) | 2021 | *Harsense: statistical human activity recognition dataset* | 5 |
-| ✅ | [FallDet](https://www.kaggle.com/datasets/harnoor343/fall-detection-accelerometer-data) | - | - | - |
-
-
-### Multi-Sensor Datasets
-
-| Supported | Name | Year | Paper | Citations |
-| --- | --- | --- | --- | --- |
-| ✅ | [ActRecTut-Gestures](https://github.com/andreas-bulling/ActRecTut) | 2014 | *A tutorial on human activity recognition using body-worn inertial sensors.* | 2086 |
-| ✅ | [ActRecTut-Walking](https://github.com/andreas-bulling/ActRecTut) | 2014 | *A tutorial on human activity recognition using body-worn inertial sensors.* | 2086 |
-| ✅ | [PAMAP2](https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring) | 2012 | *Introducing a New Benchmarked Dataset for Activity Monitoring* | 1758 |
-| ✅ | [OPPORTUNITY](https://archive.ics.uci.edu/dataset/226/opportunity+activity+recognition) | 2010 | *Collecting complex activity datasets in highly rich networked sensor environments* | 1024 |
-| ✅ | [HHAR](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition) | 2015 | *Smart Devices are Different: Assessing and Mitigating Mobile Sensing Heterogeneities for Activity Recognition* | 1019 |
-| ✅ | [MHEALTH](https://archive.ics.uci.edu/dataset/319/mhealth+dataset) | 2014 | *mHealthDroid: A Novel Framework for Agile Development of Mobile Health Applications* | 887 |
-| ✅ | [DSADS](https://archive.ics.uci.edu/dataset/256/daily+and+sports+activities) | 2010 | *Comparative study on classifying human activities with miniature inertial and magnetic sensors* | 780 |
-| ✅ | [SAD](https://www.utwente.nl/en/eemcs/ps/research/dataset/) | 2014 | *Fusion of Smartphone Motion Sensors for Physical Activity Recognition* | 752 |
-| ✅ | [BMHAD](https://www.kaggle.com/datasets/dasmehdixtr/berkeley-multimodal-human-action-database) | 2013 | *Berkeley MHAD: A Comprehensive Multimodal Human Action Database* | 668 |
-| ✅ | [Daphnet](https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait) | 2009 | *Ambulatory monitoring of freezing of gait in Parkinson’s disease* | 652 |
-| ✅ | [SKODA](http://har-dataset.org/doku.php?id=wiki%3Adataset) | 2008 | *Wearable activity tracking in car manufacturing* | 504 |
-| ✅ | [RealWorld](https://www.uni-mannheim.de/dws/research/projects/activity-recognition/dataset/dataset-realworld/) | 2016 | *On-body Localization of Wearable Devices: An Investigation of Position-Aware Activity Recognition* | 482 |
-| ✅ | [UP-Fall](https://sites.google.com/up.edu.mx/har-up/) | 2019 | *UP-fall detection dataset: A multimodal approach* | 462 |
-| ✅ | [UMAFall](https://figshare.com/articles/dataset/UMA_ADL_FALL_Dataset_zip/4214283) | 2017 | *Umafall: A multisensor dataset for the research on automatic fall detection* | 243 |
-| ✅ | [REALDISP](https://archive.ics.uci.edu/dataset/305/realdisp+activity+recognition+dataset) | 2014 | *Dealing with the Effects of Sensor Displacement in Wearable Activity Recognition* | 216 |
-| ✅ | [HuGaDB](https://github.com/romanchereshnev/HuGaDB) | 2018 | *HuGaDB: Human Gait Database for Activity Recognition from Wearable Inertial Sensor Networks* | 154 |
-| ✅ | [HARTH](https://archive.ics.uci.edu/dataset/779/harth) | 2021 | *HARTH: A Human Activity Recognition Dataset for Machine Learning* | 132 |
-| ✅ | [w-HAR](https://github.com/gmbhat/human-activity-recognition) | 2020 | *w-HAR: An Activity Recognition Dataset and Framework Using Low-Power Wearable Devices* | 100 |
-| ✅ | [WEAR](https://mariusbock.github.io/wear/) | 2024 | *Wear: An outdoor sports dataset for wearable and egocentric activity recognition* | 66 |
-| ✅ | [HAR70+](https://archive.ics.uci.edu/dataset/780/har70) | 2021 | *A machine learning classifier for detection of physical activity types and postures during free-living* | 55 |
-| ✅ | [UCA-EHAR](https://zenodo.org/records/5659336) | 2022 | *UCA-EHAR: A Dataset for Human Activity Recognition with Embedded AI on Smart Glasses* | 35 |
-| ✅ | [GOTOV](https://data.4tu.nl/articles/dataset/GOTOV_Human_Physical_Activity_and_Energy_Expenditure_Dataset_on_Older_Individuals/12716081) | 2022 | *A recurrent neural network architecture to model physical activity energy expenditure in older people* | 33 |
-| ✅ | [AICOS-HAR](https://zenodo.org/records/19452049) | 2026 | *AICOS-HAR: A human activity recognition dataset spanning multiple devices and body positions* | - |
-
 ## Configuration Reference
 
 The easiest way to start is to load a built-in configuration and adjust the fields you need:
@@ -151,13 +100,11 @@ The easiest way to start is to load a built-in configuration and adjust the fiel
 from whar_datasets import WHARDatasetID, get_dataset_cfg
 
 cfg = get_dataset_cfg(WHARDatasetID.WISDM, datasets_dir="./datasets/")
-cfg.execution_backend = "process"
 cfg.window_time = 3.0
 cfg.window_overlap = 0.5
-...
 ```
 
-`get_dataset_cfg(...)` returns a dataset-specific [`WHARConfig`](/Users/maxburzer/whar-datasets/src/whar_datasets/config/config.py#L12-L59) with sensible defaults. The most useful fields are:
+`get_dataset_cfg(...)` returns an independent copy of a dataset-specific [`WHARConfig`](src/whar_datasets/config/config.py). The most useful fields are:
 
 | Field | Meaning | Default |
 | --- | --- | --- |
@@ -166,8 +113,8 @@ cfg.window_overlap = 0.5
 | `num_workers` | Local worker processes; set `1` for single-core or `None` for automatic sizing. | `None` |
 | `execution_backend` | Processing backend: `"sequential"` or `"process"`. | `"sequential"` |
 | `cache_each_split` | Caches split-specific samples separately so repeated runs can reuse them. | `True` |
-| `selected_activities` | Optional activity filter applied before windowing. | `None` |
-| `selected_channels` | Optional channel filter applied before windowing. | `None` |
+| `selected_activities` | Activities retained before windowing. | Dataset-specific |
+| `selected_channels` | Sensor channels retained before windowing. | Dataset-specific |
 | `window_time` | Sliding window length in seconds. | `2.0` |
 | `window_overlap` | Window overlap ratio. | `0.5` |
 | `sampling_freq` | Verified source rate in Hz for fixed-rate datasets; `None` when the rate is inferred per session. | Dataset-specific |
@@ -179,14 +126,122 @@ cfg.window_overlap = 0.5
 | `shuffle_subject` | Seed-shuffle subjects before assigning LKSO folds. | `True` |
 | `normalization` | Normalization strategy used in post-processing. | `STD_GLOBALLY` |
 | `transform` | Optional transform applied to windows, such as STFT or DWT. | `None` |
-| `strict_train_val_separation` | Allocate distributed validation blocks per eligible session and purge overlaps; sessions too short to split safely are assigned wholly to training or validation. | `True` |
+| `strict_train_val_separation` | Purge overlapping raw intervals between training and validation. | `True` |
 | `dataloader_num_workers` | PyTorch loading workers; `0` keeps loading in the main process. | `0` |
 | `batch_size` | Default batch size used by adapters and training helpers. | `64` |
 | `learning_rate` | Default learning rate for downstream training. | `1e-4` |
 | `num_epochs` | Default number of training epochs. | `100` |
 | `seed` | Random seed used for sampling and dataloader shuffling. | `0` |
 
-If you want to benchmark multiple built-in datasets, `BENCHMARK_DATASET_IDS` contains the curated subset used by the library.
+## Supported Datasets
+
+### Single-Sensor Datasets
+
+| Name | Year | Paper |
+| --- | --- | --- |
+| [WISDM](https://www.cis.fordham.edu/wisdm/dataset.php) | 2010 | *Activity Recognition using Cell Phone Accelerometers* |
+| [UCI-HAR](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones) | 2013 | *A Public Domain Dataset for Human Activity Recognition using Smartphones* |
+| [UTD-MHAD](https://personal.utdallas.edu/~kehtar/UTD-MHAD.html) | 2015 | *UTD-MHAD: A Multimodal Dataset for Human Action Recognition Utilizing a Depth Camera and a Wearable Inertial Sensor* |
+| [HAPT](https://archive.ics.uci.edu/dataset/341/smartphone+based+recognition+of+human+activities+and+postural+transitions) | 2016 | *Transition-aware human activity recognition using smartphones.* |
+| [USC-HAD](https://sipi.usc.edu/had/) | 2012 | *USC-HAD: A Daily Activity Dataset for Ubiquitous Activity Recognition Using Wearable Sensors* |
+| [UniMiB-SHAR](http://www.sal.disco.unimib.it/technologies/unimib-shar/) | 2017 | *Unimib shar: a dataset for human activity recognition using acceleration data from smartphones* |
+| [MotionSense](https://github.com/mmalekzadeh/motion-sense) | 2019 | *Mobile Sensor Data Anonymization* |
+| [RealLifeHAR](https://lbd.udc.es/research/real-life-HAR-dataset/) | 2020 | *A Public Domain Dataset for Real-Life Human Activity Recognition Using Smartphone Sensors* |
+| [WISDM-19-PHONE](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset) | 2019 | *WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset* |
+| [WISDM-19-WATCH](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset) | 2019 | *WISDM: Smartphone and Smartwatch Activity and Biometrics Dataset* |
+| [KU-HAR](https://data.mendeley.com/datasets/45f952y38r/5) | 2021 | *KU-HAR: An open dataset for heterogeneous human activity recognition* |
+| [Hang-Time](https://ahoelzemann.github.io/hangtime_har/) | 2023 | *Hang-time HAR: A benchmark dataset for basketball activity recognition using wrist-worn inertial sensors* |
+| [CAPTURE-24](https://ora.ox.ac.uk/objects/uuid:99d7c092-d865-4a19-b096-cc16440cd001) | 2024 | *CAPTURE-24: A large dataset of wrist-worn activity tracker data collected in the wild for human activity recognition* |
+| [HARSense](https://ieee-dataport.org/open-access/harsense-statistical-human-activity-recognition-dataset) | 2021 | *Harsense: statistical human activity recognition dataset* |
+| [FallDet](https://www.kaggle.com/datasets/harnoor343/fall-detection-accelerometer-data) | - | - |
+
+### Multi-Sensor Datasets
+
+| Name | Year | Paper |
+| --- | --- | --- |
+| [ActRecTut-Gestures](https://github.com/andreas-bulling/ActRecTut) | 2014 | *A tutorial on human activity recognition using body-worn inertial sensors.* |
+| [ActRecTut-Walking](https://github.com/andreas-bulling/ActRecTut) | 2014 | *A tutorial on human activity recognition using body-worn inertial sensors.* |
+| [PAMAP2](https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring) | 2012 | *Introducing a New Benchmarked Dataset for Activity Monitoring* |
+| [OPPORTUNITY](https://archive.ics.uci.edu/dataset/226/opportunity+activity+recognition) | 2010 | *Collecting complex activity datasets in highly rich networked sensor environments* |
+| [HHAR](https://archive.ics.uci.edu/dataset/344/heterogeneity+activity+recognition) | 2015 | *Smart Devices are Different: Assessing and Mitigating Mobile Sensing Heterogeneities for Activity Recognition* |
+| [MHEALTH](https://archive.ics.uci.edu/dataset/319/mhealth+dataset) | 2014 | *mHealthDroid: A Novel Framework for Agile Development of Mobile Health Applications* |
+| [DSADS](https://archive.ics.uci.edu/dataset/256/daily+and+sports+activities) | 2010 | *Comparative study on classifying human activities with miniature inertial and magnetic sensors* |
+| [SAD](https://www.utwente.nl/en/eemcs/ps/research/dataset/) | 2014 | *Fusion of Smartphone Motion Sensors for Physical Activity Recognition* |
+| [BMHAD](https://www.kaggle.com/datasets/dasmehdixtr/berkeley-multimodal-human-action-database) | 2013 | *Berkeley MHAD: A Comprehensive Multimodal Human Action Database* |
+| [Daphnet](https://archive.ics.uci.edu/dataset/245/daphnet+freezing+of+gait) | 2009 | *Ambulatory monitoring of freezing of gait in Parkinson’s disease* |
+| [SKODA](http://har-dataset.org/doku.php?id=wiki%3Adataset) | 2008 | *Wearable activity tracking in car manufacturing* |
+| [RealWorld](https://www.uni-mannheim.de/dws/research/projects/activity-recognition/dataset/dataset-realworld/) | 2016 | *On-body Localization of Wearable Devices: An Investigation of Position-Aware Activity Recognition* |
+| [UP-Fall](https://sites.google.com/up.edu.mx/har-up/) | 2019 | *UP-fall detection dataset: A multimodal approach* |
+| [UMAFall](https://figshare.com/articles/dataset/UMA_ADL_FALL_Dataset_zip/4214283) | 2017 | *Umafall: A multisensor dataset for the research on automatic fall detection* |
+| [REALDISP](https://archive.ics.uci.edu/dataset/305/realdisp+activity+recognition+dataset) | 2014 | *Dealing with the Effects of Sensor Displacement in Wearable Activity Recognition* |
+| [HuGaDB](https://github.com/romanchereshnev/HuGaDB) | 2018 | *HuGaDB: Human Gait Database for Activity Recognition from Wearable Inertial Sensor Networks* |
+| [HARTH](https://archive.ics.uci.edu/dataset/779/harth) | 2021 | *HARTH: A Human Activity Recognition Dataset for Machine Learning* |
+| [w-HAR](https://github.com/gmbhat/human-activity-recognition) | 2020 | *w-HAR: An Activity Recognition Dataset and Framework Using Low-Power Wearable Devices* |
+| [WEAR](https://mariusbock.github.io/wear/) | 2024 | *Wear: An outdoor sports dataset for wearable and egocentric activity recognition* |
+| [HAR70+](https://archive.ics.uci.edu/dataset/780/har70) | 2021 | *A machine learning classifier for detection of physical activity types and postures during free-living* |
+| [UCA-EHAR](https://zenodo.org/records/5659336) | 2022 | *UCA-EHAR: A Dataset for Human Activity Recognition with Embedded AI on Smart Glasses* |
+| [GOTOV](https://data.4tu.nl/articles/dataset/GOTOV_Human_Physical_Activity_and_Energy_Expenditure_Dataset_on_Older_Individuals/12716081) | 2022 | *A recurrent neural network architecture to model physical activity energy expenditure in older people* |
+| [AICOS-HAR](https://zenodo.org/records/19452049) | 2026 | *AICOS-HAR: A human activity recognition dataset spanning multiple devices and body positions* |
+
+## Adding a Dataset
+
+Each integration lives in `src/whar_datasets/config/cfg_<dataset>.py` and has two parts: a parser that converts the raw files to the common format, and a [`WHARConfig`](src/whar_datasets/config/config.py) instance describing the dataset. Usually you instantiate `WHARConfig`; a custom subclass is not required. See [`cfg_wisdm.py`](src/whar_datasets/config/cfg_wisdm.py) for a complete example.
+
+The parser returns three objects forming the standardized representation:
+
+| Object | Required content |
+| --- | --- |
+| `activity_df` | One row per activity: integer `activity_id` and string `activity_name`. |
+| `session_df` | One row per session: integer `session_id`, `subject_id`, and `activity_id`. |
+| `sessions` | A dictionary keyed by `session_id`; each value contains a datetime `timestamp` followed by floating-point sensor channels in `available_channels` order. |
+
+IDs must be zero-based and deterministic, timestamps must be unique and increasing, and values must not contain NaN or infinity. A session is one continuous recording of one subject performing one activity: start a new session when the subject, activity, or source recording changes, or when a large timestamp gap occurs. Simultaneously recorded sensors should be aligned by timestamp and stacked as channels; modalities recorded at different times should remain separate datasets. Audio, image, and video data are not included.
+
+A minimal configuration looks like this:
+
+```python
+import pandas as pd
+
+from whar_datasets.config.config import WHARConfig
+
+
+def parse_example(
+    dir: str, activity_id_col: str
+) -> tuple[
+    pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]
+]: ...  # Convert the dataset's raw layout to the format described above.
+
+
+cfg_example = WHARConfig(
+    dataset_id="example",
+    dataset_url="https://example.org/dataset",
+    download_url="https://example.org/dataset.zip",
+    sampling_freq=50.0,
+    num_of_subjects=10,
+    num_of_activities=4,
+    num_of_channels=6,
+    parse=parse_example,
+    available_activities=["Walking", "Running", "Sitting", "Standing"],
+    selected_activities=["Walking", "Running", "Sitting", "Standing"],
+    available_channels=["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"],
+    selected_channels=["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"],
+)
+```
+
+Then:
+
+1. Add the dataset ID to [`WHARDatasetID`](src/whar_datasets/config/getter.py). With the conventional names `cfg_example.py` and `cfg_example`, the lazy registry discovers it automatically.
+2. Verify labels, subjects, sensor units, sampling rate, timestamp units, missing recordings, and channel order against the dataset's official documentation and raw files. Never infer these solely from an existing parser.
+3. Add focused parser regressions under [`tests/`](tests), especially for filename/label mapping, session boundaries, timestamp conversion, missing values, and multi-sensor alignment. Raw datasets must not be committed.
+4. Run the fast checks:
+
+   ```bash
+   uv run --with pytest python -m pytest tests/test_dataset_consistency.py -q
+   ```
+
+   If the raw dataset is already cached, also run the artifact and end-to-end checks described in [`AGENTS.md`](AGENTS.md). The cache root is `cfg.datasets_dir`; do not redownload data just to test a parser.
+
+To contribute the integration, fork the repository, create a focused branch, and open a pull request. Include links to the source documentation, describe the raw-to-standard mappings and any exclusions or missing recordings, and list the tests you ran.
 
 ## Citation
 
