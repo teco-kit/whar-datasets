@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from typing import Callable
 
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.cfg_daphnet import parse_daphnet
