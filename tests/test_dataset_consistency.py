@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from typing import Callable
 
 from whar_datasets.config.activity_name_utils import canonicalize_activity_name_list
 from whar_datasets.config.cfg_daphnet import parse_daphnet
@@ -560,3 +561,43 @@ def test_select_activities_removes_null_class_from_loaded_sessions() -> None:
 
     assert selected_activity_df["activity_name"].tolist() == ["walking"]
     assert selected_session_df["session_id"].tolist() == [11]
+
+
+def test_harmes_parser_labels_subjects_and_skips_free_form(tmp_path: Path) -> None:
+    import pickle
+
+    from whar_datasets.config.cfg_harmes import HARMES_SENSOR_CHANNELS, parse_harmes
+
+    def imu(n: int, offset: float) -> pd.DataFrame:
+        values = np.arange(n, dtype=float)[:, None] + offset + np.zeros((1, 6))
+        frame = pd.DataFrame(
+            values, columns=["acc_x", "acc_y", "acc_z", "gyro_x", "gyro_y", "gyro_z"]
+        )
+        frame["ts_sync"] = np.arange(n) * 20.0
+        return frame
+
+    labels = pd.DataFrame(
+        {
+            "Type": ["start", "end", "comment", "start", "end"],
+            "Description": ["Drinking", "Drinking", "voice", "Making tea", "Making tea"],
+            "ts_sync": [100.0, 180.0, 200.0, 400.0, 500.0],
+        }
+    )
+    recordings = [
+        {"rec_id": "0301", "IMU_L": imu(40, 0.0), "IMU_R": imu(42, 1000.0), "Labels": labels},
+        {"rec_id": "0304", "IMU_L": imu(40, 0.0), "IMU_R": imu(40, 0.0), "Labels": labels},
+    ]
+    with open(tmp_path / "participant_03_IMU_ONLY.pkl", "wb") as f:
+        pickle.dump(recordings, f)
+
+    activity_df, session_df, sessions = parse_harmes(str(tmp_path), "activity_id")
+
+    names = dict(zip(activity_df["activity_id"], activity_df["activity_name"]))
+    assert session_df["subject_id"].tolist() == [2, 2]
+    assert [names[a] for a in session_df["activity_id"]] == ["Drinking", "Making tea"]
+    # Drinking covers ts 100..180 -> rows 5..9; Making tea 400..500 -> rows 20..25.
+    drinking, tea = sessions[0], sessions[1]
+    assert list(drinking.columns) == ["timestamp", *HARMES_SENSOR_CHANNELS]
+    assert len(drinking) == 5 and len(tea) == 6
+    assert drinking["acc_x_left"].tolist() == [5.0, 6.0, 7.0, 8.0, 9.0]
+    assert drinking["acc_x_right"].tolist() == [1005.0, 1006.0, 1007.0, 1008.0, 1009.0]

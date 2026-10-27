@@ -11,7 +11,7 @@ This library provides a common workflow for wearable human activity recognition 
 - built-in caching and multiprocessing for improved efficiency
 - seamless integration with PyTorch and TensorFlow
 
-It currently supports 38 datasets. New datasets can be added with a parser and configuration.
+It currently supports 39 datasets. New datasets can be added with a parser and configuration.
 
 ## Notice
 
@@ -154,6 +154,7 @@ cfg.window_overlap = 0.5
 | [UCA-EHAR](https://zenodo.org/records/5659336) | 2022 | *UCA-EHAR: A Dataset for Human Activity Recognition with Embedded AI on Smart Glasses* |
 | [GOTOV](https://data.4tu.nl/articles/dataset/GOTOV_Human_Physical_Activity_and_Energy_Expenditure_Dataset_on_Older_Individuals/12716081) | 2022 | *A recurrent neural network architecture to model physical activity energy expenditure in older people* |
 | [AICOS-HAR](https://zenodo.org/records/19452049) | 2026 | *AICOS-HAR: A human activity recognition dataset spanning multiple devices and body positions* |
+| [HARMES](https://doi.org/10.5281/zenodo.19425718) | 2026 | *HARMES: A Multi-Modal Dataset for Wearable Human Activity Recognition with Motion, Environmental Sensing and Sound* |
 
 ## Adding a Dataset
 
