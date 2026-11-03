@@ -45,6 +45,30 @@ HARMES_ACTIVITY_NAMES: list[str] = [
 def parse_harmes(
     dir: str, activity_id_col: str
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[int, pd.DataFrame]]:
+    """Parse the preprocessed HARMES IMU-only release (one pickle per participant).
+
+    Each pickle holds a list of recordings with keys ``rec_id``, ``IMU_L``,
+    ``IMU_R`` and ``Labels``. ``rec_id`` is ``SSRR`` (subject, recording) or
+    ``SSRRPP`` when a recording was split into parts recorded on different
+    days; each part has its own labels and its own ``ts_sync`` clock that
+    restarts at ~0, so parts are parsed independently.
+
+    Audited against the raw files (all 20 participants, 69 scripted recordings,
+    2861 start/end label pairs -> 2818 sessions). Known source properties:
+
+    - Recording 04 of every participant is free-form daily life with
+      open-vocabulary labels (e.g. "Ironing laundry", "Cutting wood") that are
+      not among the 15 scripted activities, so it is skipped.
+    - In the first part of 9 split recordings (050101, 090301, 130101, 130201,
+      140101, 150101, 180201, 190201, 200101) the IMU stream ends before the
+      last label pairs. These 43 label pairs have no sensor data and are
+      ignored; the remaining data is correct.
+    - Recording 0101 has one overlapping pair: "Vacuum Cleaning" ends exactly
+      120 s after its start (likely an auto-filled end), after the following
+      "Brushing teeth" has started. Labels are applied in source order and a
+      later label overwrites an earlier one, so vacuuming is cut at the start
+      of brushing teeth (6001 -> 4571 samples).
+    """
     del activity_id_col
 
     data_root = Path(dir)
@@ -67,25 +91,37 @@ def parse_harmes(
             data = pickle.load(f)
         for recording in data:
             if recording["rec_id"][2:4] == "04":
-                continue  # skip 4th recording of each participant (by id) - these are free form activities!
+                # Recording 04 is free-form with labels outside the 15 scripted
+                # activities; skip it entirely.
+                continue
             left = recording["IMU_L"]
             right = recording["IMU_R"]
+            # IMU_L and IMU_R share the same 50 Hz row index; their ts_sync values
+            # differ by at most one sample (19 ms) without drift, so the two
+            # sensors are aligned by row and trimmed to the shorter stream
+            # (drops at most 138 trailing samples).
             min_len = min(left.shape[0], right.shape[0])
-            left = left.iloc[:min_len]
-            right = right.iloc[:min_len]
-            for i, label_col in recording["Labels"].iterrows():    
+            left = left.iloc[:min_len].copy()
+            right = right.iloc[:min_len].copy()
+            left["label"] = pd.NA
+            desc: str | None = None
+            start_ts = None
+            # Labels are start/end pairs in ms on the IMU_L ts_sync clock;
+            # "comment" rows (notes such as "voice -20") are ignored. Pairs are
+            # applied in source order, so on overlap the later label wins (only
+            # occurs once, in 0101). Pairs beyond the end of the IMU stream match
+            # no rows and are thereby ignored (43 pairs, see docstring).
+            for i, label_col in recording["Labels"].iterrows():
                 start = label_col["Type"] == "start"
                 if start:
                     start_ts = label_col["ts_sync"]
                     desc = label_col["Description"]
-                elif label_col["Type"] == "end" and desc == label_col["Description"]: 
+                elif label_col["Type"] == "end" and desc == label_col["Description"]:
                     mask = (
                         (left["ts_sync"] >= start_ts) &
                         (left["ts_sync"] <= label_col["ts_sync"])
                     )
                     left.loc[mask, "label"] = desc
-                else:
-                    print("error")
             frame = left.drop(columns=["ts_sync"]).rename(
                 columns=lambda c: f"{c}_left" if c in ["acc_x", "acc_y", "acc_z", "gyro_x", "gyro_y", "gyro_z"] else c
                 ).join(
@@ -93,7 +129,7 @@ def parse_harmes(
                         columns=lambda c: f"{c}_right" if c in ["acc_x", "acc_y", "acc_z", "gyro_x", "gyro_y", "gyro_z"] else c
                     )
                 )
-            
+
 
             frame["label"] = frame["label"].astype("string").str.strip()
             frame["label"] = frame["label"].replace(
@@ -126,6 +162,8 @@ def parse_harmes(
                 if chunk.empty or pd.isna(chunk["activity_id"].iloc[0]):
                     continue
 
+                # Raw ts_sync steps are <= 39 ms (no recording gaps inside a
+                # label), so a regular 50 Hz time axis is synthesized.
                 timestamps = pd.to_datetime(
                     np.arange(len(chunk), dtype="int64") * step_ms, unit="ms"
                 )
