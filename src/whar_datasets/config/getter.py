@@ -124,7 +124,6 @@ BENCHMARK_DATASET_IDS: list[WHARDatasetID] = [
     WHARDatasetID.HAR70,
     WHARDatasetID.UCA_EHAR,
     WHARDatasetID.GOTOV,
-    WHARDatasetID.BMHAD,
     WHARDatasetID.AICOS_HAR,
     WHARDatasetID.HARMES,
 ]
